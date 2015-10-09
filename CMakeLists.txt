@@ -9,3 +9,5 @@ add_subdirectory(lib)
 add_subdirectory(malloc)
 add_subdirectory(wlib)
 add_subdirectory(cunit)
+add_subdirectory(gc)
+
