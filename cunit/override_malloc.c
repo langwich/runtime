@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 void *parrt_malloc(size_t n) {
 	void *p = malloc(n);
 	printf("malloc %zu -> %p\n", n, p);

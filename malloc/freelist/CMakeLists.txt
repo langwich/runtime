@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.2)
-project(malloc)
+project(runtime)
 
 set(MODULE_NAME freelist)
+set(SOURCE src/freelist.c)
 
-BUILD_MODULE(${MODULE_NAME} OFF)
+add_library(${MODULE_NAME} ${SOURCE})
 
-ADD_TEST_TARGET(test_basic_sanity ${MODULE_NAME})
-ADD_TEST_TARGET(test_size_adjust ${MODULE_NAME})
-ADD_TEST_TARGET(test_replay ${MODULE_NAME})
+target_include_directories (${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(freelist cunit lib)

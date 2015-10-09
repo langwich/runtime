@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <cunit.h>
 #include <string.h>
 #include "bitset.h"
+#include "cunit.h"
 
 #define HEAP_SIZE           4096
 

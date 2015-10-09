@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.3)
-project(wich_runtime)
+project(runtime)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(MODULE_NAME wlib)
+set(SOURCE src/wich.c)
 
-set(SOURCE_FILES src/wich.c src/wich.h)
-add_executable(wich_runtime ${SOURCE_FILES})
+add_library(${MODULE_NAME} ${SOURCE})
+
+target_include_directories (${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(wlib cunit)
