@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <stdio.h>
+#include <string.h>
 #include "cunit.h"
 
 void (*cunit_setup)()		= NULL;
@@ -53,6 +54,20 @@ void _assert_addr_equal(void *a, void *b, const char as[], const char bs[], cons
 void _assert_addr_not_equal(void *a, void *b, const char as[], const char bs[], const char funcname[]) {
 	if ( a==b ) {
 		fprintf(stderr, "assertion failure in %s: %s != %s (%p == %p)\n", funcname, as, bs, a, b);
+		longjmp(longjmp_env, 1);
+	}
+}
+
+void _assert_str_equal(void *a, void *b, const char as[], const char bs[], const char funcname[]) {
+	if ( strcmp(a,b)!=0 ) {
+		fprintf(stderr, "assertion failure in %s: strcmp %s == %s (%p == %p)\n", funcname, as, bs, a, b);
+		longjmp(longjmp_env, 1);
+	}
+}
+
+void _assert_str_not_equal(void *a, void *b, const char as[], const char bs[], const char funcname[]) {
+	if ( strcmp(a,b)==0 ) {
+		fprintf(stderr, "assertion failure in %s: strcmp %s != %s (%p == %p)\n", funcname, as, bs, a, b);
 		longjmp(longjmp_env, 1);
 	}
 }
