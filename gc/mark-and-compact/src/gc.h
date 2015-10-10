@@ -9,7 +9,6 @@ extern "C" {
 
 typedef struct {
 	char *name;         // "class" name of instances of this type; useful for debugging
-	uint32_t size;      // total size including header information used by each heap_object
 	uint16_t num_ptr_fields;
 	uint16_t offsets[]; // list of offsets from p->data to fields that are managed ptrs
 } object_metadata;
@@ -17,6 +16,7 @@ typedef struct {
 /* stuff that every instance in the heap must have at the beginning (unoptimized) */
 typedef struct _heap_object {
 	object_metadata *metadata;
+	uint32_t size;      // total size including header information used by each heap_object
 	bool marked;	    // used during the mark phase of garbage collection
 	struct _heap_object *forwarded; 			// where we've moved this object during collection
 //	char data[];        // nothing allocated; just a label to location of actual instance data
@@ -45,8 +45,10 @@ extern void gc_shutdown();
  * to the start of the heap.
  */
 extern void gc();
-extern heap_object *gc_alloc_with_data(object_metadata *metadata, size_t data_size); // for Vectors, Strings, ...
-extern heap_object *gc_alloc(object_metadata *metadata);                             // fixed size objects
+// for Vectors, Strings, ...
+extern heap_object *gc_alloc_with_data(object_metadata *metadata, size_t size, size_t data_size);
+// fixed size objects
+extern heap_object *gc_alloc(object_metadata *metadata, size_t size);
 extern void gc_add_addr_of_root(heap_object **p);
 
 extern Heap_Info get_heap_info();

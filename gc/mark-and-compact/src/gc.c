@@ -23,7 +23,7 @@ static void gc_mark_live();
 static void gc_mark_object(heap_object *p);
 static void gc_sweep();
 
-static void *gc_alloc_space(size_t size);
+static void *gc_raw_alloc(size_t size);
 
 static inline bool ptr_is_in_heap(heap_object *p) {
 	return p >= (heap_object *) start_of_heap && p <= (heap_object *) end_of_heap;
@@ -63,23 +63,23 @@ void gc_add_addr_of_root(heap_object **p)
     _roots[num_roots++] = p;
 }
 
-heap_object *gc_alloc_with_data(object_metadata *metadata, size_t data_size) {
-	size_t size = request2size(metadata->size + data_size);  // update size to include header and any variably-sized data
-	heap_object *p = gc_alloc_space(size);
+/* Allocate an object per the indicated size, which must included heap_object / header info.
+ * The object is zeroed out and the header is initialized.
+ */
+heap_object *gc_alloc(object_metadata *metadata, size_t size) {
+	size = align_to_word_boundary(size);
+	heap_object *p = gc_raw_alloc(size);
 
 	memset(p, 0, size);         // wipe out object's data space and the header
 	p->metadata = metadata;     // make sure object knows where its metadata is
+	p->size = (uint32_t)size;
 	return p;
-}
-
-heap_object *gc_alloc(object_metadata *metadata) {
-	return gc_alloc_with_data(metadata, 0);
 }
 
 /** Allocate size bytes in the heap by bumping high-water mark; if full, gc() and try again.
  *  Size must include any header size and must be word-aligned.
  */
-static void *gc_alloc_space(size_t size) {
+static void *gc_raw_alloc(size_t size) {
 	if (next_free + size > end_of_heap) {
 		gc(); // try to collect
 		if (next_free + size > end_of_heap) { // try again
@@ -161,16 +161,16 @@ static void unmark_objects() {
 /* Walk heap jumping by size field of chunk header. Return an info record. */
 Heap_Info get_heap_info() {
 	heap_object *p = start_of_heap;
-	uint32_t busy = 0;
-	uint32_t computed_busy_size = 0;
-	uint32_t busy_size = (uint32_t)(next_free - start_of_heap);
-	uint32_t free_size = (uint32_t)(end_of_heap - next_free + 1);
+	int busy = 0;
+	int computed_busy_size = 0;
+	int busy_size = (uint32_t)(next_free - start_of_heap);
+	int free_size = (uint32_t)(end_of_heap - next_free + 1);
 	while ( p>=start_of_heap && p<next_free ) { // stay inbounds, walking heap
 		// track
 		busy++;
-		computed_busy_size += p->metadata->size;
-		p = (heap_object *)((void *) p + p->metadata->size);
+		computed_busy_size += p->size;
+		p = (heap_object *)((void *) p + p->size);
 	}
-	return (Heap_Info){ start_of_heap, end_of_heap, next_free, heap_size,
+	return (Heap_Info){ start_of_heap, end_of_heap, next_free, (uint32_t)heap_size,
 	                    busy, computed_busy_size, busy_size, free_size };
 }

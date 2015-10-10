@@ -22,24 +22,22 @@ typedef struct string {
 
 object_metadata Vector_metadata = {
 		"Vector",
-		sizeof(Vector),
 		0
 };
 
 object_metadata String_metadata = {
 		"String",
-		sizeof(String),
 		0
 };
 
 static inline Vector *Vector_alloc(int length) {
-	Vector *p = (Vector *)gc_alloc_with_data(&Vector_metadata, length * sizeof(double));
+	Vector *p = (Vector *)gc_alloc(&Vector_metadata, sizeof(Vector) + length * sizeof(double));
 	p->length = length;
 	return p;
 }
 
 static inline String *String_alloc(int length) {
-	String *p = (String *)gc_alloc_with_data(&Vector_metadata, length * sizeof(char));
+	String *p = (String *)gc_alloc(&Vector_metadata, sizeof(String) + length * sizeof(char));
 	p->length = length;
 	return p;
 }

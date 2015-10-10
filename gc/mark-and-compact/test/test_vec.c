@@ -24,7 +24,8 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 #include "gc.h"
-#include "builtin.h"
+#include <src/builtin.h>
+#include <src/gc.h>
 #include "cunit.h"
 
 const size_t HEAP_SIZE = 2000;
@@ -52,11 +53,13 @@ void single_vector() {
 	Vector *p = Vector_alloc(10);
 	assert_addr_not_equal(p, NULL);
 	assert_equal(p->length, 10);
+	size_t expected_size = align_to_word_boundary(sizeof(Vector) + p->length * sizeof(double));
+	assert_equal(p->header.size, expected_size);
+	assert_str_equal(p->header.metadata->name, "Vector");
 	Heap_Info info = get_heap_info();
 	assert_addr_equal(p, info.start_of_heap);
-	assert_addr_equal(info.next_free, p + sizeof(Vector));
-	assert_equal(info.busy_size, sizeof(Vector));
-//	assert_equal(p->length)
+	assert_addr_equal(info.next_free, ((void *)p) + expected_size);
+	assert_equal(info.busy_size, expected_size);
 }
 
 int main(int argc, char *argv[]) {
@@ -70,4 +73,6 @@ int main(int argc, char *argv[]) {
 	test(single_vector);
 
 	gc_shutdown();
+
+	return 0;
 }
