@@ -2,56 +2,91 @@
 #include <stdlib.h>
 #include <string.h>
 #include "gc.h"
+#include "morecore.h"
 
-#define DEBUG 0
+static bool DEBUG = false;
 
 #define MAX_ROOTS		100
-#define MAX_OBJECTS 	200
 
+/* Track every pointer into the heap; includes globals, args, and locals */
 static heap_object **_roots[MAX_ROOTS];
-static int num_roots = 0; /* index of next free space in _roots for a root */
+
+/* index of next free space in _roots for a root */
+static int num_roots = 0;
 
 static int heap_size;
-static uint8_t *start_of_heap;
-static uint8_t *end_of_heap;
-static uint8_t *next_free;
+static void *start_of_heap;
+static void *end_of_heap;
+static void *next_free;
 
 static void gc_mark_live();
 static void gc_mark_object(heap_object *p);
 static void gc_sweep();
 
-static int  gc_object_size(heap_object *p);
-static void gc_compact_object_list();
 static void *gc_alloc_space(size_t size);
-static void gc_dump();
-static bool gc_in_heap(heap_object *p);
-static char *gc_viz_heap();
-static void gc_free_object(heap_object *p);
-static void print_ptr(heap_object *p);
-static void print_addr_array(heap_object **array, int len);
-static char *long_array_to_str(unsigned long *array, int len);
-static unsigned long gc_rel_addr(heap_object *p);
-static int addrcmp(const void *a, const void *b);
-static void unmark_objects();
-static char *ptr_to_str(heap_object *p);
+
+static inline bool ptr_is_in_heap(heap_object *p) {
+	return p >= (heap_object *) start_of_heap && p <= (heap_object *) end_of_heap;
+}
+
+void gc_debug(bool debug) { DEBUG = debug; }
+
+//static int  gc_object_size(heap_object *p);
+//static void gc_compact_object_list();
+//static void gc_dump();
+//static bool ptr_is_in_heap(heap_object *p);
+//static char *gc_viz_heap();
+//static void gc_free_object(heap_object *p);
+//static void print_ptr(heap_object *p);
+//static void print_addr_array(heap_object **array, int len);
+//static char *long_array_to_str(unsigned long *array, int len);
+//static unsigned long gc_rel_addr(heap_object *p);
+//static int addrcmp(const void *a, const void *b);
+//static void unmark_objects();
+//static char *ptr_to_str(heap_object *p);
 
 /* Initialize a heap with a certain size for use with the garbage collector */
 void gc_init(int size) {
     heap_size = size;
-    start_of_heap = malloc((size_t)size); //TODO: should this be morecore()?
+    start_of_heap = morecore((size_t)size);
     end_of_heap = start_of_heap + size - 1;
     next_free = start_of_heap;
     num_roots = 0;
 }
 
 /* Announce you are done with the heap managed by the garbage collector */
-void gc_done() {
-    free(start_of_heap);
+void gc_shutdown() {
+    dropcore(start_of_heap, heap_size);
 }
 
 void gc_add_addr_of_root(heap_object **p)
 {
     _roots[num_roots++] = p;
+}
+
+heap_object *gc_alloc(size_t size, object_metadata *metadata) {
+	size = request2size(size);  // update size to include header
+	heap_object *p = gc_alloc_space(size);
+
+	memset(p, 0, size);         // wipe out object's data space and the header
+	p->metadata = metadata;     // make sure object knows where its metadata is
+	return p;
+}
+
+/** Allocate size bytes in the heap by bumping high-water mark; if full, gc() and try again.
+ *  Size must include any header size and must be word-aligned.
+ */
+static void *gc_alloc_space(size_t size) {
+	if (next_free + size > end_of_heap) {
+		gc(); // try to collect
+		if (next_free + size > end_of_heap) { // try again
+			return NULL;                      // oh well, no room. puke
+		}
+	}
+
+	void *p = next_free; // bump-ptr-allocation
+	next_free += size;
+	return p;
 }
 
 /* Perform a mark-and-compact garbage collection, moving all live objects
@@ -78,16 +113,7 @@ void gc_add_addr_of_root(heap_object **p)
  */
 void gc() {
     if (DEBUG) printf("gc_compact\n");
-    gc_mark_live(); // fills live_objects
-}
-
-extern heap_object *gc_alloc(size_t size, void (*chase_ptrs)(struct _heap_object *p)) {
-    heap_object *p = gc_alloc_space(size);
-
-    memset(p, 0, size+sizeof(heap_object));
-    p->size = (uint32_t)size;
-    p->chase_ptrs = chase_ptrs;
-    return p; // spend hour looking for bug; forgot this
+//    gc_mark_live(); // fills live_objects
 }
 
 int gc_num_roots() {
@@ -108,7 +134,7 @@ static void gc_mark_live() {
         heap_object *p = *_roots[i];
         if (p != NULL) {
             if (DEBUG) printf("root=%p\n", p);
-            if ( gc_in_heap(p) ) {
+            if ( ptr_is_in_heap(p) ) {
                 gc_mark_object(p);
             }
         }
@@ -122,27 +148,7 @@ static void gc_mark_object(heap_object *p) {
         if (DEBUG) printf("mark %p\n", p);
         p->marked = 1;
         // check for tracked heap ptrs in this object
-        p->chase_ptrs(p);
     }
-}
-
-static bool gc_in_heap(heap_object *p) {
-    return p >= (heap_object *) start_of_heap && p <= (heap_object *) end_of_heap;
-}
-
-/** Allocate size bytes in the heap; if full, gc() */
-static void *gc_alloc_space(size_t size) {
-	size = request2size(size);
-    if (next_free + size > end_of_heap) {
-        gc(); // try to collect        
-        if (next_free + size > end_of_heap) { // try again
-            return NULL;                      // oh well, no room. puke
-        }
-    }
-
-    void *p = next_free;
-    next_free += size;
-    return p;
 }
 
 static void unmark_objects() {
