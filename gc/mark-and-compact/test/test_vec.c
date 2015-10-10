@@ -49,30 +49,48 @@ void test_init_shutdown() {
 	assert_equal(0, gc_num_roots());
 }
 
-void single_vector() {
+void alloc_single_vector() {
 	Vector *p = Vector_alloc(10);
 	assert_addr_not_equal(p, NULL);
 	assert_equal(p->length, 10);
 	size_t expected_size = align_to_word_boundary(sizeof(Vector) + p->length * sizeof(double));
 	assert_equal(p->header.size, expected_size);
 	assert_str_equal(p->header.metadata->name, "Vector");
+
 	Heap_Info info = get_heap_info();
 	assert_addr_equal(p, info.start_of_heap);
 	assert_addr_equal(info.next_free, ((void *)p) + expected_size);
 	assert_equal(info.busy_size, expected_size);
 }
 
-void single_string() {
+void alloc_single_string() {
 	String *p = String_alloc(10);
 	assert_addr_not_equal(p, NULL);
 	assert_equal(p->length, 10);
 	size_t expected_size = align_to_word_boundary(sizeof(String) + p->length * sizeof(char));
 	assert_equal(p->header.size, expected_size);
 	assert_str_equal(p->header.metadata->name, "String");
+
 	Heap_Info info = get_heap_info();
 	assert_addr_equal(p, info.start_of_heap);
 	assert_addr_equal(info.next_free, ((void *)p) + expected_size);
 	assert_equal(info.busy_size, expected_size);
+}
+
+void alloc_two_vectors() {
+	Vector *p = Vector_alloc(10);
+	Vector *q = Vector_alloc(5);
+	assert_addr_not_equal(p, NULL);
+	assert_addr_not_equal(q, NULL);
+	assert_addr_not_equal(p,q);
+
+	Heap_Info info = get_heap_info();
+	size_t p_expected_size = align_to_word_boundary(sizeof(Vector) + p->length * sizeof(double));
+	size_t q_expected_size = align_to_word_boundary(sizeof(Vector) + q->length * sizeof(double));
+	assert_addr_equal(p, info.start_of_heap);
+	assert_addr_equal(info.next_free, ((void *)q) + q_expected_size);
+	assert_equal(info.busy_size, p_expected_size + q_expected_size);
+	assert_equal(info.free_size, info.heap_size - (p_expected_size + q_expected_size));
 }
 
 int main(int argc, char *argv[]) {
@@ -83,8 +101,10 @@ int main(int argc, char *argv[]) {
 
 	gc_init(HEAP_SIZE);
 
-	test(single_vector);
-	test(single_string);
+	test(alloc_single_vector);
+	test(alloc_single_string);
+
+	test(alloc_two_vectors);
 
 	gc_shutdown();
 
