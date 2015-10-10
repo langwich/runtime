@@ -14,7 +14,7 @@ static heap_object **_roots[MAX_ROOTS];
 /* index of next free space in _roots for a root */
 static int num_roots = 0;
 
-static int heap_size;
+static size_t heap_size;
 static void *start_of_heap;
 static void *end_of_heap;
 static void *next_free;
@@ -32,7 +32,6 @@ static inline bool ptr_is_in_heap(heap_object *p) {
 void gc_debug(bool debug) { DEBUG = debug; }
 
 //static int  gc_object_size(heap_object *p);
-//static void gc_compact_object_list();
 //static void gc_dump();
 //static bool ptr_is_in_heap(heap_object *p);
 //static char *gc_viz_heap();
@@ -64,13 +63,17 @@ void gc_add_addr_of_root(heap_object **p)
     _roots[num_roots++] = p;
 }
 
-heap_object *gc_alloc(size_t size, object_metadata *metadata) {
-	size = request2size(size);  // update size to include header
+heap_object *gc_alloc_with_data(object_metadata *metadata, size_t data_size) {
+	size_t size = request2size(metadata->size + data_size);  // update size to include header and any variably-sized data
 	heap_object *p = gc_alloc_space(size);
 
 	memset(p, 0, size);         // wipe out object's data space and the header
 	p->metadata = metadata;     // make sure object knows where its metadata is
 	return p;
+}
+
+heap_object *gc_alloc(object_metadata *metadata) {
+	return gc_alloc_with_data(metadata, 0);
 }
 
 /** Allocate size bytes in the heap by bumping high-water mark; if full, gc() and try again.
@@ -153,4 +156,21 @@ static void gc_mark_object(heap_object *p) {
 
 static void unmark_objects() {
     // done with live_objects, wack it
+}
+
+/* Walk heap jumping by size field of chunk header. Return an info record. */
+Heap_Info get_heap_info() {
+	heap_object *p = start_of_heap;
+	uint32_t busy = 0;
+	uint32_t computed_busy_size = 0;
+	uint32_t busy_size = (uint32_t)(next_free - start_of_heap);
+	uint32_t free_size = (uint32_t)(end_of_heap - next_free + 1);
+	while ( p>=start_of_heap && p<next_free ) { // stay inbounds, walking heap
+		// track
+		busy++;
+		computed_busy_size += p->metadata->size;
+		p = (heap_object *)((void *) p + p->metadata->size);
+	}
+	return (Heap_Info){ start_of_heap, end_of_heap, next_free, heap_size,
+	                    busy, computed_busy_size, busy_size, free_size };
 }

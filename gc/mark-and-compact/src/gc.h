@@ -17,7 +17,6 @@ typedef struct {
 /* stuff that every instance in the heap must have at the beginning (unoptimized) */
 typedef struct _heap_object {
 	object_metadata *metadata;
-	bool busy;  	    // allocated if true, free if false
 	bool marked;	    // used during the mark phase of garbage collection
 	struct _heap_object *forwarded; 			// where we've moved this object during collection
 //	char data[];        // nothing allocated; just a label to location of actual instance data
@@ -26,11 +25,14 @@ typedef struct _heap_object {
 // GC interface
 
 typedef struct {
-	int heap_size;    // total space obtained from OS
-	int busy;
-	int busy_size;
-	int free;
-	int free_size;
+	void *start_of_heap;    // first byte of heap
+	void *end_of_heap;      // last byte of heap
+	void *next_free;        // next addr where we'll allocate an object
+	int heap_size;          // total space obtained from OS
+	int busy;               // num allocated objects
+	int computed_busy_size; // total allocated size computed by walking heap
+	int busy_size;          // size from calculation
+	int free_size;          // size from calculation
 } Heap_Info;
 
 /* Initialize a heap with a certain size for use with the garbage collector */
@@ -43,14 +45,17 @@ extern void gc_shutdown();
  * to the start of the heap.
  */
 extern void gc();
-extern heap_object *gc_alloc(size_t size, object_metadata *metadata);
+extern heap_object *gc_alloc_with_data(object_metadata *metadata, size_t data_size); // for Vectors, Strings, ...
+extern heap_object *gc_alloc(object_metadata *metadata);                             // fixed size objects
 extern void gc_add_addr_of_root(heap_object **p);
+
+extern Heap_Info get_heap_info();
 
 #define gc_begin_func()		int __save = gc_num_roots()
 #define gc_end_func()		gc_set_num_roots(__save)
-static inline void gc_add_root(p) {	gc_add_addr_of_root((heap_object **)&p); }
+static inline void gc_add_root(void *p) {	gc_add_addr_of_root((heap_object **)&p); }
 
-// peek into internals for testing and hidden use in macros
+// GC internals; peek into internals for testing and hidden use in macros
 
 extern void gc_debug(bool debug);
 extern char *gc_get_state();
