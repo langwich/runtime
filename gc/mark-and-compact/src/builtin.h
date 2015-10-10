@@ -37,7 +37,7 @@ static inline Vector *Vector_alloc(int length) {
 }
 
 static inline String *String_alloc(int length) {
-	String *p = (String *)gc_alloc(&Vector_metadata, sizeof(String) + length * sizeof(char));
+	String *p = (String *)gc_alloc(&String_metadata, sizeof(String) + length * sizeof(char));
 	p->length = length;
 	return p;
 }

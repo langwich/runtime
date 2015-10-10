@@ -62,6 +62,19 @@ void single_vector() {
 	assert_equal(info.busy_size, expected_size);
 }
 
+void single_string() {
+	String *p = String_alloc(10);
+	assert_addr_not_equal(p, NULL);
+	assert_equal(p->length, 10);
+	size_t expected_size = align_to_word_boundary(sizeof(String) + p->length * sizeof(char));
+	assert_equal(p->header.size, expected_size);
+	assert_str_equal(p->header.metadata->name, "String");
+	Heap_Info info = get_heap_info();
+	assert_addr_equal(p, info.start_of_heap);
+	assert_addr_equal(info.next_free, ((void *)p) + expected_size);
+	assert_equal(info.busy_size, expected_size);
+}
+
 int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
@@ -71,6 +84,7 @@ int main(int argc, char *argv[]) {
 	gc_init(HEAP_SIZE);
 
 	test(single_vector);
+	test(single_string);
 
 	gc_shutdown();
 
