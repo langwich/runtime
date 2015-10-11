@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include <string.h>
-#include "bitset.h"
+#include <bitset.h>
 #include "cunit.h"
 
 #define HEAP_SIZE           4096
