@@ -160,6 +160,40 @@ void gc_after_single_vector_two_roots() {
 	assert_equal(info.free_size, info.heap_size);
 }
 
+void gc_compacts_vectors() {
+	const int N = 5;
+	Vector *v[N];
+	for (int i=0; i<N; i++) { gc_add_root(&v[i]); }
+
+	for (int i=0; i<N; i++) { v[i] = Vector_alloc(i+1); }
+
+	assert_equal(gc_num_live_objects(), N);
+	gc();
+	assert_equal(gc_num_live_objects(), N);
+
+	// kill a few and see if it compacts
+	v[0] = NULL;
+	v[2] = NULL;
+	v[3] = NULL;
+	// v[1], v[4] should slide to front of heap
+
+	gc();
+	assert_equal(gc_num_live_objects(), 2);
+
+
+//	p = NULL;
+//	gc();
+//	assert_equal(gc_num_live_objects(), 1); // still a ptr
+//
+//	q = NULL;
+//	gc();
+//	assert_equal(gc_num_live_objects(), 0); // no more roots into heap
+//
+//	Heap_Info info = get_heap_info();
+//	assert_equal(info.busy_size, 0);
+//	assert_equal(info.free_size, info.heap_size);
+}
+
 int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
@@ -173,6 +207,7 @@ int main(int argc, char *argv[]) {
 	test(gc_after_single_vector_one_root);
 	test(gc_after_single_vector_one_root_then_kill_ptr);
 	test(gc_after_single_vector_two_roots);
+	test(gc_compacts_vectors);
 
 	return 0;
 }

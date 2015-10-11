@@ -3,8 +3,8 @@ project(runtime)
 
 set(MODULE_NAME mark-and-compact)
 set(SOURCE src/gc.c)
+#set(TEST_TARGETS test_basics test_ptr_fields)
 set(TEST_TARGETS test_basics)
-set(TEST_TARGETS test_ptr_fields)
 
 add_library(${MODULE_NAME} ${SOURCE})
 target_link_libraries(${MODULE_NAME} lib)
