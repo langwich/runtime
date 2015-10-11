@@ -93,6 +93,22 @@ void alloc_two_vectors() {
 	assert_equal(info.free_size, info.heap_size - (p_expected_size + q_expected_size));
 }
 
+void gc_after_single_vector_no_roots() {
+	Vector *p = Vector_alloc(10);
+	gc();
+}
+
+void gc_after_single_vector_one_root() {
+	gc_debug(true);
+	Vector *p = Vector_alloc(10);
+	gc_add_root(&p);
+	gc();
+	gc_debug(false);
+	Heap_Info info = get_heap_info();
+	assert_equal(info.busy_size, 0);
+	assert_equal(info.free_size, info.heap_size);
+}
+
 int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
@@ -105,6 +121,10 @@ int main(int argc, char *argv[]) {
 	test(alloc_single_string);
 
 	test(alloc_two_vectors);
+
+	test(gc_after_single_vector_no_roots);
+
+	test(gc_after_single_vector_one_root);
 
 	gc_shutdown();
 

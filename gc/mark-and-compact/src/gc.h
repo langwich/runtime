@@ -8,9 +8,9 @@ extern "C" {
 #endif
 
 typedef struct {
-	char *name;         // "class" name of instances of this type; useful for debugging
-	uint16_t num_ptr_fields;
-	uint16_t offsets[]; // list of offsets from p->data to fields that are managed ptrs
+	char *name;               // "class" name of instances of this type; useful for debugging
+	uint16_t num_ptr_fields;  // how many managed pointers (pointers into the heap) in this object
+	uint16_t field_offsets[]; // list of offsets base of object to fields that are managed ptrs
 } object_metadata;
 
 /* stuff that every instance in the heap must have at the beginning (unoptimized) */
@@ -45,17 +45,14 @@ extern void gc_shutdown();
  * to the start of the heap.
  */
 extern void gc();
-// for Vectors, Strings, ...
-extern heap_object *gc_alloc_with_data(object_metadata *metadata, size_t size, size_t data_size);
 // fixed size objects
 extern heap_object *gc_alloc(object_metadata *metadata, size_t size);
-extern void gc_add_addr_of_root(heap_object **p);
+extern void gc_add_root(void **p);
 
 extern Heap_Info get_heap_info();
 
 #define gc_begin_func()		int __save = gc_num_roots()
 #define gc_end_func()		gc_set_num_roots(__save)
-static inline void gc_add_root(void *p) {	gc_add_addr_of_root((heap_object **)&p); }
 
 // GC internals; peek into internals for testing and hidden use in macros
 
