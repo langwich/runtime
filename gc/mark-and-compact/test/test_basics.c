@@ -134,26 +134,45 @@ void gc_after_single_vector_one_root_then_kill_ptr() {
 	assert_equal(info.free_size, info.heap_size);
 }
 
+void gc_after_single_vector_two_roots() {
+	Vector *p;
+	Vector *q;
+	gc_add_root(&p);
+	gc_add_root(&q);
+
+	p = Vector_alloc(10);
+	q = p;
+
+	assert_equal(gc_num_live_objects(), 1);
+	gc();
+	assert_equal(gc_num_live_objects(), 1); // still there as p,q point at it
+
+	p = NULL;
+	gc();
+	assert_equal(gc_num_live_objects(), 1); // still a ptr
+
+	q = NULL;
+	gc();
+	assert_equal(gc_num_live_objects(), 0); // no more roots into heap
+
+	Heap_Info info = get_heap_info();
+	assert_equal(info.busy_size, 0);
+	assert_equal(info.free_size, info.heap_size);
+}
+
 int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
 
 	test_init_shutdown();
 
-	gc_init(HEAP_SIZE);
-
 	test(alloc_single_vector);
 	test(alloc_single_string);
-
 	test(alloc_two_vectors);
-
 	test(gc_after_single_vector_no_roots);
-
 	test(gc_after_single_vector_one_root);
-
 	test(gc_after_single_vector_one_root_then_kill_ptr);
-
-	gc_shutdown();
+	test(gc_after_single_vector_two_roots);
 
 	return 0;
 }
