@@ -105,17 +105,33 @@ void gc_after_single_vector_no_roots() {
 }
 
 void gc_after_single_vector_one_root() {
-	gc_debug(true);
 	Vector *p = Vector_alloc(10);
 	gc_add_root(&p);
 	assert_equal(gc_num_live_objects(), 1);
 	gc();
 	assert_equal(gc_num_live_objects(), 1); // still there as p points at it
-	gc_debug(false);
+	gc();
+	assert_equal(gc_num_live_objects(), 1); // still there as p points at it
 	Heap_Info info = get_heap_info();
 	size_t expected_size = align_to_word_boundary(sizeof(Vector) + p->length * sizeof(double));
 	assert_equal(info.busy_size, expected_size);
 	assert_equal(info.free_size, info.heap_size - expected_size);
+}
+
+void gc_after_single_vector_one_root_then_kill_ptr() {
+	Vector *p = Vector_alloc(10);
+	gc_add_root(&p);
+	assert_equal(gc_num_live_objects(), 1);
+	gc();
+	assert_equal(gc_num_live_objects(), 1); // still there as p points at it
+
+	p = NULL;
+	gc();
+	assert_equal(gc_num_live_objects(), 0);
+
+	Heap_Info info = get_heap_info();
+	assert_equal(info.busy_size, 0);
+	assert_equal(info.free_size, info.heap_size);
 }
 
 int main(int argc, char *argv[]) {
@@ -134,6 +150,8 @@ int main(int argc, char *argv[]) {
 	test(gc_after_single_vector_no_roots);
 
 	test(gc_after_single_vector_one_root);
+
+	test(gc_after_single_vector_one_root_then_kill_ptr);
 
 	gc_shutdown();
 
