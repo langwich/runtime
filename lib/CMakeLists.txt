@@ -10,5 +10,6 @@ set_target_properties(${MODULE_NAME} PROPERTIES COMPILE_FLAGS "-mpopcnt -mlzcnt 
 target_link_libraries(lib)
 
 INSTALL_LIBRARY(${MODULE_NAME})
+
 ADD_TEST_TARGET(${TEST_TARGETS} ${MODULE_NAME})
 

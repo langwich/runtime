@@ -20,7 +20,7 @@ set(INCLUDE_DIRS
 		malloc/freelist/src
 		wlib/src)
 include_directories(${INCLUDE_DIRS})
-# install all headers
+# install all headers in directories listed above
 foreach(INCLUDE_DIR ${INCLUDE_DIRS})
 	file(GLOB HEADERS ${INCLUDE_DIR}/*.h)
 	install(FILES ${HEADERS}
