@@ -1,3 +1,5 @@
+#include "gc.h"
+
 // Define Vector and String builtin types for Wich
 // This is here for testing but should likely go somewhere else as it is generic and
 // useful for refcounting and any GC implementation. Only requires heap_object definition.
