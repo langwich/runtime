@@ -18,10 +18,10 @@ static size_t heap_size;
 static void *start_of_heap;
 static void *end_of_heap;
 static void *next_free;
+static void *next_free_forwarding; // next_free used during forwarding address computation
 
-static void gc_mark();
-static void gc_mark_object(heap_object *p);
-static void gc_sweep();
+static void mark();
+static void mark_object(heap_object *p);
 
 static void *gc_raw_alloc(size_t size);
 static void update_roots();
@@ -90,12 +90,25 @@ static void *gc_raw_alloc(size_t size) {
 	return p;
 }
 
-static inline void realloc_object(heap_object *p) { p->forwarded = gc_raw_alloc(p->size); }
+static inline void realloc_object(heap_object *p) {
+	void *q = next_free_forwarding; // bump-ptr-allocation
+	next_free_forwarding += p->size;
+	p->forwarded = q; // p now knows where it will end up after compacting
+}
+
 static inline void move_to_forwarding_addr(heap_object *p) { memcpy(p->forwarded, p, p->size); }
+
+static inline void move_object_to_forwarding_addr(heap_object *p) {
+	update_ptr_fields(p);        	// reset ptr fields to point to forwarding address
+	move_to_forwarding_addr(p);		// move objects to compact heap
+	p->marked = false;        		// reset marked bit for live object trace during next collection
+}
 
 static inline bool ptr_is_in_heap(heap_object *p) {
 	return p >= (heap_object *) start_of_heap && p <= (heap_object *) end_of_heap;
 }
+
+static inline void unmark_object(heap_object *p) { p->marked = false; }
 
 void gc_debug(bool debug) { DEBUG = debug; }
 
@@ -121,17 +134,17 @@ void gc_debug(bool debug) { DEBUG = debug; }
 void gc() {
     if (DEBUG) printf("gc_compact\n");
 
-	gc_mark();
+	mark();
 
-	next_free = start_of_heap; // reset to have 0 allocated space so first live object is at start_of_heap
-	foreach_live(realloc_object);   // for each marked (live) object, record forwarding address
+	// reallocate all live objects starting from start_of_heap
+	next_free_forwarding = start_of_heap;
+	foreach_live(realloc_object);  		// for each marked (live) object, record forwarding address
+	next_free = next_free_forwarding;	// next object to be allocated would occur here
 
-	update_roots();
+	// Now that we know where to move objects, update and move objects
+	foreach_live(move_object_to_forwarding_addr);
 
-	foreach_live(update_ptr_fields);
-
-	// move objects to compact heap
-	foreach_live(move_to_forwarding_addr);
+	update_roots();						// make sure all roots point at new object addresses
 }
 
 /* Alter roots to point at new location of live objects (compacted) */
@@ -139,14 +152,13 @@ void update_roots() {
 	for (int i = 0; i < num_roots; i++) {
 		if (DEBUG) printf("move root[%d]=%p\n", i, _roots[i]);
 		heap_object *p = *_roots[i];
-		if (p != NULL && p->marked) {
-			*_roots[i] = p->forwarded; // update root to point at new address
+		if ( p!=NULL ) {
+			*_roots[i] = p->forwarded;	// update root to point at new address
 		}
 	}
 }
 
 void update_ptr_fields(heap_object *p) {
-	p->marked = 0; // reset marked bit in preparation for next GC event
 	int f;
 	if (DEBUG) printf("move ptr fields of %s@%p\n", p->metadata->name, p);
 	for (f = 0; f < p->metadata->num_ptr_fields; f++) {
@@ -172,24 +184,42 @@ void gc_set_num_roots(int roots)
 /* Walk all roots and traverse object graph. Mark all p->mark=true for
    reachable p.
  */
-static void gc_mark() {
+static void mark() {
     for (int i = 0; i < num_roots; i++) {
         if (DEBUG) printf("root[%d]=%p\n", i, _roots[i]);
         heap_object *p = *_roots[i];
         if (p != NULL) {
             if (DEBUG) printf("root=%p\n", p);
             if ( ptr_is_in_heap(p) ) {
-                gc_mark_object(p);
+				mark_object(p);
             }
         }
     }
 }
 
+static void unmark() { foreach_live(unmark_object); }
+
+int gc_num_live_objects() {
+	mark();
+
+	int n = 0;
+	heap_object *p = start_of_heap;
+	while (p >= start_of_heap && p < next_free) { // for each marked (live) object, record forwarding address
+		if (p->marked) {
+			n++;
+		}
+		p = (heap_object *) (((void *) p) + p->size);
+	}
+
+	unmark();
+	return n;
+}
+
 /* recursively walk object graph starting from p. */
-static void gc_mark_object(heap_object *p) {
+static void mark_object(heap_object *p) {
 	if ( !p->marked ) {
 		if (DEBUG) printf("mark %p\n", p);
-		p->marked = 1;
+		p->marked = true;
 		gc_chase_ptr_fields(p);
 	}
 }
@@ -201,16 +231,15 @@ void gc_chase_ptr_fields(const heap_object *p) {// check for tracked heap ptrs i
 		heap_object **ptr_to_obj_ptr_field = (heap_object **) ptr_to_ptr_field;
 		heap_object *target_obj = *ptr_to_obj_ptr_field;
 		if (target_obj != NULL) {
-			gc_mark_object(target_obj);
+			mark_object(target_obj);
 		}
 	}
 }
 
-static void unmark_objects() {
-	// done with live_objects, wack it
-}
-
-/* Walk heap jumping by size field of chunk header. Return an info record. */
+/* Walk heap jumping by size field of chunk header. Return an info record.
+ * All data below highwater mark is considered busy as this routine
+ * does not do liveness trace.
+ */
 Heap_Info get_heap_info() {
 	heap_object *p = start_of_heap;
 	int busy = 0;

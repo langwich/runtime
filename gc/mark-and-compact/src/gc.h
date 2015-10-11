@@ -45,7 +45,6 @@ extern void gc_shutdown();
  * to the start of the heap.
  */
 extern void gc();
-// fixed size objects
 extern heap_object *gc_alloc(object_metadata *metadata, size_t size);
 extern void gc_add_root(void **p);
 
@@ -56,6 +55,7 @@ extern Heap_Info get_heap_info();
 
 // GC internals; peek into internals for testing and hidden use in macros
 
+extern int gc_num_live_objects();
 extern void gc_debug(bool debug);
 extern char *gc_get_state();
 extern long gc_heap_highwater();

@@ -43,6 +43,7 @@ static void teardown()	{ verify_heap(); gc_shutdown(); }
 void test_init_shutdown() {
 	gc_init(HEAP_SIZE);
 	verify_heap();
+	assert_equal(gc_num_live_objects(), 0);
 	gc_shutdown();
 	verify_heap();
 	assert_equal(0, gc_num_roots());
@@ -51,6 +52,7 @@ void test_init_shutdown() {
 void alloc_single_vector() {
 	Vector *p = Vector_alloc(10);
 	assert_addr_not_equal(p, NULL);
+	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	assert_equal(p->length, 10);
 	size_t expected_size = align_to_word_boundary(sizeof(Vector) + p->length * sizeof(double));
 	assert_equal(p->header.size, expected_size);
@@ -65,6 +67,7 @@ void alloc_single_vector() {
 void alloc_single_string() {
 	String *p = String_alloc(10);
 	assert_addr_not_equal(p, NULL);
+	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	assert_equal(p->length, 10);
 	size_t expected_size = align_to_word_boundary(sizeof(String) + p->length * sizeof(char));
 	assert_equal(p->header.size, expected_size);
@@ -78,7 +81,9 @@ void alloc_single_string() {
 
 void alloc_two_vectors() {
 	Vector *p = Vector_alloc(10);
+	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	Vector *q = Vector_alloc(5);
+	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	assert_addr_not_equal(p, NULL);
 	assert_addr_not_equal(q, NULL);
 	assert_addr_not_equal(p,q);
@@ -94,18 +99,23 @@ void alloc_two_vectors() {
 
 void gc_after_single_vector_no_roots() {
 	Vector *p = Vector_alloc(10);
+	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	gc();
+	assert_equal(gc_num_live_objects(), 0);
 }
 
 void gc_after_single_vector_one_root() {
 	gc_debug(true);
 	Vector *p = Vector_alloc(10);
 	gc_add_root(&p);
+	assert_equal(gc_num_live_objects(), 1);
 	gc();
+	assert_equal(gc_num_live_objects(), 1); // still there as p points at it
 	gc_debug(false);
 	Heap_Info info = get_heap_info();
-	assert_equal(info.busy_size, 0);
-	assert_equal(info.free_size, info.heap_size);
+	size_t expected_size = align_to_word_boundary(sizeof(Vector) + p->length * sizeof(double));
+	assert_equal(info.busy_size, expected_size);
+	assert_equal(info.free_size, info.heap_size - expected_size);
 }
 
 int main(int argc, char *argv[]) {
