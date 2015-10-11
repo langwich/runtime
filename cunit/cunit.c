@@ -73,7 +73,14 @@ void _assert_str_not_equal(void *a, void *b, const char as[], const char bs[], c
 }
 
 void cunit_test(void (*f)(), const char funcname[]) {
-	if ( cunit_setup!=NULL ) (*cunit_setup)();
+	if ( cunit_setup!=NULL ) {
+		if ( setjmp(longjmp_env)==0 ) {
+			(*cunit_setup)();
+		}
+		else {
+			fprintf(stderr, "FAIL SETUP %s\n", funcname);
+		}
+	}
 	if ( setjmp(longjmp_env)==0 ) {
 		f();
 		fprintf(stderr, "PASS %s\n", funcname);
@@ -81,5 +88,12 @@ void cunit_test(void (*f)(), const char funcname[]) {
 	else {
 		fprintf(stderr, "FAIL %s\n", funcname);
 	}
-	if ( cunit_teardown!=NULL ) (*cunit_teardown)();
+	if ( cunit_teardown!=NULL ) {
+		if ( setjmp(longjmp_env)==0 ) {
+			(*cunit_teardown)();
+		}
+		else {
+			fprintf(stderr, "FAIL TEARDOWN %s\n", funcname);
+		}
+	}
 }
