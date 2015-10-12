@@ -74,6 +74,8 @@ heap_object *gc_alloc(object_metadata *metadata, size_t size) {
 	size = align_to_word_boundary(size);
 	heap_object *p = gc_raw_alloc(size);
 
+	if ( p==NULL ) return NULL;
+
 	memset(p, 0, size);         // wipe out object's data space and the header
 	p->magic = MAGIC_NUMBER;    // a safety measure; if not magic num, we didn't alloc
 	p->metadata = metadata;     // make sure object knows where its metadata is
