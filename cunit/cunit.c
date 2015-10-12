@@ -24,9 +24,13 @@ SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include "cunit.h"
+#include <signal.h>
+#include <stdlib.h>
 
 void (*cunit_setup)()		= NULL;
 void (*cunit_teardown)()	= NULL;
+
+static const char *current_test_name;
 
 static jmp_buf longjmp_env;
 
@@ -72,7 +76,28 @@ void _assert_str_not_equal(void *a, void *b, const char as[], const char bs[], c
 	}
 }
 
+static void
+handle_sys_errors(int errno)
+{
+	char *signame = "UNKNOWN";
+
+	if (errno == SIGSEGV)
+		signame = "SIGSEGV";
+	else if (errno == SIGBUS)
+		signame = "SIGBUS";
+	fprintf(stderr, "test %s is confused; signal %s (%d)\n", current_test_name, signame, errno);
+	exit(errno);
+}
+
+static inline void
+setup_error_handlers() {
+	signal(SIGSEGV, handle_sys_errors);
+	signal(SIGBUS, handle_sys_errors);
+}
+
 void cunit_test(void (*f)(), const char funcname[]) {
+	current_test_name = funcname;
+	setup_error_handlers(); // ensure signals are trapped each time
 	if ( cunit_setup!=NULL ) {
 		if ( setjmp(longjmp_env)==0 ) {
 			(*cunit_setup)();
