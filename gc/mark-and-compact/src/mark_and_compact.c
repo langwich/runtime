@@ -104,22 +104,23 @@ static inline void realloc_object(heap_object *p) {
 	void *q = next_free_forwarding; // bump-ptr-allocation
 	next_free_forwarding += p->size;
 	p->forwarded = q; // p now knows where it will end up after compacting
-	if (DEBUG) printf("forward %p to %s@%p\n", p, p->metadata->name, p->forwarded);
+	if (DEBUG) printf("forward %p to %s@%p (0x%x bytes)\n", p, p->metadata->name, p->forwarded, p->size);
 }
 
 static inline void move_to_forwarding_addr(heap_object *p) {
-	if (DEBUG) printf("move    %s@%p to %p\n", p->metadata->name, p, p->forwarded);
+	if (DEBUG) printf("    move %p to %p (0x%x bytes)\n", p, p->forwarded, p->size);
 	if ( p->forwarded!=p ) memcpy(p->forwarded, p, p->size);
 }
 
 static inline void move_live_objects_to_forwarding_addr(heap_object *p) {
 	if ( p->marked ) {
+		if (DEBUG) printf("live %s@%p (0x%x bytes)\n", p->metadata->name, p, p->size);
 		update_ptr_fields(p);            // reset ptr fields to point to forwarding address
 		move_to_forwarding_addr(p);      // move objects to compact heap
 		p->marked = false;               // reset marked bit for live object trace during next collection
 	}
 	else {
-		if (DEBUG) printf("dead    %s@%p\n", p->metadata->name, p);
+		if (DEBUG) printf("dead %s@%p (0x%x bytes)\n", p->metadata->name, p, p->size);
 		p->magic = 0;
 	}
 }
@@ -152,24 +153,36 @@ void gc() {
 	mark();
 
 	// reallocate all live objects starting from start_of_heap
+	if (DEBUG) printf("FORWARD\n");
 	next_free_forwarding = start_of_heap;
 	foreach_live(realloc_object);  		// for each marked (live) object, record forwarding address
-	next_free = next_free_forwarding;	// next object to be allocated would occur here
+
+	// make sure all roots point at new object addresses
+	update_roots();                     // can't move objects before updating roots; roots point at *old* location
 
 	// Now that we know where to move objects, update and move objects
 	if (DEBUG) printf("COMPACT\n");
 	foreach_object(move_live_objects_to_forwarding_addr);
 
-	update_roots();						// make sure all roots point at new object addresses
+	// reset highwater mark *after* we've moved everything around; foreach_object() uses next_free
+	next_free = next_free_forwarding;	// next object to be allocated would occur here
 }
 
 /* Alter roots to point at new location of live objects (compacted) */
 static void update_roots() {
-	if (DEBUG) printf("update  roots\n");
+	if (DEBUG) printf("UPDATE ROOTS\n");
 	for (int i = 0; i < num_roots; i++) {
 		heap_object *p = *_roots[i];
-		if (DEBUG) printf("move    root[%d]=%p -> %s@%p\n", i, _roots[i], p!=NULL ? p->metadata->name : "???", p);
 		if ( p!=NULL ) {
+			if (DEBUG) {
+				printf("move root[%d]=%p -> %s@%p (0x%x bytes) to %p\n",
+				       i,
+				       _roots[i],
+				       p->metadata->name,
+				       p,
+				       p->size,
+				       p->forwarded);
+			}
 			*_roots[i] = p->forwarded;	// update root to point at new address
 		}
 	}
@@ -177,7 +190,7 @@ static void update_roots() {
 
 static void update_ptr_fields(heap_object *p) {
 	int f;
-	if (DEBUG) printf("update  %d ptr fields of %s@%p\n", p->metadata->num_ptr_fields, p->metadata->name, p);
+	if (DEBUG) printf("    update %d ptr fields of %s@%p\n", p->metadata->num_ptr_fields, p->metadata->name, p);
 	for (f = 0; f < p->metadata->num_ptr_fields; f++) {
 		int offset_of_ptr_field = p->metadata->field_offsets[f];
 		void *ptr_to_ptr_field = ((void *) p) + offset_of_ptr_field;
@@ -198,13 +211,13 @@ static void mark() {
 	if (DEBUG) printf("MARK\n");
     for (int i = 0; i < num_roots; i++) {
         heap_object *p = *_roots[i];
-	    if (DEBUG) printf("root[%d]=%p -> %s@%p\n", i, _roots[i], p!=NULL ? p->metadata->name : "???", p);
         if ( p != NULL ) {
             if ( ptr_is_in_heap(p) ) {
+	            if (DEBUG) printf("root[%d]=%p -> %s@%p (0x%x bytes)\n", i, _roots[i], p->metadata->name, p, p->size);
 				mark_object(p);
             }
 	        else if ( DEBUG ) {
-	            printf("root[%d] is invalid\n", i);
+	            if (DEBUG) printf("root[%d]=%p -> %p INVALID\n", i, _roots[i], p);
             }
         }
     }
@@ -234,7 +247,7 @@ int gc_num_live_objects() {
 /* recursively walk object graph starting from p. */
 static void mark_object(heap_object *p) {
 	if ( !p->marked ) {
-		if (DEBUG) printf("mark    %s@%p\n", p->metadata->name, p);
+		if (DEBUG) printf("mark    %s@%p (0x%x bytes)\n", p->metadata->name, p, p->size);
 		p->marked = true;
 		gc_chase_ptr_fields(p);
 	}
@@ -281,7 +294,7 @@ void foreach_live(void (*action)(heap_object *)) {
 	while (p >= start_of_heap && p < next_free) { // for each marked (live) object
 		heap_object *_p = (heap_object *)p;
 		if (DEBUG) {
-			if (_p->magic != MAGIC_NUMBER) printf("mark %s@%p\n", _p->metadata->name, _p);
+			if (_p->magic != MAGIC_NUMBER) printf("INVALID ptr %p in foreach_live()\n", _p);
 		}
 		if ( _p->marked ) {
 			action(p);

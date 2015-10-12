@@ -39,8 +39,9 @@ Heap_Info verify_heap() {
 	return info;
 }
 
-static void setup()		{ gc_init(HEAP_SIZE); }
-static void teardown()	{ verify_heap(); gc_shutdown(); }
+static int __save_root_count = 0;
+static void setup()		{ __save_root_count = gc_num_roots(); gc_init(HEAP_SIZE); }
+static void teardown()	{ gc_set_num_roots(__save_root_count); verify_heap(); gc_shutdown(); }
 
 void test_init_shutdown() {
 	gc_init(HEAP_SIZE);
@@ -108,7 +109,7 @@ void gc_after_single_vector_no_roots() {
 
 void gc_after_single_vector_one_root() {
 	Vector *p = Vector_alloc(10);
-	gc_add_root(&p);
+	gc_add_root((void **)&p);
 	assert_equal(gc_num_live_objects(), 1);
 	gc();
 	assert_equal(gc_num_live_objects(), 1); // still there as p points at it
@@ -122,7 +123,7 @@ void gc_after_single_vector_one_root() {
 
 void gc_after_single_vector_one_root_then_kill_ptr() {
 	Vector *p = Vector_alloc(10);
-	gc_add_root(&p);
+	gc_add_root((void **)&p);
 	assert_equal(gc_num_live_objects(), 1);
 	gc();
 	assert_equal(gc_num_live_objects(), 1); // still there as p points at it
@@ -139,8 +140,8 @@ void gc_after_single_vector_one_root_then_kill_ptr() {
 void gc_after_single_vector_two_roots() {
 	Vector *p;
 	Vector *q;
-	gc_add_root(&p);
-	gc_add_root(&q);
+	gc_add_root((void **)&p);
+	gc_add_root((void **)&q);
 
 	p = Vector_alloc(10);
 	q = p;
@@ -163,9 +164,11 @@ void gc_after_single_vector_two_roots() {
 }
 
 void gc_compacts_vectors() {
+	gc_begin_func();
+
 	const int N = 5;
 	Vector *v[N];
-	for (int i=0; i<N; i++) { gc_add_root(&v[i]); }
+	for (int i=0; i<N; i++) { gc_add_root((void **)&v[i]); }
 
 	for (int i=0; i<N; i++) { v[i] = Vector_alloc(i+1); }
 
@@ -181,35 +184,29 @@ void gc_compacts_vectors() {
 
 	gc();
 	assert_equal(gc_num_live_objects(), 2);
+	assert_equal(v[1]->length, 1+1); // make sure they still have correct vec length
+	assert_equal(v[4]->length, 4+1);
 
+	gc_end_func(); // indicate all roots are gone
 
-//	p = NULL;
-//	gc();
-//	assert_equal(gc_num_live_objects(), 1); // still a ptr
-//
-//	q = NULL;
-//	gc();
-//	assert_equal(gc_num_live_objects(), 0); // no more roots into heap
-//
-//	Heap_Info info = get_heap_info();
-//	assert_equal(info.busy_size, 0);
-//	assert_equal(info.free_size, info.heap_size);
+	gc();
+	assert_equal(gc_num_live_objects(), 0);
 }
 
 int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
 
-	gc_debug(true);
-//	test_init_shutdown();
-//
-//	test(alloc_single_vector);
-//	test(alloc_single_string);
-//	test(alloc_two_vectors);
-//	test(gc_after_single_vector_no_roots);
-//	test(gc_after_single_vector_one_root);
-//	test(gc_after_single_vector_one_root_then_kill_ptr);
-//	test(gc_after_single_vector_two_roots);
+	gc_debug(false);
+	test_init_shutdown();
+
+	test(alloc_single_vector);
+	test(alloc_single_string);
+	test(alloc_two_vectors);
+	test(gc_after_single_vector_no_roots);
+	test(gc_after_single_vector_one_root);
+	test(gc_after_single_vector_one_root_then_kill_ptr);
+	test(gc_after_single_vector_two_roots);
 	test(gc_compacts_vectors);
 
 	return 0;
