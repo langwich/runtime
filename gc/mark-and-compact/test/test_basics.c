@@ -198,6 +198,7 @@ int main(int argc, char *argv[]) {
 	cunit_teardown = teardown;
 
 	gc_debug(false);
+
 	test_init_shutdown();
 
 	test(alloc_single_vector);

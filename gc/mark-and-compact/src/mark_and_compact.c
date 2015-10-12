@@ -115,9 +115,8 @@ static inline void move_to_forwarding_addr(heap_object *p) {
 static inline void move_live_objects_to_forwarding_addr(heap_object *p) {
 	if ( p->marked ) {
 		if (DEBUG) printf("live %s@%p (0x%x bytes)\n", p->metadata->name, p, p->size);
-		update_ptr_fields(p);            // reset ptr fields to point to forwarding address
 		move_to_forwarding_addr(p);      // move objects to compact heap
-		p->marked = false;               // reset marked bit for live object trace during next collection
+		p->marked = false;
 	}
 	else {
 		if (DEBUG) printf("dead %s@%p (0x%x bytes)\n", p->metadata->name, p, p->size);
@@ -140,12 +139,16 @@ static inline void unmark_object(heap_object *p) { p->marked = false; }
  *
  * 2. Walk all live objects and compute their forwarding addresses starting from start_of_heap.
  *
- * 3. For each live object:
- * 		a) alter all non-NULL managed pointer fields to point to the forwarding addresses.
- * 		b) physically move object to forwarding address towards front of heap
- * 		c) unmark object
+ * 3. Alter all non-NULL roots to point to the object's forwarding address.
  *
- * 4. Alter all non-NULL roots to point to the object's forwarding address.
+ * 4. For each live object:
+ * 	    a) alter all non-NULL managed pointer fields to point to the forwarding addresses.
+ * 		b) unmark object
+ *
+ * 5. Physically move object to forwarding address towards front of heap and reset marked.
+ *
+ *    This phase must be last as the object stores the forwarding address. When we move,
+ *    we overwrite objects and could kill a forwarding address in a live object.
  */
 void gc() {
     if (DEBUG) printf("GC\n");
@@ -160,9 +163,12 @@ void gc() {
 	// make sure all roots point at new object addresses
 	update_roots();                     // can't move objects before updating roots; roots point at *old* location
 
+	if (DEBUG) printf("UPDATE PTR FIELDS\n");
+	foreach_live(update_ptr_fields);
+
 	// Now that we know where to move objects, update and move objects
 	if (DEBUG) printf("COMPACT\n");
-	foreach_object(move_live_objects_to_forwarding_addr);
+	foreach_object(move_live_objects_to_forwarding_addr); // also visits the dead to wack p->magic
 
 	// reset highwater mark *after* we've moved everything around; foreach_object() uses next_free
 	next_free = next_free_forwarding;	// next object to be allocated would occur here
@@ -190,7 +196,7 @@ static void update_roots() {
 
 static void update_ptr_fields(heap_object *p) {
 	int f;
-	if (DEBUG) printf("    update %d ptr fields of %s@%p\n", p->metadata->num_ptr_fields, p->metadata->name, p);
+	if (DEBUG) printf("update %d ptr fields of %s@%p\n", p->metadata->num_ptr_fields, p->metadata->name, p);
 	for (f = 0; f < p->metadata->num_ptr_fields; f++) {
 		int offset_of_ptr_field = p->metadata->field_offsets[f];
 		void *ptr_to_ptr_field = ((void *) p) + offset_of_ptr_field;
