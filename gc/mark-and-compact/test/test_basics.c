@@ -29,8 +29,11 @@ SOFTWARE.
 
 const size_t HEAP_SIZE = 2000;
 
+void check_magic(heap_object *p) { assert_equal(p->magic, MAGIC_NUMBER); }
+
 Heap_Info verify_heap() {
 	Heap_Info info = get_heap_info();
+	foreach_object(check_magic);
 	assert_equal(info.heap_size, HEAP_SIZE);
 	assert_equal(info.busy_size, info.computed_busy_size);
 	assert_equal(info.heap_size, info.busy_size+info.free_size);
@@ -98,7 +101,7 @@ void alloc_two_vectors() {
 }
 
 void gc_after_single_vector_no_roots() {
-	Vector *p = Vector_alloc(10);
+	Vector_alloc(10);
 	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	gc();
 	assert_equal(gc_num_live_objects(), 0);
@@ -169,7 +172,7 @@ void gc_compacts_vectors() {
 
 	assert_equal(gc_num_live_objects(), N);
 	gc();
-	assert_equal(gc_num_live_objects(), N);
+	assert_equal(gc_num_live_objects(), N); // everybody still there
 
 	// kill a few and see if it compacts
 	v[0] = NULL;
@@ -198,15 +201,16 @@ int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
 
-	test_init_shutdown();
-
-	test(alloc_single_vector);
-	test(alloc_single_string);
-	test(alloc_two_vectors);
-	test(gc_after_single_vector_no_roots);
-	test(gc_after_single_vector_one_root);
-	test(gc_after_single_vector_one_root_then_kill_ptr);
-	test(gc_after_single_vector_two_roots);
+	gc_debug(true);
+//	test_init_shutdown();
+//
+//	test(alloc_single_vector);
+//	test(alloc_single_string);
+//	test(alloc_two_vectors);
+//	test(gc_after_single_vector_no_roots);
+//	test(gc_after_single_vector_one_root);
+//	test(gc_after_single_vector_one_root_then_kill_ptr);
+//	test(gc_after_single_vector_two_roots);
 	test(gc_compacts_vectors);
 
 	return 0;

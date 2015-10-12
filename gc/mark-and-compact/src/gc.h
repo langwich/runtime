@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+static const uint32_t MAGIC_NUMBER = 123456789;
+
 typedef struct {
 	char *name;               // "class" name of instances of this type; useful for debugging
 	uint16_t num_ptr_fields;  // how many managed pointers (pointers into the heap) in this object
@@ -15,6 +17,7 @@ typedef struct {
 
 /* stuff that every instance in the heap must have at the beginning (unoptimized) */
 typedef struct _heap_object {
+	uint32_t magic;     // used in debugging
 	object_metadata *metadata;
 	uint32_t size;      // total size including header information used by each heap_object
 	bool marked;	    // used during the mark phase of garbage collection
@@ -29,7 +32,8 @@ typedef struct {
 	void *end_of_heap;      // last byte of heap
 	void *next_free;        // next addr where we'll allocate an object
 	int heap_size;          // total space obtained from OS
-	int busy;               // num allocated objects
+	int busy;               // num allocated objects (computed by walking heap)
+	int live;               // num live objects (computed by walking heap)
 	int computed_busy_size; // total allocated size computed by walking heap
 	int busy_size;          // size from calculation
 	int free_size;          // size from calculation
@@ -61,6 +65,8 @@ extern char *gc_get_state();
 extern long gc_heap_highwater();
 extern int gc_num_roots();
 extern void gc_set_num_roots(int roots);
+extern void foreach_live(void (*action)(heap_object *));
+extern void foreach_object(void (*action)(heap_object *));
 
 static const size_t WORD_SIZE_IN_BYTES = sizeof(void *);
 static const size_t ALIGN_MASK = WORD_SIZE_IN_BYTES - 1;

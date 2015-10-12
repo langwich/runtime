@@ -9,7 +9,6 @@ static void mark_object(heap_object *p);
 
 static void *gc_raw_alloc(size_t size);
 static void update_roots();
-static void foreach_live(void (*action)(heap_object *));
 static void gc_chase_ptr_fields(const heap_object *p);
 static void update_ptr_fields(heap_object *p);
 
@@ -74,6 +73,7 @@ heap_object *gc_alloc(object_metadata *metadata, size_t size) {
 	heap_object *p = gc_raw_alloc(size);
 
 	memset(p, 0, size);         // wipe out object's data space and the header
+	p->magic = MAGIC_NUMBER;    // a safety measure; if not magic num, we didn't alloc
 	p->metadata = metadata;     // make sure object knows where its metadata is
 	p->size = (uint32_t)size;
 	return p;
@@ -102,18 +102,30 @@ static inline void realloc_object(heap_object *p) {
 	void *q = next_free_forwarding; // bump-ptr-allocation
 	next_free_forwarding += p->size;
 	p->forwarded = q; // p now knows where it will end up after compacting
+	if (DEBUG) printf("forward %p to %s@%p\n", p, p->metadata->name, p->forwarded);
 }
 
-static inline void move_to_forwarding_addr(heap_object *p) { memcpy(p->forwarded, p, p->size); }
+static inline void move_to_forwarding_addr(heap_object *p) {
+	if (DEBUG) printf("move    %s@%p to %p\n", p->metadata->name, p, p->forwarded);
+	if ( p->forwarded!=p ) memcpy(p->forwarded, p, p->size);
+}
 
-static inline void move_object_to_forwarding_addr(heap_object *p) {
-	update_ptr_fields(p);        	// reset ptr fields to point to forwarding address
-	move_to_forwarding_addr(p);		// move objects to compact heap
-	p->marked = false;        		// reset marked bit for live object trace during next collection
+static inline void move_live_objects_to_forwarding_addr(heap_object *p) {
+	if ( p->marked ) {
+		update_ptr_fields(p);            // reset ptr fields to point to forwarding address
+		move_to_forwarding_addr(p);      // move objects to compact heap
+		p->marked = false;               // reset marked bit for live object trace during next collection
+	}
+	else {
+		if (DEBUG) printf("dead    %s@%p\n", p->metadata->name, p);
+		p->magic = 0;
+	}
 }
 
 static inline bool ptr_is_in_heap(heap_object *p) {
-	return p >= (heap_object *) start_of_heap && p <= (heap_object *) end_of_heap;
+	return  p >= (heap_object *) start_of_heap &&
+			p <= (heap_object *) end_of_heap &&
+			p->magic == MAGIC_NUMBER;
 }
 
 static inline void unmark_object(heap_object *p) { p->marked = false; }
@@ -133,7 +145,7 @@ static inline void unmark_object(heap_object *p) { p->marked = false; }
  * 4. Alter all non-NULL roots to point to the object's forwarding address.
  */
 void gc() {
-    if (DEBUG) printf("gc_compact\n");
+    if (DEBUG) printf("GC\n");
 
 	mark();
 
@@ -143,16 +155,18 @@ void gc() {
 	next_free = next_free_forwarding;	// next object to be allocated would occur here
 
 	// Now that we know where to move objects, update and move objects
-	foreach_live(move_object_to_forwarding_addr);
+	if (DEBUG) printf("COMPACT\n");
+	foreach_object(move_live_objects_to_forwarding_addr);
 
 	update_roots();						// make sure all roots point at new object addresses
 }
 
 /* Alter roots to point at new location of live objects (compacted) */
 static void update_roots() {
+	if (DEBUG) printf("update  roots\n");
 	for (int i = 0; i < num_roots; i++) {
-		if (DEBUG) printf("move root[%d]=%p\n", i, _roots[i]);
 		heap_object *p = *_roots[i];
+		if (DEBUG) printf("move    root[%d]=%p -> %s@%p\n", i, _roots[i], p!=NULL ? p->metadata->name : "???", p);
 		if ( p!=NULL ) {
 			*_roots[i] = p->forwarded;	// update root to point at new address
 		}
@@ -161,7 +175,7 @@ static void update_roots() {
 
 static void update_ptr_fields(heap_object *p) {
 	int f;
-	if (DEBUG) printf("move ptr fields of %s@%p\n", p->metadata->name, p);
+	if (DEBUG) printf("update  %d ptr fields of %s@%p\n", p->metadata->num_ptr_fields, p->metadata->name, p);
 	for (f = 0; f < p->metadata->num_ptr_fields; f++) {
 		int offset_of_ptr_field = p->metadata->field_offsets[f];
 		void *ptr_to_ptr_field = ((void *) p) + offset_of_ptr_field;
@@ -179,19 +193,25 @@ static void update_ptr_fields(heap_object *p) {
    reachable p.
  */
 static void mark() {
+	if (DEBUG) printf("MARK\n");
     for (int i = 0; i < num_roots; i++) {
-        if (DEBUG) printf("root[%d]=%p\n", i, _roots[i]);
         heap_object *p = *_roots[i];
-        if (p != NULL) {
-            if (DEBUG) printf("root=%p\n", p);
+	    if (DEBUG) printf("root[%d]=%p -> %s@%p\n", i, _roots[i], p!=NULL ? p->metadata->name : "???", p);
+        if ( p != NULL ) {
             if ( ptr_is_in_heap(p) ) {
 				mark_object(p);
+            }
+	        else if ( DEBUG ) {
+	            printf("root[%d] is invalid\n", i);
             }
         }
     }
 }
 
-static void unmark() { foreach_live(unmark_object); }
+static void unmark() {
+	if (DEBUG) printf("UNMARK\n");
+	foreach_live(unmark_object);
+}
 
 int gc_num_live_objects() {
 	mark();
@@ -212,7 +232,7 @@ int gc_num_live_objects() {
 /* recursively walk object graph starting from p. */
 static void mark_object(heap_object *p) {
 	if ( !p->marked ) {
-		if (DEBUG) printf("mark %p\n", p);
+		if (DEBUG) printf("mark    %s@%p\n", p->metadata->name, p);
 		p->marked = true;
 		gc_chase_ptr_fields(p);
 	}
@@ -239,6 +259,7 @@ static void gc_chase_ptr_fields(const heap_object *p) {// check for tracked heap
 Heap_Info get_heap_info() {
 	void *p = start_of_heap;
 	int busy = 0;
+	int live = gc_num_live_objects();
 	int computed_busy_size = 0;
 	int busy_size = (uint32_t)(next_free - start_of_heap);
 	int free_size = (uint32_t)(end_of_heap - next_free + 1);
@@ -249,16 +270,28 @@ Heap_Info get_heap_info() {
 		p = p + ((heap_object *)p)->size;
 	}
 	return (Heap_Info){ start_of_heap, end_of_heap, next_free, (uint32_t)heap_size,
-	                    busy, computed_busy_size, busy_size, free_size };
+	                    busy, live, computed_busy_size, busy_size, free_size };
 }
 
 /* Apply function action to each marked (live) object in the heap */
 void foreach_live(void (*action)(heap_object *)) {
 	void *p = start_of_heap;
 	while (p >= start_of_heap && p < next_free) { // for each marked (live) object
-		if (((heap_object *)p)->marked) {
+		heap_object *_p = (heap_object *)p;
+		if (DEBUG) {
+			if (_p->magic != MAGIC_NUMBER) printf("mark %s@%p\n", _p->metadata->name, _p);
+		}
+		if ( _p->marked ) {
 			action(p);
 		}
+		p = p + _p->size;
+	}
+}
+
+void foreach_object(void (*action)(heap_object *)) {
+	void *p = start_of_heap;
+	while (p >= start_of_heap && p < next_free) { // for each object in the heap currently allocated
+		action(p);
 		p = p + ((heap_object *)p)->size;
 	}
 }
