@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "gc.h"
-#include "morecore.h"
+
+#include <mark_and_compact.h>
+#include <wich.h>
+#include <morecore.h>
 
 static void mark();
 static void mark_object(heap_object *p);
@@ -294,4 +296,26 @@ void foreach_object(void (*action)(heap_object *)) {
 		action(p);
 		p = p + ((heap_object *)p)->size;
 	}
+}
+
+object_metadata Vector_metadata = {
+		"Vector",
+		0
+};
+
+object_metadata String_metadata = {
+		"String",
+		0
+};
+
+Vector *Vector_alloc(size_t length) {
+	Vector *p = (Vector *)gc_alloc(&Vector_metadata, sizeof(Vector) + length * sizeof(double));
+	p->length = length;
+	return p;
+}
+
+String *String_alloc(size_t length) {
+	String *p = (String *)gc_alloc(&String_metadata, sizeof(String) + length * sizeof(char));
+	p->length = length;
+	return p;
 }

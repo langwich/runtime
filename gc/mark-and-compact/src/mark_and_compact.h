@@ -1,7 +1,8 @@
-#ifndef GC_H_
-#define GC_H_
+#ifndef RUNTIME_MARK_AND_COMPACT_H_
+#define RUNTIME_MARK_AND_COMPACT_H_
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,12 +17,12 @@ typedef struct {
 } object_metadata;
 
 /* stuff that every instance in the heap must have at the beginning (unoptimized) */
-typedef struct _heap_object {
+typedef struct heap_object {
 	uint32_t magic;     // used in debugging
 	object_metadata *metadata;
 	uint32_t size;      // total size including header information used by each heap_object
 	bool marked;	    // used during the mark phase of garbage collection
-	struct _heap_object *forwarded; 			// where we've moved this object during collection
+	struct heap_object *forwarded; 			// where we've moved this object during collection
 //	char data[];        // nothing allocated; just a label to location of actual instance data
 } heap_object;
 
@@ -87,6 +88,7 @@ static inline size_t align_to_word_boundary(size_t n) {
 static inline size_t request2size(size_t n) {
 	return align_to_word_boundary(size_with_header(n));
 }
+
 
 #ifdef __cplusplus
 }

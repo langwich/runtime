@@ -23,10 +23,11 @@ SOFTWARE.
 */
 #include <stdio.h>
 #include <stdlib.h>
-#include <builtin.h>
-#include <gc.h>
 #include <string.h>
+
 #include "cunit.h"
+#include "mark_and_compact.h"
+#include "wich.h"
 
 const size_t HEAP_SIZE = 2000;
 

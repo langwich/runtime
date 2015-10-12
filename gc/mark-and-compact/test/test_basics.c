@@ -22,10 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <stdio.h>
-#include <stdlib.h>
-#include <builtin.h>
-#include <gc.h>
-#include "cunit.h"
+#include <mark_and_compact.h>
+#include <wich.h>
+#include <cunit.h>
 
 const size_t HEAP_SIZE = 2000;
 
@@ -58,8 +57,8 @@ void alloc_single_vector() {
 	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	assert_equal(p->length, 10);
 	size_t expected_size = align_to_word_boundary(sizeof(Vector) + p->length * sizeof(double));
-	assert_equal(p->header.size, expected_size);
-	assert_str_equal(p->header.metadata->name, "Vector");
+	assert_equal(p->metadata.size, expected_size);
+	assert_str_equal(p->metadata.metadata->name, "Vector");
 
 	Heap_Info info = get_heap_info();
 	assert_addr_equal(p, info.start_of_heap);
@@ -73,8 +72,8 @@ void alloc_single_string() {
 	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	assert_equal(p->length, 10);
 	size_t expected_size = align_to_word_boundary(sizeof(String) + p->length * sizeof(char));
-	assert_equal(p->header.size, expected_size);
-	assert_str_equal(p->header.metadata->name, "String");
+	assert_equal(p->metadata.size, expected_size);
+	assert_str_equal(p->metadata.metadata->name, "String");
 
 	Heap_Info info = get_heap_info();
 	assert_addr_equal(p, info.start_of_heap);

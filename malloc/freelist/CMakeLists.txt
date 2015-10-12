@@ -6,7 +6,7 @@ set(SOURCE src/freelist.c)
 set(TEST_TARGETS test_basic_sanity test_replay test_size_adjust)
 
 add_library(${MODULE_NAME} ${SOURCE})
-target_link_libraries(${MODULE_NAME} lib)
+target_link_libraries(${MODULE_NAME} malloc-common)
 
 INSTALL_LIBRARY(${MODULE_NAME})
 
