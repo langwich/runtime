@@ -3,5 +3,6 @@ project(runtime)
 
 set(MODULE_NAME gc)
 
+#add_subdirectory(lib)
 add_subdirectory(mark-and-compact)
 

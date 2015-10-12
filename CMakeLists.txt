@@ -16,7 +16,7 @@ set(CMAKE_INSTALL_PREFIX ${INSTALL_DIR})
 set(INCLUDE_DIRS
 		cunit
 		gc/mark-and-compact/src
-		lib/src
+		malloc/lib/src
 		malloc/freelist/src
 		wlib/src)
 include_directories(${INCLUDE_DIRS})
@@ -49,7 +49,7 @@ endfunction()
 ################# S u b d i r s #################
 
 # add all subdirectories
- set(SUB_DIRS lib malloc wlib cunit gc)
+ set(SUB_DIRS malloc wlib cunit gc)
 foreach(SUB_DIR ${SUB_DIRS})
 	add_subdirectory(${SUB_DIR})
 endforeach()
