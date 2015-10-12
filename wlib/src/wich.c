@@ -26,9 +26,8 @@ SOFTWARE.
 #include <string.h>
 #include <stdio.h>
 //#define DEBUG
-#include "wich.h"
-#include "refcounting.h"
-
+#include <wich.h>
+#include <refcounting.h>
 static const int MAX_ROOTS = 1024;
 static int sp = -1; // grow upwards; inc then set for push.
 static heap_object **roots[MAX_ROOTS];

@@ -22,11 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#ifndef RUNTIME_REFCOUNTING_H_
+#define RUNTIME_REFCOUNTING_H_
+
+typedef struct {
+	int refs;    		// refs to this object
+} heap_object;
+
 /* Announce a heap reference so we can _deref() all before exiting a function */
 void _heapvar(heap_object **p);
 void _deref(int,int);
 int _heap_sp();
 void _set_sp(int);
+
 
 // enter/exit a function
 #define ENTER()		int _funcsp = _heap_sp();// printf("ENTER; sp=%d\n", _funcsp);
@@ -72,3 +80,13 @@ static inline void DEREF(void *x) {
 		}
 	}
 }
+
+static inline void COPY_ON_WRITE(void *x) {
+	if ( x!=NULL && ((heap_object *)x)->refs > 1 ) {
+		((heap_object *)x)->refs--;
+		x = Vector_copy(x);
+		((heap_object *)x)->refs = 1;
+	}
+}
+
+#endif

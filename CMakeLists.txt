@@ -15,7 +15,9 @@ set(CMAKE_INSTALL_PREFIX ${INSTALL_DIR})
 # inherited by subdirectories
 set(INCLUDE_DIRS
 		cunit
+		gc
 		gc/mark-and-compact/src
+		malloc
 		malloc/lib/src
 		malloc/freelist/src
 		wlib/src)

@@ -22,13 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#ifndef RUNTIME_WICH_H_
+#define RUNTIME_WICH_H_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-
-typedef struct {
-	int refs;    		// refs to this object
-} heap_object;
 
 typedef struct {
 	heap_object metadata;
@@ -38,6 +37,7 @@ typedef struct {
 
 typedef struct string {
 	heap_object metadata;
+	int length;
 	char str[];
 	/* the string starts at the end of fixed fields; this field
 	 * does not take any room in the structure; it's really just a
@@ -53,6 +53,8 @@ String *String_from_char(char c);
 String *String_alloc(size_t size);
 String *String_add(String *s, String *t);
 String *String_copy(String *s);
+String *String_alloc(size_t length);
+
 void print_string(String *s);
 
 Vector *Vector_empty();
@@ -66,20 +68,13 @@ Vector *Vector_add(Vector *a, Vector *b);
 Vector *Vector_sub(Vector *a, Vector *b);
 Vector *Vector_mul(Vector *a, Vector *b);
 Vector *Vector_div(Vector *a, Vector *b);
+Vector *Vector_alloc(size_t length);
 
 void print_vector(Vector *a);
 
 // Following malloc/free are the hook where we create our own malloc/free or use the system's
 void *wich_malloc(size_t nbytes);
 void wich_free(heap_object *p);
-
-static inline void COPY_ON_WRITE(void *x) {
-	if ( x!=NULL && ((heap_object *)x)->refs > 1 ) {
-		((heap_object *)x)->refs--;
-		x = Vector_copy(x);
-		((heap_object *)x)->refs = 1;
-	}
-}
 
 
 static void
@@ -99,3 +94,5 @@ static inline void setup_error_handlers() {
 	signal(SIGSEGV, handle_sys_errors);
 	signal(SIGBUS, handle_sys_errors);
 }
+
+#endif
