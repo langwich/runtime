@@ -60,14 +60,6 @@ Vector *Vector_empty()
 	return v;
 }
 
-Vector *Vector_alloc(size_t size)
-{
-	Vector *v = wich_malloc(sizeof(Vector) + size * sizeof(double));
-	v->metadata.refs = 0;
-	v->length = size;
-	return v;
-}
-
 Vector *Vector_add(Vector *a, Vector *b)
 {
 	REF(a);
@@ -105,13 +97,6 @@ void print_vector(Vector *a)
 	printf("%s\n", vs);
 	free(vs);
 	DEREF(a);
-}
-
-String *String_alloc(size_t size)
-{
-	String *s = (String *)wich_malloc(sizeof(String) + size * sizeof(char) + 1); // include \0 of string
-	s->metadata.refs = 0;
-	return s;
 }
 
 String *String_new(char *orig)

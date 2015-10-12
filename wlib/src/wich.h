@@ -50,16 +50,13 @@ typedef struct string {
 
 String *String_new(char *s);
 String *String_from_char(char c);
-String *String_alloc(size_t size);
 String *String_add(String *s, String *t);
 String *String_copy(String *s);
-String *String_alloc(size_t length);
 
 void print_string(String *s);
 
 Vector *Vector_empty();
 Vector *Vector_copy(Vector *v);
-Vector *Vector_alloc(size_t size);
 Vector *Vector_new(double *data, size_t n);
 Vector *Vector_append(Vector *a, double value);
 Vector *Vector_append_vector(Vector *a, Vector *b);
@@ -68,7 +65,6 @@ Vector *Vector_add(Vector *a, Vector *b);
 Vector *Vector_sub(Vector *a, Vector *b);
 Vector *Vector_mul(Vector *a, Vector *b);
 Vector *Vector_div(Vector *a, Vector *b);
-Vector *Vector_alloc(size_t length);
 
 void print_vector(Vector *a);
 
