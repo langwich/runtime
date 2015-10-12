@@ -3,5 +3,6 @@ project(runtime)
 
 set(MODULE_NAME malloc)
 
+add_subdirectory(lib)
 add_subdirectory(freelist)
 
