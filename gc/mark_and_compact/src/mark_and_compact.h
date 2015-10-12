@@ -42,7 +42,7 @@ extern void gc_init(int size);
 /* Announce you are done with the heap managed by the garbage collector */
 extern void gc_shutdown();
 
-/* Perform a mark-and-compact garbage collection, moving all live objects
+/* Perform a mark_and_compact garbage collection, moving all live objects
  * to the start of the heap.
  */
 extern void gc();
