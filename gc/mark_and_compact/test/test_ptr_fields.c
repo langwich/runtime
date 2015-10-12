@@ -77,7 +77,7 @@ static void teardown()	{ verify_heap(); gc_shutdown(); }
 
 void one_user_set_ptr_null() {
 	User *u = create_one_user("parrt");
-	gc_add_root(&u);
+	gc_add_root((void **)&u);
 
 	Heap_Info info = get_heap_info();
 	size_t u_expected_size = align_to_word_boundary(sizeof(User));
@@ -104,7 +104,7 @@ void one_user_ptr_out_of_scope() {
 	gc_begin_func();
 
 	User *u = create_one_user("parrt");
-	gc_add_root(&u);
+	gc_add_root((void **)&u);
 
 	Heap_Info info = get_heap_info();
 	size_t u_expected_size = align_to_word_boundary(sizeof(User));
@@ -130,7 +130,7 @@ void one_user_ptr_out_of_scope() {
 
 void two_employees_set_ptr_null() { // just one root pointing to parrt that points at tombu
 	Employee *e = create_one_employee("parrt");
-	gc_add_root(&e);
+	gc_add_root((void **)&e);
 	assert_equal(gc_num_live_objects(), 2);
 	String *last_object = e->name;
 
@@ -163,7 +163,7 @@ void two_employees_set_ptr_null() { // just one root pointing to parrt that poin
 
 void one_employee_in_cycle_set_ptr_null() { // just one root pointing to parrt that points at itself
 	Employee *e = create_one_employee("parrt");
-	gc_add_root(&e);
+	gc_add_root((void **)&e);
 	assert_equal(gc_num_live_objects(), 2);
 	String *last_object = e->name;
 
