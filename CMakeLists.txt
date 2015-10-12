@@ -16,7 +16,7 @@ set(CMAKE_INSTALL_PREFIX ${INSTALL_DIR})
 set(INCLUDE_DIRS
 		cunit
 		gc
-		gc/mark-and-compact/src
+		gc/mark_and_compact/src
 		malloc
 		malloc/lib/src
 		malloc/freelist/src

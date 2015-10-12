@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 project(runtime)
 
-set(MODULE_NAME malloc-common)
+set(MODULE_NAME malloc_common)
 set(SOURCE src/morecore.c src/bitset.c)
 set(TEST_TARGETS test_bitset_basics)
 

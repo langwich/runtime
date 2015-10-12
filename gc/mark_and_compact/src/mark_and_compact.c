@@ -132,7 +132,7 @@ static inline bool ptr_is_in_heap(heap_object *p) {
 
 static inline void unmark_object(heap_object *p) { p->marked = false; }
 
-/* Perform a mark-and-compact garbage collection, moving all live objects
+/* Perform a mark_and_compact garbage collection, moving all live objects
  * to the start of the heap. Anything that we don't mark is dead.
  *
  * 1. Walk object graph starting from roots, marking live objects.

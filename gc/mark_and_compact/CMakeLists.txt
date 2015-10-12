@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.2)
 project(runtime)
 
-set(MODULE_NAME mark-and-compact)
+set(MODULE_NAME mark_and_compact)
 set(SOURCE src/mark_and_compact.c)
 set(TEST_TARGETS test_ptr_fields test_basics)
 
 add_library(${MODULE_NAME} ${SOURCE})
-target_link_libraries(${MODULE_NAME} malloc-common)
+target_link_libraries(${MODULE_NAME} malloc_common)
 
 INSTALL_LIBRARY(${MODULE_NAME})
 
