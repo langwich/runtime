@@ -27,6 +27,7 @@ SOFTWARE.
 #include <cunit.h>
 #include <string.h>
 #include <time.h>
+#include <gc.h>
 
 const size_t HEAP_SIZE = 20000000;
 
