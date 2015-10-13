@@ -24,6 +24,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <mark_and_compact.h>
 #include <wich.h>
+#include <gc.h>
 #include <cunit.h>
 
 const size_t HEAP_SIZE = 2000;
