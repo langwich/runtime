@@ -22,11 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <setjmp.h>
+#include <stdbool.h>
 
 extern void (*cunit_setup)();
 extern void (*cunit_teardown)();
 
 #define test(f)						cunit_test(f, #f)
+#define assert_true(a)			    _assert_true(a,#a,__func__)
+#define assert_false(a)			    _assert_false(a,#a,__func__)
 #define assert_equal(a,b)			_assert_equal((unsigned long)a,(unsigned long)b,#a,#b,__func__)
 #define assert_not_equal(a,b)		_assert_not_equal((unsigned long)a,(unsigned long)b,#a,#b,__func__)
 #define assert_addr_equal(a,b)		_assert_addr_equal(a,b,#a,#b,__func__)
@@ -34,6 +37,8 @@ extern void (*cunit_teardown)();
 #define assert_str_equal(a,b)		_assert_str_equal(a,b,#a,#b,__func__)
 #define assert_str_not_equal(a,b)	_assert_str_not_equal(a,b,#a,#b,__func__)
 
+void _assert_true(bool a, const char as[], const char funcname[]);
+void _assert_false(bool a, const char as[], const char funcname[]);
 void _assert_equal(unsigned long a, unsigned long b, const char as[], const char bs[], const char funcname[]);
 void _assert_not_equal(unsigned long a, unsigned long b, const char as[], const char bs[], const char funcname[]);
 void _assert_addr_equal(void *a, void *b, const char as[], const char bs[], const char funcname[]);

@@ -6,19 +6,17 @@
 #include <wich.h>
 #include <morecore.h>
 
-static void mark();
-static void mark_object(heap_object *p);
-
 static void *gc_raw_alloc(size_t size);
 static void update_roots();
 static void gc_chase_ptr_fields(const heap_object *p);
 static void update_ptr_fields(heap_object *p);
+static void mark_object(heap_object *p);
 
 // --------------------------------- D A T A ---------------------------------
 
 static bool DEBUG = false;
 
-static const int MAX_ROOTS = 1000; // obviously this is ok only for the educational purpose of this code
+static const int MAX_ROOTS = 100000; // obviously this is ok only for the educational purpose of this code
 
 /* Track every pointer into the heap; includes globals, args, and locals */
 static heap_object **_roots[MAX_ROOTS];
@@ -53,7 +51,9 @@ void gc_shutdown() {
 
 void gc_add_root(void **p)
 {
-    _roots[num_roots++] = (heap_object **)p;
+	if ( num_roots<MAX_ROOTS ) {
+		_roots[num_roots++] = (heap_object **) p;
+	}
 }
 
 int gc_num_roots() {
@@ -126,7 +126,7 @@ static inline void move_live_objects_to_forwarding_addr(heap_object *p) {
 	}
 }
 
-static inline bool ptr_is_in_heap(heap_object *p) {
+bool ptr_is_in_heap(heap_object *p) {
 	return  p >= (heap_object *) start_of_heap &&
 			p <= (heap_object *) end_of_heap &&
 			p->magic == MAGIC_NUMBER;
@@ -155,7 +155,7 @@ static inline void unmark_object(heap_object *p) { p->marked = false; }
 void gc() {
     if (DEBUG) printf("GC\n");
 
-	mark();
+	gc_mark();
 
 	// reallocate all live objects starting from start_of_heap
 	if (DEBUG) printf("FORWARD\n");
@@ -215,7 +215,7 @@ static void update_ptr_fields(heap_object *p) {
 /* Walk all roots and traverse object graph. Mark all p->mark=true for
    reachable p.
  */
-static void mark() {
+void gc_mark() {
 	if (DEBUG) printf("MARK\n");
     for (int i = 0; i < num_roots; i++) {
         heap_object *p = *_roots[i];
@@ -231,13 +231,13 @@ static void mark() {
     }
 }
 
-static void unmark() {
+void gc_unmark() {
 	if (DEBUG) printf("UNMARK\n");
 	foreach_live(unmark_object);
 }
 
 int gc_num_live_objects() {
-	mark();
+	gc_mark();
 
 	int n = 0;
 	void *p = start_of_heap;
@@ -248,7 +248,7 @@ int gc_num_live_objects() {
 		p = p + ((heap_object *)p)->size;
 	}
 
-	unmark();
+	gc_unmark();
 	return n;
 }
 
@@ -296,7 +296,7 @@ Heap_Info get_heap_info() {
 	                    busy, live, computed_busy_size, busy_size, free_size };
 }
 
-/* Apply function action to each marked (live) object in the heap */
+/* Apply function action to each marked (live) object in the heap; assumes live are marked */
 void foreach_live(void (*action)(heap_object *)) {
 	void *p = start_of_heap;
 	while (p >= start_of_heap && p < next_free) { // for each marked (live) object

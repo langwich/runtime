@@ -26,6 +26,7 @@ SOFTWARE.
 #include "cunit.h"
 #include <signal.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 void (*cunit_setup)()		= NULL;
 void (*cunit_teardown)()	= NULL;
@@ -33,6 +34,20 @@ void (*cunit_teardown)()	= NULL;
 static const char *current_test_name;
 
 static jmp_buf longjmp_env;
+
+void _assert_true(bool a, const char as[], const char funcname[]) {
+	if ( !a ) {
+		fprintf(stderr, "assertion failure in %s: %s is false\n", funcname, as);
+		longjmp(longjmp_env, 1);
+	}
+}
+
+void _assert_false(bool a, const char as[], const char funcname[]) {
+	if ( !a ) {
+		fprintf(stderr, "assertion failure in %s: %s is true\n", funcname, as);
+		longjmp(longjmp_env, 1);
+	}
+}
 
 void _assert_equal(unsigned long a, unsigned long b, const char as[], const char bs[], const char funcname[]) {
 	if ( a!=b ) {
