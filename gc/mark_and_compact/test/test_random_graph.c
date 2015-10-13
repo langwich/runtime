@@ -43,7 +43,7 @@ static int __save_root_count = 0;
 static void setup()		{ __save_root_count = gc_num_roots(); gc_init(HEAP_SIZE); }
 static void teardown()	{ gc_set_num_roots(__save_root_count); verify_heap(); gc_shutdown(); }
 
-static const int NUM_NODES = 1000;
+static const int NUM_NODES = 10000;
 static const int MAX_EDGES = 10;
 
 typedef struct _Node {
@@ -70,10 +70,15 @@ object_metadata Node_metadata = {
 		}
 };
 
+static bool unreachable[NUM_NODES]; // freed[i] true if free_random_nodes() wacked root to node->ID == i
+
+int wack_random_roots(Node **nodes);
+
 Node *create_node(int ID, char *name) {
 	Node *n = (Node *)gc_alloc(&Node_metadata, sizeof(Node));
 	if ( n!=NULL ) {
 		n->name = String_alloc(20);
+		n->ID = ID;
 		strcpy(n->name->str, name);
 	}
 
@@ -111,12 +116,14 @@ void ensure_valid_node(heap_object *p) {
 		Node *n = (Node *) p;
 		assert_true(ptr_is_in_heap(p));
 		assert_not_equal(n->ID, -1);
+		assert_false(unreachable[n->ID]); // is this a node we made unreachable?
 		assert_not_equal(n->name, NULL);
 		assert_str_not_equal(n->name->str, "wacked");
 //		printf("LIVE node %s\n", n->name->str);
 	}
 	else { // must be string
 		String *s = (String *)p;
+		assert_not_equal(s->length, 0);
 		assert_not_equal(strlen(s->str), 0);
 //		assert_equal(strlen(s->str), s->length);
 //		printf("LIVE string %s\n", s->str);
@@ -134,6 +141,7 @@ void sniff_for_dead_nodes(heap_object *p) { // should NOT be any dead nodes afte
 	}
 	else { // must be string
 		String *s = (String *)p;
+		assert_not_equal(s->length, 0);
 		assert_str_not_equal(s->str, "wacked");
 //		String *s = (String *)p;
 //		printf("DEAD string %s\n", s->str);
@@ -155,6 +163,23 @@ void many_disconnected_nodes_free_random_nodes() {
 	gc(); // should do nothing
 	assert_equal(gc_num_live_objects(), 2*NUM_NODES); // 1 for node, 1 for name String
 
+	int num_freed = wack_random_roots(nodes);
+	//	printf("wacked %d nodes\n", num_freed);
+
+	gc_mark();
+	foreach_live(ensure_valid_node);
+	gc_unmark();
+
+	gc(); // should kill num_freed
+	assert_equal(gc_num_live_objects(), 2*(NUM_NODES - num_freed));
+
+	// after compaction, should be no dead nodes
+	foreach_object(sniff_for_dead_nodes);
+}
+
+/* wack roots but also set nodes directly pointed to from roots to wacky values */
+int wack_random_roots(Node **nodes) {
+	memset(unreachable, false, NUM_NODES);
 	const int attempt_to_free = NUM_NODES/3;
 	int num_freed = 0; // random num could hit same index
 	for (int i=0; i<attempt_to_free; i++) { // kill 1/3 of nodes and then compact
@@ -166,20 +191,11 @@ void many_disconnected_nodes_free_random_nodes() {
 			// wack the node and the string it points to, which will also be garbage
 			p->ID = -1;
 			strcpy(p->name->str, "wacked"); // overwrite name for error checking
+			unreachable[node_index] = true;
 			nodes[node_index] = NULL; // kill root
 		}
 	}
-//	printf("wacked %d nodes\n", num_freed);
-
-	gc_mark();
-	foreach_live(ensure_valid_node);
-	gc_unmark();
-
-	gc(); // should kill num_freed
-	assert_equal(gc_num_live_objects(), 2*(NUM_NODES - num_freed));
-
-	// after compaction, should be no dead nodes
-	foreach_object(sniff_for_dead_nodes);
+	return num_freed;
 }
 
 int main(int argc, char *argv[]) {

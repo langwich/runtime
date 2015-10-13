@@ -43,7 +43,7 @@ void _assert_true(bool a, const char as[], const char funcname[]) {
 }
 
 void _assert_false(bool a, const char as[], const char funcname[]) {
-	if ( !a ) {
+	if ( a ) {
 		fprintf(stderr, "assertion failure in %s: %s is true\n", funcname, as);
 		longjmp(longjmp_env, 1);
 	}
