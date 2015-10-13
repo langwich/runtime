@@ -43,7 +43,7 @@ static int __save_root_count = 0;
 static void setup()		{ __save_root_count = gc_num_roots(); gc_init(HEAP_SIZE); }
 static void teardown()	{ gc_set_num_roots(__save_root_count); verify_heap(); gc_shutdown(); }
 
-static const int NUM_NODES = 10000;
+static const int NUM_NODES = 50000;
 static const int MAX_EDGES = 10;
 
 typedef struct _Node {
@@ -54,49 +54,38 @@ typedef struct _Node {
 } Node;
 
 object_metadata Node_metadata = {
-		"Node",
-		1+MAX_EDGES,
-		{__offsetof(Node,name),
-		 __offsetof(Node,edges)+0*sizeof(void *),
-		 __offsetof(Node,edges)+1*sizeof(void *),
-		 __offsetof(Node,edges)+2*sizeof(void *),
-		 __offsetof(Node,edges)+3*sizeof(void *),
-		 __offsetof(Node,edges)+4*sizeof(void *),
-		 __offsetof(Node,edges)+5*sizeof(void *),
-		 __offsetof(Node,edges)+6*sizeof(void *),
-		 __offsetof(Node,edges)+7*sizeof(void *),
-		 __offsetof(Node,edges)+8*sizeof(void *),
-		 __offsetof(Node,edges)+9*sizeof(void *),
-		}
+	"Node",
+	1+MAX_EDGES,
+	{__offsetof(Node,name),
+	 __offsetof(Node,edges)+0*sizeof(void *),
+	 __offsetof(Node,edges)+1*sizeof(void *),
+	 __offsetof(Node,edges)+2*sizeof(void *),
+	 __offsetof(Node,edges)+3*sizeof(void *),
+	 __offsetof(Node,edges)+4*sizeof(void *),
+	 __offsetof(Node,edges)+5*sizeof(void *),
+	 __offsetof(Node,edges)+6*sizeof(void *),
+	 __offsetof(Node,edges)+7*sizeof(void *),
+	 __offsetof(Node,edges)+8*sizeof(void *),
+	 __offsetof(Node,edges)+9*sizeof(void *),
+	}
 };
 
 static bool unreachable[NUM_NODES]; // freed[i] true if free_random_nodes() wacked root to node->ID == i
 
 int wack_random_roots(Node **nodes);
+Node *create_node(int ID, char *name);
+void ensure_valid_node(heap_object *p);
+void sniff_for_dead_nodes(heap_object *p);
 
-Node *create_node(int ID, char *name) {
-	Node *n = (Node *)gc_alloc(&Node_metadata, sizeof(Node));
-	if ( n!=NULL ) {
-		n->name = String_alloc(20);
-		n->ID = ID;
-		strcpy(n->name->str, name);
-	}
+// ------------------------ T E S T S ------------------------
 
-	return n;
-}
+void add_random_edges(Node *const *nodes);
+Node **create_nodes();
 
 void many_disconnected_nodes_free_all_at_once() {
 	gc_begin_func();
 
-	Node *nodes[NUM_NODES];
-	char buf[255];
-	for (int i=0; i<NUM_NODES; i++) {
-		sprintf(buf, "node%d", i);
-		nodes[i] = create_node(i, buf);
-		if (nodes[i] != NULL) {
-			gc_add_root((void **) &nodes[i]);
-		}
-	}
+	create_nodes();
 
 	gc(); // should do nothing
 	assert_equal(gc_num_live_objects(), 2*NUM_NODES); // 1 for node, 1 for name String
@@ -109,6 +98,86 @@ void many_disconnected_nodes_free_all_at_once() {
 	Heap_Info info = get_heap_info();
 	assert_equal(info.busy_size, 0);
 	assert_equal(info.free_size, info.heap_size);
+}
+
+void many_disconnected_nodes_free_random_nodes() {
+	char buf[255];
+	memset(buf, '\0', 255);
+
+	Node **nodes = create_nodes();
+
+	gc(); // should do nothing
+	assert_equal(gc_num_live_objects(), 2*NUM_NODES); // 1 for node, 1 for name String
+
+	int num_freed = wack_random_roots(nodes);
+	//	printf("wacked %d nodes\n", num_freed);
+
+	gc_mark();
+	foreach_live(ensure_valid_node);
+	gc_unmark();
+
+	gc(); // should kill num_freed
+	assert_equal(gc_num_live_objects(), 2*(NUM_NODES - num_freed));
+
+	// after compaction, should be no dead nodes
+	foreach_object(sniff_for_dead_nodes);
+}
+
+void many_connected_nodes_free_all_at_once() {
+	gc_begin_func();
+
+	Node **nodes = create_nodes();
+
+	add_random_edges(nodes);
+
+	gc(); // should do nothing
+	assert_equal(gc_num_live_objects(), 2*NUM_NODES); // 1 for node, 1 for name String
+
+	gc_end_func();
+
+	gc(); // should kill all
+	assert_equal(gc_num_live_objects(), 0);
+
+	Heap_Info info = get_heap_info();
+	assert_equal(info.busy_size, 0);
+	assert_equal(info.free_size, info.heap_size);
+}
+
+
+// ------------------------ S U P P O R T ------------------------
+
+Node *create_node(int ID, char *name) {
+	Node *n = (Node *)gc_alloc(&Node_metadata, sizeof(Node));
+	if ( n!=NULL ) {
+		n->name = String_alloc(20);
+		n->ID = ID;
+		strcpy(n->name->str, name);
+	}
+
+	return n;
+}
+
+Node **create_nodes() {
+	Node **nodes = calloc(NUM_NODES, sizeof(Node *));
+	char buf[255];
+	for (int i=0; i<NUM_NODES; i++) {
+		sprintf(buf, "node%d", i);
+		nodes[i] = create_node(i, buf);
+		if (nodes[i] != NULL) {
+			gc_add_root((void **) &nodes[i]);
+		}
+	}
+	return nodes;
+}
+
+void add_random_edges(Node *const *nodes) {// connect each node to MAX_EDGES random nodes
+	for (int i=0; i<NUM_NODES; i++) {
+		Node *n = nodes[i];
+		for (int e=0; e<MAX_EDGES; e++) { // duplicate edges are possible!
+			int target = rand() % NUM_NODES;
+			n->edges[e] = nodes[target];
+		}
+	}
 }
 
 void ensure_valid_node(heap_object *p) {
@@ -148,35 +217,6 @@ void sniff_for_dead_nodes(heap_object *p) { // should NOT be any dead nodes afte
 	}
 }
 
-void many_disconnected_nodes_free_random_nodes() {
-	Node **nodes = (Node **)calloc(NUM_NODES, sizeof(Node *));
-	char buf[255];
-	memset(buf, '\0', 255);
-	for (int i=0; i<NUM_NODES; i++) {
-		sprintf(buf, "node%d", i);
-		nodes[i] = create_node(i, buf);
-		if (nodes[i] != NULL) {
-			gc_add_root((void **) &nodes[i]);
-		}
-	}
-
-	gc(); // should do nothing
-	assert_equal(gc_num_live_objects(), 2*NUM_NODES); // 1 for node, 1 for name String
-
-	int num_freed = wack_random_roots(nodes);
-	//	printf("wacked %d nodes\n", num_freed);
-
-	gc_mark();
-	foreach_live(ensure_valid_node);
-	gc_unmark();
-
-	gc(); // should kill num_freed
-	assert_equal(gc_num_live_objects(), 2*(NUM_NODES - num_freed));
-
-	// after compaction, should be no dead nodes
-	foreach_object(sniff_for_dead_nodes);
-}
-
 /* wack roots but also set nodes directly pointed to from roots to wacky values */
 int wack_random_roots(Node **nodes) {
 	memset(unreachable, false, NUM_NODES);
@@ -208,6 +248,8 @@ int main(int argc, char *argv[]) {
 
 	test(many_disconnected_nodes_free_all_at_once);
 	test(many_disconnected_nodes_free_random_nodes);
+
+	test(many_connected_nodes_free_all_at_once);
 
 	return 0;
 }

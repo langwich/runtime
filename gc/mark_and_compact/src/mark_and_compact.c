@@ -205,6 +205,7 @@ static void update_ptr_fields(heap_object *p) {
 		heap_object **ptr_to_obj_ptr_field = (heap_object **) ptr_to_ptr_field;
 		heap_object *target_obj = *ptr_to_obj_ptr_field;
 		if (target_obj != NULL) {
+			if (DEBUG) printf("update ptr (offset %d) from %p to %p\n", offset_of_ptr_field, target_obj, target_obj->forwarded);
 			*ptr_to_obj_ptr_field = target_obj->forwarded;
 		}
 	}
