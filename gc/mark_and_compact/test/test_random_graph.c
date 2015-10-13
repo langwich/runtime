@@ -43,7 +43,7 @@ static int __save_root_count = 0;
 static void setup()		{ __save_root_count = gc_num_roots(); gc_init(HEAP_SIZE); }
 static void teardown()	{ gc_set_num_roots(__save_root_count); verify_heap(); gc_shutdown(); }
 
-static const int NUM_NODES = 100;
+static const int NUM_NODES = 1000;
 static const int MAX_EDGES = 10;
 
 typedef struct _Node {
@@ -116,22 +116,25 @@ void ensure_valid_node(heap_object *p) {
 //		printf("LIVE node %s\n", n->name->str);
 	}
 	else { // must be string
-//		String *s = (String *)p;
+		String *s = (String *)p;
+		assert_not_equal(strlen(s->str), 0);
+//		assert_equal(strlen(s->str), s->length);
 //		printf("LIVE string %s\n", s->str);
 	}
 }
 
-void sniff_dead_node(heap_object *p) {
-	if ( p->marked ) return; // only want dead nodes
+void sniff_for_dead_nodes(heap_object *p) { // should NOT be any dead nodes after GC compacts
 	if ( p->metadata == &Node_metadata ) {
 		Node *n = (Node *) p;
 		assert_true(ptr_is_in_heap(p));
-		assert_equal(n->ID, -1);
+		assert_not_equal(n->ID, -1);
 		assert_not_equal(n->name, NULL);
-		assert_str_equal(n->name->str, "wacked");
+		assert_str_not_equal(n->name->str, "wacked"); // also tests that n->name->str is a valid address
 //		printf("DEAD node %s\n", n->name->str);
 	}
 	else { // must be string
+		String *s = (String *)p;
+		assert_str_not_equal(s->str, "wacked");
 //		String *s = (String *)p;
 //		printf("DEAD string %s\n", s->str);
 	}
@@ -149,8 +152,8 @@ void many_disconnected_nodes_free_random_nodes() {
 		}
 	}
 
-//	gc(); // should do nothing
-//	assert_equal(gc_num_live_objects(), 2*NUM_NODES); // 1 for node, 1 for name String
+	gc(); // should do nothing
+	assert_equal(gc_num_live_objects(), 2*NUM_NODES); // 1 for node, 1 for name String
 
 	const int attempt_to_free = NUM_NODES/3;
 	int num_freed = 0; // random num could hit same index
@@ -170,11 +173,13 @@ void many_disconnected_nodes_free_random_nodes() {
 
 	gc_mark();
 	foreach_live(ensure_valid_node);
-	foreach_object(sniff_dead_node);
 	gc_unmark();
 
 	gc(); // should kill num_freed
 	assert_equal(gc_num_live_objects(), 2*(NUM_NODES - num_freed));
+
+	// after compaction, should be no dead nodes
+	foreach_object(sniff_for_dead_nodes);
 }
 
 int main(int argc, char *argv[]) {
