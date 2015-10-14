@@ -25,9 +25,6 @@ SOFTWARE.
 #ifndef RUNTIME_REFCOUNTING_H_
 #define RUNTIME_REFCOUNTING_H_
 
-typedef struct {
-	int refs;    		// refs to this object
-} heap_object;
 
 /* Announce a heap reference so we can _deref() all before exiting a function */
 void _heapvar(heap_object **p);

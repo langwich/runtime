@@ -26,6 +26,9 @@ SOFTWARE.
 #include <string.h>
 #include <stdio.h>
 //#define DEBUG
+typedef struct {
+	int refs;    		// refs to this object
+} heap_object;
 #include <wich.h>
 #include <refcounting.h>
 static const int MAX_ROOTS = 1024;

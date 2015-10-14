@@ -52,7 +52,7 @@ endfunction()
 ################# S u b d i r s #################
 
 # add all subdirectories
- set(SUB_DIRS malloc wlib cunit gc)
+set(SUB_DIRS malloc wlib cunit gc)
 foreach(SUB_DIR ${SUB_DIRS})
 	add_subdirectory(${SUB_DIR})
 endforeach()
