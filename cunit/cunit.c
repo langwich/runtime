@@ -91,6 +91,20 @@ void _assert_str_not_equal(void *a, void *b, const char as[], const char bs[], c
 	}
 }
 
+void _assert_float_equal(double a, double b, const char as[], const char bs[], const char funcname[]) {
+	if ( a!=b ) {
+		fprintf(stderr, "assertion failure in %s: %s == %s (%lf == %lf)\n", funcname, as, bs, a, b);
+		longjmp(longjmp_env, 1);
+	}
+}
+
+void _assert_float_not_equal(double a, double b, const char as[], const char bs[], const char funcname[]) {
+	if ( a==b ) {
+		fprintf(stderr, "assertion failure in %s: %s != %s (%lf != %lf)\n", funcname, as, bs, a, b);
+		longjmp(longjmp_env, 1);
+	}
+}
+
 static void
 handle_sys_errors(int errno)
 {
