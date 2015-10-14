@@ -52,6 +52,8 @@ extern void gc_shutdown();
 extern void gc();
 extern heap_object *gc_alloc(object_metadata *metadata, size_t size);
 extern void gc_add_root(void **p);
+extern void gc_mark();
+extern void gc_unmark();
 
 extern Heap_Info get_heap_info();
 
@@ -68,6 +70,7 @@ extern int gc_num_roots();
 extern void gc_set_num_roots(int roots);
 extern void foreach_live(void (*action)(heap_object *));
 extern void foreach_object(void (*action)(heap_object *));
+extern bool ptr_is_in_heap(heap_object *p);
 
 static const size_t WORD_SIZE_IN_BYTES = sizeof(void *);
 static const size_t ALIGN_MASK = WORD_SIZE_IN_BYTES - 1;

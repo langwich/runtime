@@ -37,7 +37,7 @@ typedef struct {
 
 typedef struct string {
 	heap_object metadata;
-	int length;
+	int length;         // max length not string length
 	char str[];
 	/* the string starts at the end of fixed fields; this field
 	 * does not take any room in the structure; it's really just a
