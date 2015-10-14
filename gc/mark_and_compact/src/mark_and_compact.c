@@ -106,19 +106,19 @@ static inline void realloc_object(heap_object *p) {
 	void *q = next_free_forwarding; // bump-ptr-allocation
 	next_free_forwarding += p->size;
 	p->forwarded = q; // p now knows where it will end up after compacting
-	if (DEBUG) printf("forward %p to %s@%p (0x%x bytes)\n", p, p->metadata->name, p->forwarded, p->size);
+	if (DEBUG) if ( p->forwarded!=p ) printf("forward %p to %s@%p (0x%x bytes)\n", p, p->metadata->name, p->forwarded, p->size);
 }
 
 static inline void move_to_forwarding_addr(heap_object *p) {
-	if (DEBUG) printf("    move %p to %p (0x%x bytes)\n", p, p->forwarded, p->size);
+	if (DEBUG) if ( p->forwarded!=p ) printf("    move %p to %p (0x%x bytes)\n", p, p->forwarded, p->size);
 	if ( p->forwarded!=p ) memcpy(p->forwarded, p, p->size);
 }
 
 static inline void move_live_objects_to_forwarding_addr(heap_object *p) {
 	if ( p->marked ) {
 		if (DEBUG) printf("live %s@%p (0x%x bytes)\n", p->metadata->name, p, p->size);
-		move_to_forwarding_addr(p);      // move objects to compact heap
-		p->marked = false;
+		p->marked = false;              // reset *before* move or you're changing old object
+		move_to_forwarding_addr(p);     // move objects to compact heap
 	}
 	else {
 		if (DEBUG) printf("dead %s@%p (0x%x bytes)\n", p->metadata->name, p, p->size);
@@ -174,6 +174,8 @@ void gc() {
 
 	// reset highwater mark *after* we've moved everything around; foreach_object() uses next_free
 	next_free = next_free_forwarding;	// next object to be allocated would occur here
+
+	if (DEBUG) printf("DONE GC\n");
 }
 
 /* Alter roots to point at new location of live objects (compacted) */
@@ -183,13 +185,15 @@ static void update_roots() {
 		heap_object *p = *_roots[i];
 		if ( p!=NULL ) {
 			if (DEBUG) {
-				printf("move root[%d]=%p -> %s@%p (0x%x bytes) to %p\n",
-				       i,
-				       _roots[i],
-				       p->metadata->name,
-				       p,
-				       p->size,
-				       p->forwarded);
+				if (p->forwarded != p) {
+					printf("move root[%d]=%p -> %s@%p (0x%x bytes) to %p\n",
+					       i,
+					       _roots[i],
+					       p->metadata->name,
+					       p,
+					       p->size,
+					       p->forwarded);
+				}
 			}
 			*_roots[i] = p->forwarded;	// update root to point at new address
 		}
@@ -205,7 +209,14 @@ static void update_ptr_fields(heap_object *p) {
 		heap_object **ptr_to_obj_ptr_field = (heap_object **) ptr_to_ptr_field;
 		heap_object *target_obj = *ptr_to_obj_ptr_field;
 		if (target_obj != NULL) {
-			if (DEBUG) printf("update ptr (offset %d) from %p to %p\n", offset_of_ptr_field, target_obj, target_obj->forwarded);
+			if (DEBUG) {
+				if ( target_obj->forwarded!=target_obj ) {
+					printf("    update ptr (offset %d) from %p to %p\n",
+					       offset_of_ptr_field,
+					       target_obj,
+					       target_obj->forwarded);
+				}
+			}
 			*ptr_to_obj_ptr_field = target_obj->forwarded;
 		}
 	}
@@ -234,10 +245,11 @@ void gc_mark() {
 
 void gc_unmark() {
 	if (DEBUG) printf("UNMARK\n");
-	foreach_live(unmark_object);
+	foreach_object(unmark_object);
 }
 
 int gc_num_live_objects() {
+//	gc_unmark();
 	gc_mark();
 
 	int n = 0;

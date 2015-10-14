@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.2)
 project(runtime)
 
 set(MODULE_NAME mark_and_compact)
-set(SOURCE src/mark_and_compact.c)
+set(SOURCE src/mark_and_compact.c test/bitset.c)
 set(TEST_TARGETS test_ptr_fields test_basics test_random_graph)
 
 add_library(${MODULE_NAME} ${SOURCE})
