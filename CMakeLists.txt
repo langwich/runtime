@@ -17,6 +17,7 @@ set(INCLUDE_DIRS
 		cunit
 		gc
 		gc/mark_and_compact/src
+		gc/mark_and_sweep/src
 		malloc
 		malloc/lib/src
 		malloc/freelist/src

@@ -5,4 +5,5 @@ set(MODULE_NAME gc)
 
 #add_subdirectory(lib)
 add_subdirectory(mark_and_compact)
+add_subdirectory(mark_and_sweep)
 

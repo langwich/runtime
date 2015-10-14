@@ -115,7 +115,7 @@ static inline void move_to_forwarding_addr(heap_object *p) {
 static inline void move_live_objects_to_forwarding_addr(heap_object *p) {
 	if ( p->marked ) {
 		if (DEBUG) printf("live %s@%p (0x%x bytes)\n", p->metadata->name, p, p->size);
-		move_to_forwarding_addr(p);      // move objects to compact heap
+		move_to_forwarding_addr(p);      // move _objects to compact heap
 		p->marked = false;
 	}
 	else {
@@ -132,12 +132,12 @@ static inline bool ptr_is_in_heap(heap_object *p) {
 
 static inline void unmark_object(heap_object *p) { p->marked = false; }
 
-/* Perform a mark_and_compact garbage collection, moving all live objects
+/* Perform a mark_and_compact garbage collection, moving all live _objects
  * to the start of the heap. Anything that we don't mark is dead.
  *
- * 1. Walk object graph starting from roots, marking live objects.
+ * 1. Walk object graph starting from roots, marking live _objects.
  *
- * 2. Walk all live objects and compute their forwarding addresses starting from start_of_heap.
+ * 2. Walk all live _objects and compute their forwarding addresses starting from start_of_heap.
  *
  * 3. Alter all non-NULL roots to point to the object's forwarding address.
  *
@@ -148,25 +148,25 @@ static inline void unmark_object(heap_object *p) { p->marked = false; }
  * 5. Physically move object to forwarding address towards front of heap and reset marked.
  *
  *    This phase must be last as the object stores the forwarding address. When we move,
- *    we overwrite objects and could kill a forwarding address in a live object.
+ *    we overwrite _objects and could kill a forwarding address in a live object.
  */
 void gc() {
     if (DEBUG) printf("GC\n");
 
 	mark();
 
-	// reallocate all live objects starting from start_of_heap
+	// reallocate all live _objects starting from start_of_heap
 	if (DEBUG) printf("FORWARD\n");
 	next_free_forwarding = start_of_heap;
 	foreach_live(realloc_object);  		// for each marked (live) object, record forwarding address
 
 	// make sure all roots point at new object addresses
-	update_roots();                     // can't move objects before updating roots; roots point at *old* location
+	update_roots();                     // can't move _objects before updating roots; roots point at *old* location
 
 	if (DEBUG) printf("UPDATE PTR FIELDS\n");
 	foreach_live(update_ptr_fields);
 
-	// Now that we know where to move objects, update and move objects
+	// Now that we know where to move _objects, update and move _objects
 	if (DEBUG) printf("COMPACT\n");
 	foreach_object(move_live_objects_to_forwarding_addr); // also visits the dead to wack p->magic
 
@@ -174,7 +174,7 @@ void gc() {
 	next_free = next_free_forwarding;	// next object to be allocated would occur here
 }
 
-/* Alter roots to point at new location of live objects (compacted) */
+/* Alter roots to point at new location of live _objects (compacted) */
 static void update_roots() {
 	if (DEBUG) printf("UPDATE ROOTS\n");
 	for (int i = 0; i < num_roots; i++) {
