@@ -33,8 +33,8 @@ typedef struct {
 	void *end_of_heap;      // last byte of heap
 	void *next_free;        // next addr where we'll allocate an object
 	int heap_size;          // total space obtained from OS
-	int busy;               // num allocated _objects (computed by walking heap)
-	int live;               // num live _objects (computed by walking heap)
+	int busy;               // num allocated objects (computed by walking heap)
+	int live;               // num live objects (computed by walking heap)
 	int computed_busy_size; // total allocated size computed by walking heap
 	int busy_size;          // size from calculation
 	int free_size;          // size from calculation
@@ -46,7 +46,7 @@ extern void gc_init(int size);
 /* Announce you are done with the heap managed by the garbage collector */
 extern void gc_shutdown();
 
-/* Perform a mark_and_compact garbage collection, moving all live _objects
+/* Perform a mark_and_compact garbage collection, moving all live objects
  * to the start of the heap.
  */
 extern void gc();
