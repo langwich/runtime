@@ -44,7 +44,7 @@ static int __save_root_count = 0;
 static void setup()		{ __save_root_count = gc_num_roots(); gc_init(HEAP_SIZE); }
 static void teardown()	{ gc_set_num_roots(__save_root_count); verify_heap(); gc_shutdown(); }
 
-static const int NUM_NODES = 40;
+static const int NUM_NODES = 1000;
 static const int MAX_EDGES = 4;
 
 typedef struct _Node {
