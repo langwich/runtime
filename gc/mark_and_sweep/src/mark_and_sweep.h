@@ -1,44 +1,41 @@
-#ifndef RUNTIME_MARK_AND_COMPACT_H_
-#define RUNTIME_MARK_AND_COMPACT_H_
+#ifndef RUNTIME_MARK_AND_SWEEP_H
+#define RUNTIME_MARK_AND_SWEEP_H
 
 #include <stdbool.h>
 #include <stdlib.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-static const uint32_t MAGIC_NUMBER = 123456789;
-
 typedef struct {
-	char *name;               // "class" name of instances of this type; useful for debugging
-	uint16_t num_ptr_fields;  // how many managed pointers (pointers into the heap) in this object
-	uint16_t field_offsets[]; // list of offsets base of object to fields that are managed ptrs
+    char *name;               // "class" name of instances of this type; useful for debugging
+    uint16_t num_ptr_fields;  // how many managed pointers (pointers into the heap) in this object
+    uint16_t field_offsets[]; // list of offsets base of object to fields that are managed ptrs
 } object_metadata;
 
 /* stuff that every instance in the heap must have at the beginning (unoptimized) */
 typedef struct heap_object {
-	uint32_t magic;     // used in debugging
-	object_metadata *metadata;
-	uint32_t size;      // total size including header information used by each heap_object
-	bool marked;	    // used during the mark phase of garbage collection
-	struct heap_object *forwarded; 			// where we've moved this object during collection
-//	char data[];        // nothing allocated; just a label to location of actual instance data
+    object_metadata *metadata;
+    uint32_t size;      // total size including header information used by each heap_object
+    bool marked;	    // used during the mark phase of garbage collection
 } heap_object;
 
 // GC interface
 
 typedef struct {
-	void *start_of_heap;    // first byte of heap
-	void *end_of_heap;      // last byte of heap
-	void *next_free;        // next addr where we'll allocate an object
-	int heap_size;          // total space obtained from OS
-	int busy;               // num allocated _objects (computed by walking heap)
-	int live;               // num live _objects (computed by walking heap)
-	int computed_busy_size; // total allocated size computed by walking heap
-	int busy_size;          // size from calculation
-	int free_size;          // size from calculation
+    void *start_of_heap;    // first byte of heap
+    void *end_of_heap;      // last byte of heap
+    int heap_size;          // total space obtained from OS
+    int busy;               // num allocated _objects (computed by walking heap)
+    int live;               // num live _objects (computed by walking heap)
+    int computed_busy_size; // total allocated size computed by walking heap
+    int computed_free_size;
 } Heap_Info;
+
+typedef struct _Free_Header {//maintain a free list for unallocated chunks, also for sweep action
+    int size;                //size of current chunk
+    struct _Free_Header *next;//point to next free chunk
+}Free_Header;
 
 /* Initialize a heap with a certain size for use with the garbage collector */
 extern void gc_init(int size);
@@ -52,8 +49,6 @@ extern void gc_shutdown();
 extern void gc();
 extern heap_object *gc_alloc(object_metadata *metadata, size_t size);
 extern void gc_add_root(void **p);
-extern void gc_mark();
-extern void gc_unmark();
 
 extern Heap_Info get_heap_info();
 
@@ -63,33 +58,31 @@ extern Heap_Info get_heap_info();
 // GC internals; peek into internals for testing and hidden use in macros
 
 extern int gc_num_live_objects();
+extern int gc_num_alloc_objects();
 extern void gc_debug(bool debug);
-extern char *gc_get_state();
-extern long gc_heap_highwater();
 extern int gc_num_roots();
 extern void gc_set_num_roots(int roots);
 extern void foreach_live(void (*action)(heap_object *));
 extern void foreach_object(void (*action)(heap_object *));
-extern bool ptr_is_in_heap(heap_object *p);
 
 static const size_t WORD_SIZE_IN_BYTES = sizeof(void *);
 static const size_t ALIGN_MASK = WORD_SIZE_IN_BYTES - 1;
 
 /* Pad size n to include header */
 static inline size_t size_with_header(size_t n) {
-	return n + sizeof(heap_object);
+    return n + sizeof(heap_object);
 }
 
 /* Align size n to nearest word size boundary (4 or 8) */
 static inline size_t align_to_word_boundary(size_t n) {
-	return (n & ALIGN_MASK) == 0 ? n : (n + WORD_SIZE_IN_BYTES) & ~ALIGN_MASK;
+    return (n & ALIGN_MASK) == 0 ? n : (n + WORD_SIZE_IN_BYTES) & ~ALIGN_MASK;
 }
 
 /* Convert a user request for n bytes into a size in bytes that has all necessary
  * header room and is word aligned.
  */
 static inline size_t request2size(size_t n) {
-	return align_to_word_boundary(size_with_header(n));
+    return align_to_word_boundary(size_with_header(n));
 }
 
 
@@ -97,4 +90,4 @@ static inline size_t request2size(size_t n) {
 }
 #endif
 
-#endif
+#endif //RUNTIME_MARK_AND_SWEEP_H
