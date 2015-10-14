@@ -92,8 +92,14 @@ void _assert_str_not_equal(void *a, void *b, const char as[], const char bs[], c
 }
 
 void _assert_float_equal(double a, double b, const char as[], const char bs[], const char funcname[]) {
-	if ( a!=b ) {
+	if (a != b) {
 		fprintf(stderr, "assertion failure in %s: %s == %s (%lf == %lf)\n", funcname, as, bs, a, b);
+		longjmp(longjmp_env, 1);
+	}
+}
+void _assert_strn_equal(void *a, void *b, size_t n, const char as[], const char bs[], const char funcname[]) {
+	if ( strncmp(a,b,n)!=0 ) {
+		fprintf(stderr, "assertion failure in %s: strcmp %s == %s (%p == %p)\n", funcname, as, bs, a, b);
 		longjmp(longjmp_env, 1);
 	}
 }
@@ -101,6 +107,13 @@ void _assert_float_equal(double a, double b, const char as[], const char bs[], c
 void _assert_float_not_equal(double a, double b, const char as[], const char bs[], const char funcname[]) {
 	if ( a==b ) {
 		fprintf(stderr, "assertion failure in %s: %s != %s (%lf != %lf)\n", funcname, as, bs, a, b);
+		longjmp(longjmp_env, 1);
+	}
+}
+
+void _assert_strn_not_equal(void *a, void *b, size_t n, const char as[], const char bs[], const char funcname[]) {
+	if ( strncmp(a,b,n)==0 ) {
+		fprintf(stderr, "assertion failure in %s: strcmp %s != %s (%p == %p)\n", funcname, as, bs, a, b);
 		longjmp(longjmp_env, 1);
 	}
 }

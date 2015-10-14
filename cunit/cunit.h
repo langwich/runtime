@@ -38,6 +38,8 @@ extern void (*cunit_teardown)();
 #define assert_str_not_equal(a,b)	_assert_str_not_equal(a,b,#a,#b,__func__)
 #define assert_float_equal(a,b)		_assert_float_equal(a,b,#a,#b,__func__)
 #define assert_float_not_equal(a,b)	_assert_float_not_equal(a,b,#a,#b,__func__)
+#define assert_strn_equal(a,b,n)	_assert_strn_equal(a,b,n,#a,#b,__func__)
+#define assert_strn_not_equal(a,b,n)_assert_strn_not_equal(a,b,n,#a,#b,__func__)
 
 void _assert_true(bool a, const char as[], const char funcname[]);
 void _assert_false(bool a, const char as[], const char funcname[]);
@@ -49,5 +51,7 @@ void _assert_str_equal(void *a, void *b, const char as[], const char bs[], const
 void _assert_str_not_equal(void *a, void *b, const char as[], const char bs[], const char funcname[]);
 void _assert_float_equal(double a, double b, const char as[], const char bs[], const char funcname[]);
 void _assert_float_not_equal(double a, double b, const char as[], const char bs[], const char funcname[]);
+void _assert_strn_equal(void *a, void *b, size_t n, const char as[], const char bs[], const char funcname[]);
+void _assert_strn_not_equal(void *a, void *b, size_t n, const char as[], const char bs[], const char funcname[]);
 
 void cunit_test(void (*f)(), const char funcname[]);
