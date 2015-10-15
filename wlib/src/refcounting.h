@@ -34,7 +34,7 @@ void _set_sp(int);
 
 
 // enter/exit a function
-#define ENTER()		int _funcsp = _heap_sp();// printf("ENTER; sp=%d\n", _funcsp);
+#define ENTER()		int _funcsp = _h    eap_sp();// printf("ENTER; sp=%d\n", _funcsp);
 #define EXIT()		{/*printf("EXIT; sp=%d\n", _heap_sp());*/ _deref(_funcsp+1,_heap_sp()); _set_sp(_funcsp);}
 
 // enter/exit a block

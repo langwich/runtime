@@ -28,10 +28,6 @@ SOFTWARE.
 #include <stdbool.h>
 
 typedef struct {
-	int refs;    		// refs to this object
-} heap_object;
-
-typedef struct {
 	heap_object metadata;
 	size_t length;      // number of doubles
 	double data[];      // a label to the start of the data part of vector
@@ -39,6 +35,7 @@ typedef struct {
 
 typedef struct string {
 	heap_object metadata;
+	size_t length;
 	char str[];
 	/* the string starts at the end of fixed fields; this field
 	 * does not take any room in the structure; it's really just a
@@ -51,7 +48,6 @@ typedef struct string {
 
 String *String_new(char *s);
 String *String_from_char(char c);
-String *String_alloc(size_t size);
 String *String_add(String *s, String *t);
 String *String_copy(String *s);
 String *String_from_vector(Vector *vector);
@@ -68,7 +64,6 @@ void print_string(String *s);
 
 Vector *Vector_empty();
 Vector *Vector_copy(Vector *v);
-Vector *Vector_alloc(size_t size);
 Vector *Vector_new(double *data, size_t n);
 Vector *Vector_append(Vector *a, double value);
 Vector *Vector_append_vector(Vector *a, Vector *b);
@@ -85,14 +80,6 @@ void print_vector(Vector *a);
 // Following malloc/free are the hook where we create our own malloc/free or use the system's
 void *wich_malloc(size_t nbytes);
 void wich_free(heap_object *p);
-
-static inline void COPY_ON_WRITE(void *x) {
-	if ( x!=NULL && ((heap_object *)x)->refs > 1 ) {
-		((heap_object *)x)->refs--;
-		x = Vector_copy(x);
-		((heap_object *)x)->refs = 1;
-	}
-}
 
 
 static void
