@@ -22,50 +22,42 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef MALLOC_BITSET_H
-#define MALLOC_BITSET_H
+#ifndef MALLOC_BYTESET_H
+#define MALLOC_BYTESET_H
 
 #include <stddef.h>
-#include <stdbool.h>
+#include <string.h>
 
-typedef unsigned long long      BITCHUNK;// one full chunk covers 512 bytes in the heap.
 typedef unsigned char           U1;
 typedef __uint32_t              U32;
 
-#define WORD(x)                 ((unsigned long long *)x)
-#define BITSET_NON              ((BITCHUNK) ~0x0)// we can never get that much memory
-#define BIT_NUM                 8
-#define WORD_SIZE               (sizeof(void *))
-#define ALIGN_MASK              (WORD_SIZE - 1)
-#define CHUNK_SIZE              (sizeof(BITCHUNK))// usually it's the same as WORD_SIZE on 64-bit machines.
-#define CHK_IN_BIT              (CHUNK_SIZE * BIT_NUM)
-#define BC_ONE                  0xFFFFFFFFFFFFFFFF
-#define BC_LEFTMOST_MASK        0x8000000000000000
+#define WORD_SIZE       (sizeof(void *))
+#define NOT_FOUND       ((size_t)~0x0)
+#define ALIGN_MASK      (WORD_SIZE - 1)
 
+#define WORD(x)                 ((unsigned long long *)x)
 #define ALIGN_WORD_BOUNDARY(n)  ((n & ALIGN_MASK) == 0 ? n : (n + WORD_SIZE) & ~ALIGN_MASK)
 
-/* this struct holds the actual data of
- * the bitset.
+typedef struct {
+	size_t num_words;
+	char *bytes;
+} byset;
+
+void byset_init(byset *, size_t, void *);
+size_t byset_nrun(byset *, size_t);
+int byset_contain_ones(byset *, size_t, size_t);
+
+/*
+ * Set the bytes in [lo,hi] (both inclusive) to 1.
  */
-typedef struct {
-	BITCHUNK *m_bc;
-	size_t m_nbc;
-} bitset;
+static inline void byset_set1(byset *pbys, size_t lo, size_t hi) {
+	memset(pbys->bytes + lo, '1', hi - lo + 1);
+}
+/*
+ * Set the bytes in [lo,hi] (both inclusive) to 0.
+ */
+static inline void byset_set0(byset *pbys, size_t lo, size_t hi) {
+	memset(pbys->bytes + lo, '0', hi - lo + 1);
+}
 
-typedef struct {
-	long leading;
-	long trailing;
-	long non_cross;
-} profile_info;
-
-void bs_init(bitset *, size_t, void *);
-size_t bs_nrun(bitset *, size_t);
-void bs_set1(bitset *, size_t, size_t);
-void bs_set0(bitset *, size_t, size_t);
-int bs_chk_scann(BITCHUNK, size_t);
-int bs_contain_ones(bitset *, size_t, size_t);
-profile_info get_profile_info();
-
-void bs_dump(BITCHUNK, int);
-
-#endif //MALLOC_BITSET_H
+#endif //MALLOC_BYTESET_H

@@ -21,6 +21,8 @@ set(INCLUDE_DIRS
 		malloc
 		malloc/lib/src
 		malloc/freelist/src
+		malloc/bitmap/src
+		malloc/bytemap/src
 		wlib/src)
 include_directories(${INCLUDE_DIRS})
 # install all headers in directories listed above

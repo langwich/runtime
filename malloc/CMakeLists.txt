@@ -5,4 +5,6 @@ set(MODULE_NAME malloc)
 
 add_subdirectory(lib)
 add_subdirectory(freelist)
+add_subdirectory(bitmap)
+add_subdirectory(bytemap)
 
