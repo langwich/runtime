@@ -26,6 +26,12 @@ SOFTWARE.
 
 static const unsigned INVALID_VERSION = (unsigned)-1;
 
+/*
+ * A DEREF(v) will have to deallocate all element linked-lists as well.
+ * We can make DEREF and DEREF_Vector I guess.  Maybe that implies
+ * we need DEREF_String for consistency.
+ */
+
 typedef struct {
 	int refs;    		// refs to this object
 } heap_object;
