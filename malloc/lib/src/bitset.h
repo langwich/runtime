@@ -91,6 +91,7 @@ static inline bool bs_check_set(bitset *bs, size_t index) {
 
 void bs_init(bitset *, size_t, void *);
 size_t bs_nrun(bitset *, size_t);
+size_t bs_nrun_from(bitset *, size_t, size_t);
 void bs_set_range(bitset *, size_t, size_t);
 void bs_clear_range(bitset *, size_t, size_t);
 size_t bs_next_zero(bitset *, size_t);

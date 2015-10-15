@@ -93,19 +93,95 @@ void bs_dump(BITCHUNK bc, int fd) {
  */
 
 size_t bs_nrun(bitset *bs, size_t n) {
+	return bs_nrun_from(bs, n, 0);
+//	// although start_index starts from 0, but it should always
+//	// skip the first few bits set for the bit score board itself.
+//	size_t start_index = 0;
+//	size_t end_index = start_index;
+//	// starts with non-cross mode
+//	int mode = 0;// 0, non-crossing, 1 leading, 2 trailing (1, 2 are cross modes)
+//	int one_chk_possible = n > CHK_IN_BIT ? 0 : 1;
+//	if (!one_chk_possible) mode = 2;
+//	// current chunk index.
+//	size_t cur_chunk_index = 0;
+//
+//	size_t remaining = n;
+//	while (cur_chunk_index < bs->m_nbc) {
+//		BITCHUNK cur_bchk = bs->m_bc[cur_chunk_index];
+//		if (!remaining) break;
+//		if (1 == mode) {
+//			size_t lzcnt = bs_lzcnt(cur_bchk);
+//			if (lzcnt < remaining) {
+//				if (CHK_IN_BIT == lzcnt) {
+//					remaining -= lzcnt;
+//					end_index += lzcnt;
+//					cur_chunk_index++;
+//				}
+//				else {
+//					// not enough consecutive bits, restart scan
+//					// in this chunk
+//					if (one_chk_possible) mode = 0;
+//					else mode = 2;
+//					remaining = n;
+//				}
+//			}
+//			else {
+//				end_index += remaining;
+//				break;
+//			}
+//		}
+//		else if (2 == mode){
+//			// trailing mode could only happen when we just
+//			// started the crossing mode.
+//			size_t tzcnt = bs_tzcnt(cur_bchk);
+//			if (tzcnt) {
+//				start_index = (cur_chunk_index + 1) * CHK_IN_BIT - tzcnt;
+//				end_index = start_index + tzcnt - 1;
+//				remaining -= tzcnt;
+//				mode = 1;
+//			}
+//			else if (one_chk_possible) {
+//				// give up on this pass, start over from non-trailing mode
+//				// if it can be fit into one chunk.
+//				mode = 0;
+//			}
+//			cur_chunk_index++;
+//		}
+//		else {// non crossing mode
+//			int index = bs_chk_scann(cur_bchk, n);
+//			if (index >= 0) {
+//				start_index = cur_chunk_index * CHK_IN_BIT + index;
+//				end_index = start_index + n - 1;
+//				break;
+//			}
+//			// no contiguous chunk found, starting trailing mode
+//			mode = 2;
+//		}
+//	}
+//
+//	if (cur_chunk_index >= bs->m_nbc) return BITSET_NON;
+//	bs_set_range(bs, start_index, end_index);
+//	return start_index;
+}
+
+
+size_t bs_nrun_from(bitset *bs, size_t n, size_t start) {
 	// although start_index starts from 0, but it should always
 	// skip the first few bits set for the bit score board itself.
-	size_t start_index = 0;
+	size_t start_index = start;
 	size_t end_index = start_index;
 	// starts with non-cross mode
 	int mode = 0;// 0, non-crossing, 1 leading, 2 trailing (1, 2 are cross modes)
 	int one_chk_possible = n > CHK_IN_BIT ? 0 : 1;
 	if (!one_chk_possible) mode = 2;
+
 	// current chunk index.
-	size_t cur_chunk_index = 0;
+	size_t start_chunk_index = start_index / CHK_IN_BIT;
+	size_t cur_chunk_index = start_chunk_index;
 
 	size_t remaining = n;
-	while (cur_chunk_index < bs->m_nbc) {
+	size_t chunk_scanned = 0;
+	while (chunk_scanned < bs->m_nbc) {
 		BITCHUNK cur_bchk = bs->m_bc[cur_chunk_index];
 		if (!remaining) break;
 		if (1 == mode) {
@@ -115,6 +191,7 @@ size_t bs_nrun(bitset *bs, size_t n) {
 					remaining -= lzcnt;
 					end_index += lzcnt;
 					cur_chunk_index++;
+					chunk_scanned++;
 				}
 				else {
 					// not enough consecutive bits, restart scan
@@ -145,6 +222,7 @@ size_t bs_nrun(bitset *bs, size_t n) {
 				mode = 0;
 			}
 			cur_chunk_index++;
+			chunk_scanned++;
 		}
 		else {// non crossing mode
 			int index = bs_chk_scann(cur_bchk, n);
@@ -155,6 +233,11 @@ size_t bs_nrun(bitset *bs, size_t n) {
 			}
 			// no contiguous chunk found, starting trailing mode
 			mode = 2;
+		}
+		if (cur_chunk_index == bs->m_nbc && start_chunk_index) {
+			start_index = end_index = 0;
+			cur_chunk_index = 0;
+			remaining = n;
 		}
 	}
 
