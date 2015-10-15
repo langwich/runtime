@@ -91,7 +91,7 @@ void free(void *ptr)
 	if (ptr == NULL) return;
 
 	size_t offset = WORD(ptr) - WORD(g_pheap);
-	if (bs_check_set(&g_bsa, offset)) {
+	if (!bs_check_set(&g_bsa, offset)) {
 #ifdef DEBUG
 		fprintf(stderr, "boundary tag not set for address %p\n", ptr);
 #endif

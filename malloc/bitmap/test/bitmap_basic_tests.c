@@ -63,20 +63,20 @@ void test_bitmap_malloc() {
 	assert_addr_equal(WORD(g_pheap) + 18, addr20);
 	assert_equal(0x8000A00000000000, *g_pbsa);
 
-	void *addr408 = malloc(408);
+	void *addr344 = malloc(344);
 	assert_equal(0xFFFFFFFFFFFFFFFF, *g_pbsm);
-	assert_addr_equal(WORD(g_pbsm) + 13, addr408);
-	assert_equal(0x80A4000000000000, *g_pbsa);
+	assert_addr_equal(WORD(g_pheap) + 21, addr344);
+	assert_equal(0x8000A40000000000, *g_pbsa);
 
 	// start a new chunk
 	void *addr23 = malloc(23);
 	assert_equal(0xE000000000000000, g_pbsm[1]);
-	assert_addr_equal(WORD(g_pbsm) + 64, addr23);
+	assert_addr_equal(WORD(g_pheap) + 64, addr23);
 	assert_equal(0x8000000000000000, g_pbsa[1]);
 
 	void *addr30 = malloc(30);
 	assert_equal(0xFE00000000000000, g_pbsm[1]);
-	assert_addr_equal(WORD(g_pbsm) + 67, addr30);
+	assert_addr_equal(WORD(g_pheap) + 67, addr30);
 	assert_equal(0x9000000000000000, g_pbsa[1]);
 }
 
@@ -84,39 +84,38 @@ void test_bitmap_malloc_free() {
 	//////////
 	void *addr20 = malloc(20);
 	// check bit board
-	assert_equal(0xFFF0000000000000, *g_pbsm);
+	assert_equal(0xFFFFE00000000000, *g_pbsm);
 	// check address
-	assert_addr_equal(addr20, WORD(g_pbsm) + 8 + 1);
-	// check boundary tag
-	assert_equal(0xBBEEEEFF, *((U32 *)(WORD(addr20) - 1)));
-	assert_equal(4, ((U32 *)(WORD(addr20) - 1))[1]);
+	assert_addr_equal(WORD(g_pheap) + 16, addr20);
+	// check associated bit board
+	assert_equal(0x8000800000000000, *g_pbsa);
+
 	//////////
 	void *addr100 = malloc(100);
-	// check bit board
-	assert_equal(0xFFFFFFC000000000, *g_pbsm);
-	// check address
-	assert_addr_equal(addr100, WORD(g_pbsm) + 12 + 1);
-	// check boundary tag
-	assert_equal(0xBBEEEEFF, *((U32 *)(WORD(addr100) - 1)));
-	assert_equal(14, ((U32 *)(WORD(addr100) - 1))[1]);
+	assert_equal(0xFFFFFFFF00000000, *g_pbsm);
+	assert_addr_equal(WORD(g_pheap) + 19, addr100);
+	assert_equal(0x8000900000000000, *g_pbsa);
+
 	// test unsatisfiable request
 	assert_equal(NULL, malloc(4096));
 	///////////
 	// freeing
 	free(addr20);
-	assert_equal(0xFF0FFFC000000000, *g_pbsm);
+	assert_equal(0xFFFF1FFF00000000, *g_pbsm);
+	assert_equal(0x8000100000000000, *g_pbsa);
+
 	free(addr100);
-	assert_equal(0xFF00000000000000, *g_pbsm);
+	assert_equal(0xFFFF000000000000, *g_pbsm);
+	assert_equal(0x8000000000000000, *g_pbsa);
+
 
 	// acquiring all memory
-	void *addrAll = malloc(4096 - 9 * 8);
-	assert_addr_equal(addrAll, WORD(g_pbsm) + 8 + 1);
-	BITCHUNK *bitchunk = (BITCHUNK *) g_pbsm;
+	void *addrAll = malloc(HEAP_SIZE - 16 * 8);
+	assert_addr_equal(addrAll, WORD(g_pheap) + 16);
 	// all bits should be turned on.
-	for (int i = 0; i < 8; ++i) assert_equal(bitchunk[i], ~0x0);
-	// the first word should contain the boundary tag.
-	assert_equal(0xBBEEEEFF, *((U32 *)(WORD(addrAll) - 1)));
-	assert_equal(504, ((U32 *)(WORD(addrAll) - 1))[1]);
+	for (int i = 0; i < 8; ++i) assert_equal(~0x0, g_pbsm[i]);
+	// check boundary
+	assert_equal(0x8000800000000000, *g_pbsa);
 }
 
 int main(int argc, char *argv[]) {
@@ -125,7 +124,7 @@ int main(int argc, char *argv[]) {
 
 	test(test_bitmap_init);
 	test(test_bitmap_malloc);
-//	test(test_bitmap_malloc_free);
+	test(test_bitmap_malloc_free);
 
 	return 0;
 }
