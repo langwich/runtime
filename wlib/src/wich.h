@@ -22,12 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef RUNTIME_WICH_H_
-#define RUNTIME_WICH_H_
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <stdbool.h>
+
+typedef struct {
+	int refs;    		// refs to this object
+} heap_object;
 
 typedef struct {
 	heap_object metadata;
@@ -37,7 +39,6 @@ typedef struct {
 
 typedef struct string {
 	heap_object metadata;
-	int length;         // max length not string length
 	char str[];
 	/* the string starts at the end of fixed fields; this field
 	 * does not take any room in the structure; it's really just a
@@ -50,16 +51,29 @@ typedef struct string {
 
 String *String_new(char *s);
 String *String_from_char(char c);
+String *String_alloc(size_t size);
 String *String_add(String *s, String *t);
 String *String_copy(String *s);
+String *String_from_vector(Vector *vector);
+String *String_from_int(int value);
+String *String_from_float(float value);
 
+bool String_eq(String *s, String *t);
+bool String_neq(String *s, String *t);
+bool String_gt(String *s, String *t);
+bool String_ge(String *s, String *t);
+bool String_lt(String *s, String *t);
+bool String_le(String *s, String *t);
 void print_string(String *s);
 
 Vector *Vector_empty();
 Vector *Vector_copy(Vector *v);
+Vector *Vector_alloc(size_t size);
 Vector *Vector_new(double *data, size_t n);
 Vector *Vector_append(Vector *a, double value);
 Vector *Vector_append_vector(Vector *a, Vector *b);
+Vector *Vector_from_int(int value, Vector *v);
+Vector *Vector_from_float(float value, Vector *v);
 
 Vector *Vector_add(Vector *a, Vector *b);
 Vector *Vector_sub(Vector *a, Vector *b);
@@ -71,6 +85,14 @@ void print_vector(Vector *a);
 // Following malloc/free are the hook where we create our own malloc/free or use the system's
 void *wich_malloc(size_t nbytes);
 void wich_free(heap_object *p);
+
+static inline void COPY_ON_WRITE(void *x) {
+	if ( x!=NULL && ((heap_object *)x)->refs > 1 ) {
+		((heap_object *)x)->refs--;
+		x = Vector_copy(x);
+		((heap_object *)x)->refs = 1;
+	}
+}
 
 
 static void
@@ -90,5 +112,3 @@ static inline void setup_error_handlers() {
 	signal(SIGSEGV, handle_sys_errors);
 	signal(SIGBUS, handle_sys_errors);
 }
-
-#endif
