@@ -27,8 +27,9 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdbool.h>
 //#define DEBUG
+
+#include "persistent_vector.h"
 #include "wich.h"
-#include "refcounting.h"
 
 static const int MAX_ROOTS = 1024;
 static int sp = -1; // grow upwards; inc then set for push.
@@ -59,14 +60,6 @@ Vector *Vector_empty()
 	int n = 10;
 	Vector *v = Vector_alloc(n);
 	memset(v->data, 0, n*sizeof(double));
-	return v;
-}
-
-Vector *Vector_alloc(size_t size)
-{
-	Vector *v = wich_malloc(sizeof(Vector) + size * sizeof(double));
-	v->metadata.refs = 0;
-	v->length = size;
 	return v;
 }
 
@@ -177,13 +170,6 @@ void print_vector(Vector *a)
 	printf("%s\n", vs);
 	free(vs);
 	DEREF(a);
-}
-
-String *String_alloc(size_t size)
-{
-	String *s = (String *)wich_malloc(sizeof(String) + size * sizeof(char) + 1); // include \0 of string
-	s->metadata.refs = 0;
-	return s;
 }
 
 String *String_new(char *orig)
