@@ -24,7 +24,9 @@ SOFTWARE.
 
 /*
  * 60s - 64s with -mpopcnt -mlzcnt turned on similar result without
- * those intrinsics.
+ * those intrinsics. (that's for the old boundary tag implementation)
+ *
+ * 270s - 300s for the two-bitmap implementation.
  */
 
 #include <stddef.h>
@@ -93,7 +95,7 @@ void free(void *ptr)
 	size_t offset = WORD(ptr) - WORD(g_pheap);
 	if (!bs_check_set(&g_bsa, offset)) {
 #ifdef DEBUG
-		fprintf(stderr, "boundary tag not set for address %p\n", ptr);
+		fprintf(stderr, "boundary bit not set for address %p\n", ptr);
 #endif
 		// returning here to avoid corruption
 		return;
