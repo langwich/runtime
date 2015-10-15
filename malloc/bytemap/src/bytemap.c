@@ -40,7 +40,7 @@ static size_t g_heap_size;
  * Allocate size bytes from the arena. Size will
  * be rounded up to word boundary.
  *
- * Algorithm: Find consecutive size / WORD_SIZE
+ * Algorithm: Find consecutive size / WORD_SIZE_IN_BYTE
  * bytes that are '0' from the byte score board.
  * Use the start address of this n-run of '0' as
  * the offset and return the start address of the
@@ -51,7 +51,7 @@ void *malloc(size_t size) {
 	size_t n = ALIGN_WORD_BOUNDARY(size);
 
 	size_t offset;
-	size_t num_bytes = n / WORD_SIZE + 1;
+	size_t num_bytes = n / WORD_SIZE_IN_BYTE + 1;
 	// plus one here for the extra word used for boundary tag.
 	if ((offset = byset_nrun(&g_bys, num_bytes)) == NOT_FOUND) return NULL;
 	void *ptr = WORD(g_pheap) + offset;
@@ -80,7 +80,7 @@ void free(void *ptr) {
 void bytemap_init(size_t size) {
 	g_pheap = morecore(size);
 	g_heap_size = size;
-	byset_init(&g_bys, g_heap_size / WORD_SIZE, g_pheap);
+	byset_init(&g_bys, g_heap_size / WORD_SIZE_IN_BYTE, g_pheap);
 }
 
 void bytemap_release() {

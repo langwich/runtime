@@ -24,6 +24,8 @@ SOFTWARE.
 
 #include <string.h>
 #include <cunit.h>
+#include <stdio.h>
+#include <lib/src/bitset.h>
 #include "bitset.h"
 
 #define HEAP_SIZE           4096
@@ -46,7 +48,7 @@ void test_bs_init() {
 void test_bs_set1() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
-	bs_set1(&bs, 23, 80);
+	bs_set_range(&bs, 23, 80);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFFFFFFF);
 	assert_equal(bs.m_bc[1], 0xFFFF800000000000);
 }
@@ -54,7 +56,7 @@ void test_bs_set1() {
 void test_bs_set1_left_boundary() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
-	bs_set1(&bs, 64, 80);
+	bs_set_range(&bs, 64, 80);
 	assert_equal(bs.m_bc[0], 0xC000000000000000);
 	assert_equal(bs.m_bc[1], 0xFFFF800000000000);
 }
@@ -62,7 +64,7 @@ void test_bs_set1_left_boundary() {
 void test_bs_set1_right_boundary_hi() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
-	bs_set1(&bs, 23, 63);
+	bs_set_range(&bs, 23, 63);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFFFFFFF);
 	assert_equal(bs.m_bc[1], 0x0);
 }
@@ -70,7 +72,7 @@ void test_bs_set1_right_boundary_hi() {
 void test_bs_set1_right_boundary_lo() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
-	bs_set1(&bs, 63, 77);
+	bs_set_range(&bs, 63, 77);
 	assert_equal(bs.m_bc[0], 0xC000000000000001);
 	assert_equal(bs.m_bc[1], 0xFFFC000000000000);
 }
@@ -79,7 +81,7 @@ void test_bs_set1_same_chk() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
 	assert_equal(bs.m_bc[0], 0xC000000000000000);
-	bs_set1(&bs, 2, 3);
+	bs_set_range(&bs, 2, 3);
 	assert_equal(bs.m_bc[0], 0xF000000000000000);
 }
 
@@ -87,7 +89,7 @@ void test_bs_set1_same_chk_middle() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
 	assert_equal(bs.m_bc[0], 0xC000000000000000);
-	bs_set1(&bs, 23, 33);
+	bs_set_range(&bs, 23, 33);
 	assert_equal(bs.m_bc[0], 0xC00001FFC0000000);
 	assert_equal(bs.m_bc[1], 0x0);
 }
@@ -95,8 +97,8 @@ void test_bs_set1_same_chk_middle() {
 void test_bs_set0() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
-	bs_set1(&bs, 23, 80);
-	bs_set0(&bs, 55, 77);
+	bs_set_range(&bs, 23, 80);
+	bs_clear_range(&bs, 55, 77);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFFFFE00);
 	assert_equal(bs.m_bc[1], 0x0003800000000000);
 }
@@ -104,8 +106,8 @@ void test_bs_set0() {
 void test_bs_set0_left_boundary() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
-	bs_set1(&bs, 23, 80);
-	bs_set0(&bs, 64, 77);
+	bs_set_range(&bs, 23, 80);
+	bs_clear_range(&bs, 64, 77);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFFFFFFF);
 	assert_equal(bs.m_bc[1], 0x0003800000000000);
 }
@@ -113,8 +115,8 @@ void test_bs_set0_left_boundary() {
 void test_bs_set0_right_boundary_hi() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
-	bs_set1(&bs, 23, 80);
-	bs_set0(&bs, 44, 63);
+	bs_set_range(&bs, 23, 80);
+	bs_clear_range(&bs, 44, 63);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFF00000);
 	assert_equal(bs.m_bc[1], 0xFFFF800000000000);
 }
@@ -122,8 +124,8 @@ void test_bs_set0_right_boundary_hi() {
 void test_bs_set0_right_boundary_lo() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
-	bs_set1(&bs, 23, 80);
-	bs_set0(&bs, 63, 77);
+	bs_set_range(&bs, 23, 80);
+	bs_clear_range(&bs, 63, 77);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFFFFFFE);
 	assert_equal(bs.m_bc[1], 0x0003800000000000);
 }
@@ -131,8 +133,8 @@ void test_bs_set0_right_boundary_lo() {
 void test_bs_set0_same_chk() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
-	bs_set1(&bs, 23, 63);//  0xC00001FFFFFFFFFF
-	bs_set0(&bs, 24, 33);
+	bs_set_range(&bs, 23, 63);//  0xC00001FFFFFFFFFF
+	bs_clear_range(&bs, 24, 33);
 	assert_equal(bs.m_bc[0], 0xC00001003FFFFFFF);
 	assert_equal(bs.m_bc[1], 0x0);
 }
@@ -161,6 +163,115 @@ void test_bs_chk_scann_right_bdry() {
 	assert_equal(57, index7);
 }
 
+void test_set_single_bit() {
+	bitset bs;
+	bs_init(&bs, 2, g_heap);
+	*(bs.m_bc) = 10;
+	bs_set(&bs, 63);
+	assert_equal(11, *(bs.m_bc));
+	bs_set(&bs, 1);
+	assert_equal(4611686018427387915, *(bs.m_bc));
+	bs_clear(&bs, 1);
+	assert_equal(11, *(bs.m_bc));
+	bs_clear(&bs, 63);
+	assert_equal(10, *(bs.m_bc));
+}
+
+void test_next_zero() {
+	bitset bs;
+	bs_init(&bs, 2, g_heap);
+	// test normal usage
+	size_t next_pos = bs_next_zero(&bs, 0);
+	assert_equal(2, next_pos);
+	next_pos = bs_next_zero(&bs, 63);
+	assert_equal(63, next_pos);
+	next_pos = bs_next_zero(&bs, 64);
+	assert_equal(64, next_pos);
+
+	bs_set_range(&bs, 3, 10);
+	assert_equal(0xDFE0000000000000, bs.m_bc[0]);
+	next_pos = bs_next_zero(&bs, 1);
+	assert_equal(2, next_pos);
+	next_pos = bs_next_zero(&bs, 2);
+	assert_equal(2, next_pos);
+	next_pos = bs_next_zero(&bs, 3);
+	assert_equal(11, next_pos);
+
+	bs_set_range(&bs, 62, 63);
+	next_pos = bs_next_zero(&bs, 61);
+	assert_equal(61, next_pos);
+	next_pos = bs_next_zero(&bs, 62);
+	assert_equal(64, next_pos);
+
+	// test when there is no zero
+	bs_set_range(&bs, 0, 127);
+	assert_equal(~0x0, bs.m_bc[0]);
+	assert_equal(~0x0, bs.m_bc[1]);
+
+	next_pos = bs_next_zero(&bs, 0);
+	assert_equal(next_pos, BITSET_NON);
+
+	// test starts from second chunk
+	bs_clear_range(&bs, 66, 69);
+	next_pos = bs_next_zero(&bs, 65);
+	assert_equal(66, next_pos);
+
+	// test start point off zero
+	bs_set_range(&bs, 66, 69);
+	bs_clear(&bs, 0);
+	next_pos = bs_next_zero(&bs, 0);
+	assert_equal(0, next_pos);
+	next_pos = bs_next_zero(&bs, 1);// off by 1
+	assert_equal(BITSET_NON, next_pos);
+}
+
+
+void test_next_one() {
+	bitset bs;
+	bs_init(&bs, 2, g_heap);
+	// test normal usage
+	size_t next_pos = bs_next_one(&bs, 0);
+	assert_equal(0, next_pos);
+	bs_set_range(&bs, 63, 64);
+	next_pos = bs_next_one(&bs, 62);
+	assert_equal(63, next_pos);
+	next_pos = bs_next_one(&bs, 63);
+	assert_equal(63, next_pos);
+
+	// test when there is no one
+	bs_clear_range(&bs, 0, 127);
+	assert_equal(0x0, bs.m_bc[0]);
+	assert_equal(0x0, bs.m_bc[1]);
+
+	next_pos = bs_next_one(&bs, 0);
+	assert_equal(next_pos, BITSET_NON);
+
+	// test starts from second chunk
+	bs_set_range(&bs, 66, 69);
+	next_pos = bs_next_one(&bs, 65);
+	assert_equal(66, next_pos);
+
+	// test start point off zero
+	bs_clear_range(&bs, 66, 69);
+	bs_set(&bs, 0);
+	next_pos = bs_next_one(&bs, 0);
+	assert_equal(0, next_pos);
+	next_pos = bs_next_one(&bs, 1);// off by 1
+	assert_equal(BITSET_NON, next_pos);
+}
+
+void test_check_set() {
+	bitset bs;
+	bs_init(&bs, 2, g_heap);
+	// test in the first chunk
+	assert_true(bs_check_set(&bs, 0));
+	assert_true(bs_check_set(&bs, 1));
+	// test in the second chunk
+	bs_set_range(&bs, 64, 65);
+	assert_true(bs_check_set(&bs, 64));
+	assert_true(bs_check_set(&bs, 65));
+}
+
 void test_bs_nrun() {
 	bitset bs;
 	// initialization
@@ -178,7 +289,7 @@ void test_bs_nrun() {
 	// to 1 such that we can get the next trunk for allocation
 	// of 16 bits. there are only 15 bits left for the first
 	// chunk now.
-	bs_set1(&bs, 31, 63);
+	bs_set_range(&bs, 31, 63);
 	size_t index16 = bs_nrun(&bs, 16);
 	assert_equal(64, index16);
 	assert_equal(bs.m_bc[1], 0xFFFF000000000000);
@@ -188,7 +299,7 @@ void test_bs_nrun() {
 	assert_equal(bs.m_bc[0], 0xFFFFFFFFFFFFFFFF);
 	assert_equal(bs.m_bc[1], 0xFFFF000000000000);
 	// trying leading mode here
-	bs_set0(&bs, 50, 70);// set a 0 "island" cross two chunks
+	bs_clear_range(&bs, 50, 70);// set a 0 "island" cross two chunks
 	assert_equal(bs.m_bc[0], 0xFFFFFFFFFFFFC000);
 	assert_equal(bs.m_bc[1], 0x01FF000000000000);
 	size_t index19 = bs_nrun(&bs, 19);
@@ -212,8 +323,8 @@ void test_bs_nrun_long() {
 	}
 	assert_equal(bs.m_bc[5], 0xFFFFFFFFFFFFFFFE);
 	// now the last two chunks with one extra bit should be 1s
-	bs_set1(&bs, 383, 511);
-	bs_set0(&bs, 8, 382);
+	bs_set_range(&bs, 383, 511);
+	bs_clear_range(&bs, 8, 382);
 	for (int i = 1; i < 5; ++i) {
 		assert_equal(bs.m_bc[i], 0x0);
 	}
@@ -266,6 +377,10 @@ int main(int argc, char *argv[]) {
 	test(test_bs_chk_scann);
 	test(test_bs_chk_scann_left_bdry);
 	test(test_bs_chk_scann_right_bdry);
+	test(test_set_single_bit);
+	test(test_next_zero);
+	test(test_next_one);
+	test(test_check_set);
 
 	test(test_bs_nrun);
 	test(test_bs_nrun_long);

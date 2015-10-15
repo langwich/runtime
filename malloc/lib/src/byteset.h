@@ -31,12 +31,12 @@ SOFTWARE.
 typedef unsigned char           U1;
 typedef __uint32_t              U32;
 
-#define WORD_SIZE       (sizeof(void *))
+#define WORD_SIZE_IN_BYTE       (sizeof(void *))
 #define NOT_FOUND       ((size_t)~0x0)
-#define ALIGN_MASK      (WORD_SIZE - 1)
+#define ALIGN_MASK      (WORD_SIZE_IN_BYTE - 1)
 
 #define WORD(x)                 ((unsigned long long *)x)
-#define ALIGN_WORD_BOUNDARY(n)  ((n & ALIGN_MASK) == 0 ? n : (n + WORD_SIZE) & ~ALIGN_MASK)
+#define ALIGN_WORD_BOUNDARY(n)  ((n & ALIGN_MASK) == 0 ? n : (n + WORD_SIZE_IN_BYTE) & ~ALIGN_MASK)
 
 typedef struct {
 	size_t num_words;

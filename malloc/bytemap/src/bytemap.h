@@ -27,8 +27,6 @@ SOFTWARE.
 
 #include <stddef.h>
 
-#define BOUNDARY_TAG        0xBBEEEEFF
-
 void *bytemap_get_heap();
 void bytemap_init(size_t size);
 void bytemap_release();

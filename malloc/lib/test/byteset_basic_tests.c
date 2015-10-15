@@ -27,7 +27,7 @@ SOFTWARE.
 #include "byteset.h"
 
 #define HEAP_SIZE           4096
-#define NUM_WORDS           HEAP_SIZE/WORD_SIZE
+#define NUM_WORDS           HEAP_SIZE/WORD_SIZE_IN_BYTE
 
 static char g_heap[HEAP_SIZE];
 
