@@ -34,9 +34,9 @@ void byset_init(byset *pbys, size_t n, void *pheap) {
 	pbys->num_words = n;
 	// unlike bitmap, we need to initialize byte board to '0'
 	memset(pheap, '0', n);
-	// set first n / WORD_SIZE bytes to 1, since this is
+	// set first n / WORD_SIZE_IN_BYTE bytes to 1, since this is
 	// occupied by the byte score board.
-	byset_set1(pbys, 0, n / WORD_SIZE - 1);
+	byset_set1(pbys, 0, n / WORD_SIZE_IN_BYTE - 1);
 }
 
 /*

@@ -31,7 +31,7 @@ SOFTWARE.
 #define HEAP_SIZE           4096
 
 
-static char test_buf[HEAP_SIZE / WORD_SIZE];
+static char test_buf[HEAP_SIZE / WORD_SIZE_IN_BYTE];
 static void *g_pheap;
 
 static void setup() {
@@ -62,7 +62,7 @@ void test_bytemap_malloc() {
 	assert_strn_equal(test_buf, g_pheap, sizeof(test_buf));
 
 	// try assigning one byte more than the space available.
-	void *addr_null = malloc(HEAP_SIZE - HEAP_SIZE / WORD_SIZE - 20 + 1);
+	void *addr_null = malloc(HEAP_SIZE - HEAP_SIZE / WORD_SIZE_IN_BYTE - 20 + 1);
 	assert_equal(addr_null, NULL);
 	assert_strn_equal(test_buf, g_pheap, sizeof(test_buf));
 

@@ -44,29 +44,13 @@ static int lup[LUP_ROW][LUP_COL];
 /*
  * the initial masks with n leading 0s (from left).
  */
-static unsigned char n_lz_mask[LUP_COL] = {0x7f, 0x3f, 0x1f, 0x0f, 0x07, 0x03, 0x01, 0x00};
-//static unsigned char n_tz_mask[LUP_COL] = {0xfe, 0xfc, 0xf8, 0xf0, 0xe0, 0xc0, 0x80, 0x00};
+static unsigned char lz_mask[LUP_COL] = {0x7f, 0x3f, 0x1f, 0x0f, 0x07, 0x03, 0x01, 0x00};
+static unsigned char tz_mask[LUP_COL] = {0xfe, 0xfc, 0xf8, 0xf0, 0xe0, 0xc0, 0x80, 0x00};
 static BITCHUNK right_masks[65];
 static BITCHUNK left_masks[65];
 
 static void init_lups();
 static void init_masks();
-
-// in Core i7 processors the LZCNT instruction
-// is implemented using BSR, thus its the index
-// of the last set bit.
-#define bs_lzcnt(bchk) (bchk ? CHK_IN_BIT - 1 - __builtin_clzll(bchk) : CHK_IN_BIT)
-// in Core i7 processors this intrinsic is translated to
-// BSF, thus gives the first index of a set bit.
-#define bs_tzcnt(bchk) (bchk ? __builtin_ctzll(bchk) : CHK_IN_BIT)
-
-
-static inline size_t bs_popcnt(BITCHUNK bchk) {
-	return CHK_IN_BIT - __builtin_popcountll(bchk);
-}
-
-// used to track profiling information
-profile_info profile = {0};
 
 /*
  * Initializes a bitset with n chunks.
@@ -82,8 +66,9 @@ void bs_init(bitset *bs, size_t nchks, void *pheap) {
 	bs->m_bc = pheap;
 	// set the first few bits to 1.
 	// Those bits count for the space consumed by the bit score board.
-	bs_set1(bs, 0, nchks * CHUNK_SIZE / WORD_SIZE - 1);
+	bs_set_range(bs, 0, nchks * CHUNK_SIZE / WORD_SIZE_IN_BYTE - 1);
 }
+
 /*
  * Dump the bit chunk to fd. Mainly used for debug/test.
  */
@@ -93,6 +78,7 @@ void bs_dump(BITCHUNK bc, int fd) {
 	}
 	write(fd, "\n", 1);
 }
+
 /*
  * Returns the index of the first n-run of 0s in the bitset.
  * The index is 0-based. -1 is returned if no n-run of 0s are
@@ -123,9 +109,6 @@ size_t bs_nrun(bitset *bs, size_t n) {
 		BITCHUNK cur_bchk = bs->m_bc[cur_chunk_index];
 		if (!remaining) break;
 		if (1 == mode) {
-#ifdef DEBUG
-			profile.leading++;
-#endif
 			size_t lzcnt = bs_lzcnt(cur_bchk);
 			if (lzcnt < remaining) {
 				if (CHK_IN_BIT == lzcnt) {
@@ -147,9 +130,6 @@ size_t bs_nrun(bitset *bs, size_t n) {
 			}
 		}
 		else if (2 == mode){
-#ifdef DEBUG
-			profile.trailing++;
-#endif
 			// trailing mode could only happen when we just
 			// started the crossing mode.
 			size_t tzcnt = bs_tzcnt(cur_bchk);
@@ -167,9 +147,6 @@ size_t bs_nrun(bitset *bs, size_t n) {
 			cur_chunk_index++;
 		}
 		else {// non crossing mode
-#ifdef DEBUG
-			profile.non_cross++;
-#endif
 			int index = bs_chk_scann(cur_bchk, n);
 			if (index >= 0) {
 				start_index = cur_chunk_index * CHK_IN_BIT + index;
@@ -182,14 +159,15 @@ size_t bs_nrun(bitset *bs, size_t n) {
 	}
 
 	if (cur_chunk_index >= bs->m_nbc) return BITSET_NON;
-	bs_set1(bs, start_index, end_index);
+	bs_set_range(bs, start_index, end_index);
 	return start_index;
 }
+
 /*
  * Sets the bits in [lo,hi] to 1. lo is the less significant bit.
  * lo and hi are bit indices and are *0-BASED*
  */
-void bs_set1(bitset *bs, size_t lo, size_t hi) {
+void bs_set_range(bitset *bs, size_t lo, size_t hi) {
 	size_t lo_chk = lo / CHK_IN_BIT;
 	size_t hi_chk = hi / CHK_IN_BIT;
 	if (lo_chk == hi_chk) {
@@ -203,11 +181,12 @@ void bs_set1(bitset *bs, size_t lo, size_t hi) {
 		bs->m_bc[hi_chk] |= left_masks[hi + 1 - hi_chk * CHK_IN_BIT];
 	}
 }
+
 /*
  * Sets the bits in [lo,hi] to 0. lo is the less significant bit
  * lo and hi are bit indices and are *0-BASED*
  */
-void bs_set0(bitset *bs, size_t lo, size_t hi) {
+void bs_clear_range(bitset *bs, size_t lo, size_t hi) {
 	size_t lo_chk = lo / CHK_IN_BIT;
 	size_t hi_chk = hi / CHK_IN_BIT;
 	if (lo_chk == hi_chk) {
@@ -230,36 +209,11 @@ int bs_chk_scann(BITCHUNK bchk, size_t n) {
 	int i = 0;
 	while (bs_lzcnt(bchk) < n) {
 		bchk = (bchk << 1) | (BITCHUNK) 1;
-		if (bs_popcnt(bchk) < n || (i == (CHK_IN_BIT - n))) return -1;
+		if (bs_zerocnt(bchk) < n || (i == (CHK_IN_BIT - n))) return -1;
 		i++;
 	}
 	return i;
 }
-
-/*
- * Verify the range [start,end] (index starts from 0)
- * contains all 1s. returns 1 for true and 0 for false.
- */
-#ifdef DEBUG
-int bs_contain_ones(bitset *bs, size_t lo, size_t hi) {
-	size_t lo_chk = lo / CHK_IN_BIT;
-	size_t hi_chk = hi / CHK_IN_BIT;
-	if (lo_chk == hi_chk) {
-		BITCHUNK mask = ~(right_masks[(lo_chk + 1) * CHK_IN_BIT - lo] ^
-		                  left_masks[hi + 1 - hi_chk * CHK_IN_BIT]);
-		return (bs->m_bc[lo_chk] & mask) == mask;
-	}
-	else {
-		size_t next_chk = lo_chk + 1;
-		while (next_chk < hi_chk) if (bs->m_bc[next_chk++] != BC_ONE) return 0;
-		BITCHUNK right_mask = right_masks[(lo_chk + 1) * CHK_IN_BIT - lo];
-		BITCHUNK left_mask = left_masks[hi + 1 - hi_chk * CHK_IN_BIT];
-		if ((bs->m_bc[lo_chk] & right_mask) != right_mask ||
-				(bs->m_bc[hi_chk] & left_mask)!= left_mask) return 0;
-	}
-	return 1;
-}
-#endif
 
 static void init_lups() {
 	for (int i = 0; i < LUP_ROW; ++i) {
@@ -270,7 +224,7 @@ static void init_lups() {
 
 	for (int i = 0; i < LUP_ROW; ++i) {
 		for (int j = 0; j < LUP_COL; ++j) {
-			U1 mask = n_lz_mask[j];
+			U1 mask = lz_mask[j];
 			for (int k = 0; k < BIT_NUM - j; ++k) {
 				// stops when we got j+1 consecutive 0s
 				// or we reach the end.
@@ -296,6 +250,28 @@ static void init_masks() {
 	}
 }
 
-profile_info get_profile_info() {
-	return profile;
+// get the next zero index starts from index (inclusive)
+size_t bs_next_zero(bitset *bs, size_t index) {
+	for (size_t i = index; i < bs->m_nbc * CHK_IN_BIT; i = ALIGN_CHUNK_BOUNDARY(i + 1)) {
+		BITCHUNK chk = bs->m_bc[i / CHK_IN_BIT] | left_masks[i % CHK_IN_BIT];
+		if (bs_zerocnt(chk)) {
+			size_t offset = 0;
+			while ((chk << offset) & BC_LEFTMOST_MASK) ++offset;
+			return i & CHK_ALIGN_MASK ? (i / CHK_IN_BIT) * CHK_IN_BIT + offset : i + offset;
+		}
+	}
+	return BITSET_NON;
+}
+
+// get the next zero index starts from index (inclusive)
+size_t bs_next_one(bitset *bs, size_t index) {
+	for (size_t i = index; i < bs->m_nbc * CHK_IN_BIT; i = ALIGN_CHUNK_BOUNDARY(i + 1)) {
+		BITCHUNK chk = bs->m_bc[i / CHK_IN_BIT] & ~left_masks[i % CHK_IN_BIT];
+		if (bs_zerocnt(chk) < CHK_IN_BIT) {
+			size_t offset = 0;
+			while (!((chk << offset) & BC_LEFTMOST_MASK)) ++offset;
+			return i & CHK_ALIGN_MASK ? (i / CHK_IN_BIT) * CHK_IN_BIT + offset : i + offset;
+		}
+	}
+	return BITSET_NON;
 }

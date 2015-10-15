@@ -29,13 +29,16 @@ SOFTWARE.
 
 #include <stddef.h>
 #include <morecore.h>
+
 #include <bitset.h>
 
 #include "bitmap.h"
 
 static void *g_pheap;
 static size_t g_heap_size;
-static bitset g_bset;
+
+static bitset g_bsm;// bit set used to keep track of heap usage.
+static bitset g_bsa;// associated bit set to mark the boundaries.
 
 /*
  * Current implementation is really straightforward. We don't
@@ -44,8 +47,16 @@ static bitset g_bset;
 void bitmap_init(size_t size) {
 	g_pheap = morecore(size);
 	g_heap_size = size;
-	// the bitset will "borrow" some heap space here for the bit "score-board".
-	bs_init(&g_bset, size / (CHK_IN_BIT * WORD_SIZE), g_pheap);
+
+	size_t num_chk = size / (CHK_IN_BIT *WORD_SIZE_IN_BYTE);
+	bs_init(&g_bsm, num_chk, g_pheap);
+
+	// the associated bit board starts right after the main one
+	// to improve locality.
+	bs_set_range(&g_bsm, num_chk, 2 * num_chk - 1);
+	bs_init(&g_bsa, num_chk, ((BITCHUNK *)g_pheap) + num_chk);
+	bs_clear_range(&g_bsa, 0, num_chk - 1);
+	bs_set(&g_bsa, 0);
 }
 
 void bitmap_release() {
@@ -57,26 +68,18 @@ void bitmap_release() {
  * amount of heap/mapped memory.
  * The size is round up to the word boundary.
  * NULL is returned when there is not enough memory.
- *
- *  First word serve as the boundary.
- *      32bit     32bit
- * |===========+===========|=========
- * | BBEEEEFF  +   size    | data...
- * |===========+===========|=========
  */
 void *malloc(size_t size)
 {
 	size_t n = ALIGN_WORD_BOUNDARY(size);
 
-	size_t run_index;
-	// +1 for the extra boundary tag
-	size_t num_bits = n / WORD_SIZE + 1;
-	if ((run_index = bs_nrun(&g_bset, num_bits)) == BITSET_NON) return NULL;
+	size_t run_index = 0;
+	if ((run_index = bs_nrun(&g_bsm, n /WORD_SIZE_IN_BYTE)) == BITSET_NON) return NULL;
 	void *ptr = WORD(g_pheap) + run_index;
-	U32 *boundary = (U32 *) ptr;
-	boundary[0] = BOUNDARY_TAG;
-	boundary[1] = (U32) num_bits;
-	return WORD(ptr) + 1;
+	// make sure the we set the correct boundary
+	bs_set(&g_bsa, run_index);
+
+	return ptr;
 }
 
 /*
@@ -86,51 +89,37 @@ void *malloc(size_t size)
 void free(void *ptr)
 {
 	if (ptr == NULL) return;
-	U32 *boundary = (U32 *) (WORD(ptr) - 1);
-	if (BOUNDARY_TAG != boundary[0]) {
+
+	size_t offset = WORD(ptr) - WORD(g_pheap);
+	if (bs_check_set(&g_bsa, offset)) {
 #ifdef DEBUG
-		fprintf(stderr, "boundary tag corrupted for address %p, have you freed it before?\n", ptr);
+		fprintf(stderr, "boundary tag not set for address %p\n", ptr);
 #endif
-		// returning here in case the free are called twice
-		// on the same memory address
+		// returning here to avoid corruption
 		return;
 	}
-	U32 num_bits = boundary[1];
-	size_t start_index = WORD(ptr) - 1 - WORD(g_pheap);
-	bs_set0(&g_bset, start_index, start_index + num_bits - 1);
-	// remove boundary tag
-	boundary[0] = 0;
+
+	// find the size of consecutive ones
+	size_t next_set = bs_next_one(&g_bsa, offset + 1);
+	size_t size;
+	if (next_set == BITSET_NON) {
+		// if nothing found in the associative bitmap
+		// then there is only one chunk in the main bitmap.
+		size_t next_unset = bs_next_zero(&g_bsm, offset + 1);
+		// the true answer means the allocated memory goes to the end.
+		size = (next_unset == BITSET_NON) ? g_bsa.m_nbc * CHK_IN_BIT - offset : next_unset - offset;
+	}
+	else {
+		size = next_set - offset;
+	}
+
+	// clear the bits in two bitmaps
+	bs_clear_range(&g_bsm, offset, offset + size - 1);
+	bs_clear(&g_bsa, offset);
 }
 
+#ifdef DEBUG
 void *bitmap_get_heap() {
 	return g_pheap;
 }
-
-int verify_bit_score_board() {
-	BITCHUNK *chk = WORD(g_pheap);
-	for (size_t bit_index = 0; bit_index < g_bset.m_nbc * CHK_IN_BIT; ++bit_index) {
-		// boundary tag
-		U32 tag = ((U32 *)(&chk[bit_index]))[0];
-		if (tag == BOUNDARY_TAG) {
-			U32 len = ((U32 *)(&chk[bit_index]))[1];
-			size_t end_index = bit_index + len - 1;
-			if (!bs_contain_ones(&g_bset, bit_index, end_index)) {
-#ifdef DEBUG
-				fprintf(stderr, "verification failed, bitmap is in wrong status.\n");
 #endif
-				return 0;
-			}
-		}
-	}
-	return 1;
-}
-
-int print_profile_info() {
-#ifdef DEBUG
-	profile_info profile = get_profile_info();
-
-	fprintf(stderr, "non_cross: %ld\nleading: %ld\ntrailing: %ld\n",
-	        profile.non_cross, profile.leading, profile.trailing);
-#endif
-	return 0;
-}
