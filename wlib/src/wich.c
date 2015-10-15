@@ -28,12 +28,40 @@ SOFTWARE.
 #include <stdbool.h>
 //#define DEBUG
 
-#include "persistent_vector.h"
+#ifdef REFCOUNTING
+#include <refcounting.h>
+#elif MARK_AND_SWEEP
+#include <gc.h>
+#elif MARK_AND_COMPACT
+#include <gc.h>
+#else // PLAIN
+typedef struct {} heap_object; // no extra header info needed
+#endif
+
 #include "wich.h"
+#include "persistent_vector.h"
 
 static const int MAX_ROOTS = 1024;
 static int sp = -1; // grow upwards; inc then set for push.
 static heap_object **roots[MAX_ROOTS];
+
+#ifndef REFCOUNTING
+void REF(heap_object *x) { }
+void DEREF(heap_object *x) { }
+#endif
+
+#if defined(MARK_AND_COMPACT) || defined(MARK_AND_SWEEP)
+Vector *Vector_alloc(size_t length) {
+	Vector *p = (Vector *)gc_alloc(&Vector_metadata, sizeof(Vector) + length * sizeof(double));
+	p->length = length;
+	return p;
+}
+String *String_alloc(size_t length) {
+	String *p = (String *)gc_alloc(&String_metadata, sizeof(String) + length * sizeof(char));
+	p->length = length;
+	return p;
+}
+#endif
 
 // There is a general assumption that support routines follow same
 // ref counting convention as Wich code: functions REF their heap args and

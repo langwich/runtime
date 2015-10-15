@@ -26,6 +26,13 @@ SOFTWARE.
 #include <stdio.h>
 #include <math.h>
 
+#ifdef REFCOUNTING
+#elif MARK_AND_SWEEP
+#elif MARK_AND_COMPACT
+#else // PLAIN
+typedef struct {} heap_object; // no extra header info needed
+#endif
+
 #include "persistent_vector.h"
 
 /*

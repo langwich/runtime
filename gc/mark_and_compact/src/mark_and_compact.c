@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include <mark_and_compact.h>
-#include <wich.h>
 #include <morecore.h>
 
 static void *gc_raw_alloc(size_t size);

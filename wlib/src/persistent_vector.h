@@ -32,10 +32,6 @@ static const unsigned INVALID_VERSION = (unsigned)-1;
  * we need DEREF_String for consistency.
  */
 
-typedef struct {
-	int refs;    		// refs to this object
-} heap_object;
-
 /* A node in a "fat node" list.  PVectors have an array of these that act as head pointers
  * and hold the value used to create the overall vector. This value is the default value
  * if next==NULL or version not found in list. It has an impossible -1 version
