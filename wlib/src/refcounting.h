@@ -25,6 +25,8 @@ SOFTWARE.
 #ifndef RUNTIME_REFCOUNTING_H_
 #define RUNTIME_REFCOUNTING_H_
 
+#include <stdlib.h>
+
 typedef struct {
 	int refs;
 } heap_object;
