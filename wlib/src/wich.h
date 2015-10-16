@@ -113,3 +113,11 @@ static inline void setup_error_handlers() {
 	signal(SIGSEGV, handle_sys_errors);
 	signal(SIGBUS, handle_sys_errors);
 }
+
+static inline void COPY_ON_WRITE(void *x) {
+//	if ( x!=NULL && ((heap_object *)x)->refs > 1 ) {
+//		((heap_object *)x)->refs--;
+//		x = Vector_copy(x);
+//		((heap_object *)x)->refs = 1;
+//	}
+}
