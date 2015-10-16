@@ -152,7 +152,7 @@ void test_bs_set0_same_chk() {
 }
 
 void test_bs_chk_scann() {
-	BITCHUNK bchk = 0xFFFFF1FFFFFFF011;
+	WORD bchk = 0xFFFFF1FFFFFFF011;
 	int index7 = bs_chk_scann(bchk, 7);
 	int index4 = bs_chk_scann(bchk, 4);
 	int index3 = bs_chk_scann(bchk, 3);
@@ -164,13 +164,13 @@ void test_bs_chk_scann() {
 }
 
 void test_bs_chk_scann_left_bdry() {
-	BITCHUNK bchk = 0x0100000000000000;
+	WORD bchk = 0x0100000000000000;
 	int index7 = bs_chk_scann(bchk, 7);
 	assert_equal(0, index7);
 }
 
 void test_bs_chk_scann_right_bdry() {
-	BITCHUNK bchk = 0xFFFFFFFFFFFFFF80;
+	WORD bchk = 0xFFFFFFFFFFFFFF80;
 	int index7 = bs_chk_scann(bchk, 7);
 	assert_equal(57, index7);
 }

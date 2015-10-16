@@ -27,6 +27,8 @@ SOFTWARE.
  * those intrinsics. (that's for the old boundary tag implementation)
  *
  * 270s - 300s for the two-bitmap implementation.
+ *
+ * 736s after using the last freed chunk heuristic.
  */
 
 #include <stddef.h>
@@ -52,7 +54,7 @@ void bitmap_init(size_t size) {
 	g_pheap = morecore(size);
 	g_heap_size = size;
 
-	size_t num_chk = size / (CHK_IN_BIT * WORD_SIZE_IN_BYTE);
+	size_t num_chk = size / (WORD_SIZE_IN_BIT * WORD_SIZE_IN_BYTE);
 	bs_init(&g_bsm, num_chk, g_pheap);
 	// set the first few bits to 1.
 	// Those bits count for the space consumed by the bit score board.
@@ -61,7 +63,7 @@ void bitmap_init(size_t size) {
 	// the associated bit board starts right after the main one
 	// to improve locality.
 	bs_set_range(&g_bsm, num_chk, 2 * num_chk - 1);
-	bs_init(&g_bsa, num_chk, ((BITCHUNK *)g_pheap) + num_chk);
+	bs_init(&g_bsa, num_chk, ((WORD *)g_pheap) + num_chk);
 	bs_set(&g_bsa, 0);
 }
 
@@ -113,7 +115,7 @@ void free(void *ptr)
 		// then there is only one chunk in the main bitmap.
 		size_t next_unset = bs_next_zero(&g_bsm, offset + 1);
 		// the true answer means the allocated memory goes to the end.
-		size = (next_unset == BITSET_NON) ? g_bsa.m_nbc * CHK_IN_BIT - offset : next_unset - offset;
+		size = (next_unset == BITSET_NON) ? g_bsa.m_nbc * WORD_SIZE_IN_BIT - offset : next_unset - offset;
 	}
 	else {
 		size = next_set - offset;
@@ -131,3 +133,7 @@ void *bitmap_get_heap() {
 	return g_pheap;
 }
 #endif
+
+bool check_bitmap_consistency(){
+	return false;
+}

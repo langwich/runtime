@@ -29,7 +29,7 @@ SOFTWARE.
 sizeof(Busy_Header) == 4
 sizeof(Free_Header) == 16. hmm... it word aligns to 64 bits so next is 8 byte boundary
 
-All chunks must start at 4 or 8-byte boundary. I.e., size & ALIGN_MASK should be 0.
+All chunks must start at 4 or 8-byte boundary. I.e., size & ALIGN_MASK_IN_BYTE should be 0.
 
 Useful resource has been Doug Lea's malloc(): http://g.oswego.edu/pub/misc/malloc-2.6.6.c
 */

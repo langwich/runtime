@@ -27,7 +27,7 @@ SOFTWARE.
 
 #define MINSIZE				sizeof(Free_Header)
 #define WORD_SIZE_IN_BYTES	sizeof(void *)
-#define ALIGN_MASK			(WORD_SIZE_IN_BYTES-1)
+#define ALIGN_MASK_IN_BYTE            (WORD_SIZE_IN_BYTES-1)
 
 typedef struct _Busy_Header {
 	uint32_t size; 	  	  // 31 bits for size and 1 bit for inuse/free; doesn't include header
@@ -46,7 +46,7 @@ static inline size_t size_with_header(size_t n) {
 
 /* Align n to nearest word size boundary (4 or 8) */
 static inline size_t align_to_word_boundary(size_t n) {
-	return (n & ALIGN_MASK) == 0 ? n : (n + WORD_SIZE_IN_BYTES) & ~ALIGN_MASK;
+	return (n & ALIGN_MASK_IN_BYTE) == 0 ? n : (n + WORD_SIZE_IN_BYTES) & ~ALIGN_MASK_IN_BYTE;
 }
 
 static inline size_t request2size(size_t n) {
