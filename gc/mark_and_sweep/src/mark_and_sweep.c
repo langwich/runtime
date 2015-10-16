@@ -3,6 +3,7 @@
 #include <string.h>
 #include "mark_and_sweep.h"
 #include <morecore.h>
+#include <gc.h>
 
 static void mark();
 static void mark_object(heap_object *p);

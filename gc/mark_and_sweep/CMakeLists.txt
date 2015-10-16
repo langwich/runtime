@@ -6,7 +6,7 @@ set(SOURCE src/mark_and_sweep.c)
 set(TEST_TARGETS ms_test_basics ms_test_ptr_fields)
 
 add_library(${MODULE_NAME} ${SOURCE})
-target_link_libraries(${MODULE_NAME} malloc_common)
+target_link_libraries(${MODULE_NAME} malloc_common gc_mark_and_sweep)
 
 INSTALL_LIBRARY(${MODULE_NAME})
 

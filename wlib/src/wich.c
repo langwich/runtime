@@ -28,12 +28,14 @@ SOFTWARE.
 #include <stdbool.h>
 //#define DEBUG
 
-#ifdef REFCOUNTING
+#if defined(MARK_AND_SWEEP)
+#include <mark_and_sweep.h>
+#include <gc.h>
+#elif defined(MARK_AND_COMPACT)
+#include <mark_and_compact.h>
+#include <gc.h>
+#elif defined(REFCOUNTING)
 #include <refcounting.h>
-#elif MARK_AND_SWEEP
-#include <gc.h>
-#elif MARK_AND_COMPACT
-#include <gc.h>
 #else // PLAIN
 typedef struct {} heap_object; // no extra header info needed
 #endif

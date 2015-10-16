@@ -65,26 +65,6 @@ extern void gc_set_num_roots(int roots);
 extern void foreach_live(void (*action)(heap_object *));
 extern void foreach_object(void (*action)(heap_object *));
 
-static const size_t WORD_SIZE_IN_BYTES = sizeof(void *);
-static const size_t ALIGN_MASK = WORD_SIZE_IN_BYTES - 1;
-
-/* Pad size n to include header */
-static inline size_t size_with_header(size_t n) {
-    return n + sizeof(heap_object);
-}
-
-/* Align size n to nearest word size boundary (4 or 8) */
-static inline size_t align_to_word_boundary(size_t n) {
-    return (n & ALIGN_MASK) == 0 ? n : (n + WORD_SIZE_IN_BYTES) & ~ALIGN_MASK;
-}
-
-/* Convert a user request for n bytes into a size in bytes that has all necessary
- * header room and is word aligned.
- */
-static inline size_t request2size(size_t n) {
-    return align_to_word_boundary(size_with_header(n));
-}
-
 
 #ifdef __cplusplus
 }
