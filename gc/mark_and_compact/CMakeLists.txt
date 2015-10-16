@@ -8,7 +8,7 @@ set(SOURCE src/mark_and_compact.c test/bitset.c)
 set(TEST_TARGETS test_ptr_fields test_basics test_random_graph)
 
 add_library(${MODULE_NAME} ${SOURCE})
-target_link_libraries(${MODULE_NAME} malloc_common wlib gc_mark_and_compact)
+target_link_libraries(${MODULE_NAME} malloc_common gc_mark_and_compact wlib_mark_and_compact)
 
 INSTALL_LIBRARY(${MODULE_NAME})
 

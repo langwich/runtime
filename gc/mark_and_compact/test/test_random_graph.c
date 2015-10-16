@@ -22,12 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <stdio.h>
-#include <mark_and_compact.h>
 #include <wich.h>
 #include <cunit.h>
 #include <string.h>
 #include <time.h>
-#include <gc.h>
 #include "bitset.h"
 
 const size_t HEAP_SIZE = 20000000;

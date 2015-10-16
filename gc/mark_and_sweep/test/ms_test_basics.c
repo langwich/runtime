@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <stdio.h>
-#include <mark_and_sweep.h>
 #include <wich.h>
 #include <gc.h>
 #include <cunit.h>
