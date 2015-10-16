@@ -28,15 +28,15 @@ SOFTWARE.
 
 #define HEAP_SIZE           4096
 
-static BITCHUNK *g_pbsm;
-static BITCHUNK *g_pbsa;
+static WORD *g_pbsm;
+static WORD *g_pbsa;
 static void *g_pheap;
 
 static void setup() {
 	bitmap_init(HEAP_SIZE);
 	g_pheap = bitmap_get_heap();
-	g_pbsm = (BITCHUNK *) g_pheap;
-	g_pbsa = &(g_pbsm[HEAP_SIZE / CHK_IN_BIT / WORD_SIZE_IN_BYTE]);
+	g_pbsm = (WORD *) g_pheap;
+	g_pbsa = &(g_pbsm[HEAP_SIZE / WORD_SIZE_IN_BIT / WORD_SIZE_IN_BYTE]);
 }
 
 static void teardown() {

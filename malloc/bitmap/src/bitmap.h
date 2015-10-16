@@ -36,5 +36,6 @@ void *bitmap_get_heap();
 void *malloc(size_t size);
 void free(void *);
 
+bool check_bitmap_consistency();
 
 #endif //MALLOC_BITMAP_H
