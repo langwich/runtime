@@ -54,7 +54,7 @@ void bitmap_init(size_t size) {
 	bs_init(&g_bsm, num_chk, g_pheap);
 	// set the first few bits to 1.
 	// Those bits count for the space consumed by the bit score board.
-	bs_set_range(&g_bsm, 0, num_chk * CHUNK_SIZE / WORD_SIZE_IN_BYTE - 1);
+	bs_set_range(&g_bsm, 0, num_chk - 1);
 
 	// the associated bit board starts right after the main one
 	// to improve locality.
@@ -78,7 +78,7 @@ void *malloc(size_t size)
 	size_t n = ALIGN_WORD_BOUNDARY(size);
 
 	size_t run_index = 0;
-	if ((run_index = bs_nrun(&g_bsm, n /WORD_SIZE_IN_BYTE)) == BITSET_NON) return NULL;
+	if ((run_index = bs_nrun(&g_bsm, n / WORD_SIZE_IN_BYTE)) == BITSET_NON) return NULL;
 	void *ptr = WORD(g_pheap) + run_index;
 	// make sure the we set the correct boundary
 	bs_set(&g_bsa, run_index);

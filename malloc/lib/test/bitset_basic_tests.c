@@ -41,6 +41,7 @@ static void teardown() { }
 void test_bs_init() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	assert_equal(bs.m_bc[0], 0xC000000000000000);
 	assert_equal(bs.m_bc[1], 0x0);
 }
@@ -48,6 +49,7 @@ void test_bs_init() {
 void test_bs_set1() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	bs_set_range(&bs, 23, 80);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFFFFFFF);
 	assert_equal(bs.m_bc[1], 0xFFFF800000000000);
@@ -56,6 +58,7 @@ void test_bs_set1() {
 void test_bs_set1_left_boundary() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	bs_set_range(&bs, 64, 80);
 	assert_equal(bs.m_bc[0], 0xC000000000000000);
 	assert_equal(bs.m_bc[1], 0xFFFF800000000000);
@@ -64,6 +67,7 @@ void test_bs_set1_left_boundary() {
 void test_bs_set1_right_boundary_hi() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	bs_set_range(&bs, 23, 63);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFFFFFFF);
 	assert_equal(bs.m_bc[1], 0x0);
@@ -72,6 +76,7 @@ void test_bs_set1_right_boundary_hi() {
 void test_bs_set1_right_boundary_lo() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	bs_set_range(&bs, 63, 77);
 	assert_equal(bs.m_bc[0], 0xC000000000000001);
 	assert_equal(bs.m_bc[1], 0xFFFC000000000000);
@@ -80,6 +85,7 @@ void test_bs_set1_right_boundary_lo() {
 void test_bs_set1_same_chk() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	assert_equal(bs.m_bc[0], 0xC000000000000000);
 	bs_set_range(&bs, 2, 3);
 	assert_equal(bs.m_bc[0], 0xF000000000000000);
@@ -88,6 +94,7 @@ void test_bs_set1_same_chk() {
 void test_bs_set1_same_chk_middle() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	assert_equal(bs.m_bc[0], 0xC000000000000000);
 	bs_set_range(&bs, 23, 33);
 	assert_equal(bs.m_bc[0], 0xC00001FFC0000000);
@@ -97,6 +104,7 @@ void test_bs_set1_same_chk_middle() {
 void test_bs_set0() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	bs_set_range(&bs, 23, 80);
 	bs_clear_range(&bs, 55, 77);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFFFFE00);
@@ -106,6 +114,7 @@ void test_bs_set0() {
 void test_bs_set0_left_boundary() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	bs_set_range(&bs, 23, 80);
 	bs_clear_range(&bs, 64, 77);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFFFFFFF);
@@ -115,6 +124,7 @@ void test_bs_set0_left_boundary() {
 void test_bs_set0_right_boundary_hi() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	bs_set_range(&bs, 23, 80);
 	bs_clear_range(&bs, 44, 63);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFF00000);
@@ -124,6 +134,7 @@ void test_bs_set0_right_boundary_hi() {
 void test_bs_set0_right_boundary_lo() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	bs_set_range(&bs, 23, 80);
 	bs_clear_range(&bs, 63, 77);
 	assert_equal(bs.m_bc[0], 0xC00001FFFFFFFFFE);
@@ -133,6 +144,7 @@ void test_bs_set0_right_boundary_lo() {
 void test_bs_set0_same_chk() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	bs_set_range(&bs, 23, 63);//  0xC00001FFFFFFFFFF
 	bs_clear_range(&bs, 24, 33);
 	assert_equal(bs.m_bc[0], 0xC00001003FFFFFFF);
@@ -166,6 +178,7 @@ void test_bs_chk_scann_right_bdry() {
 void test_set_single_bit() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	*(bs.m_bc) = 10;
 	bs_set(&bs, 63);
 	assert_equal(11, *(bs.m_bc));
@@ -180,7 +193,8 @@ void test_set_single_bit() {
 void test_next_zero() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
-	// test normal usage
+	bs_set_range(&bs, 0, 1);
+// test normal usage
 	size_t next_pos = bs_next_zero(&bs, 0);
 	assert_equal(2, next_pos);
 	next_pos = bs_next_zero(&bs, 63);
@@ -229,6 +243,7 @@ void test_next_zero() {
 void test_next_one() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	// test normal usage
 	size_t next_pos = bs_next_one(&bs, 0);
 	assert_equal(0, next_pos);
@@ -263,6 +278,7 @@ void test_next_one() {
 void test_check_set() {
 	bitset bs;
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	// test in the first chunk
 	assert_true(bs_check_set(&bs, 0));
 	assert_true(bs_check_set(&bs, 1));
@@ -276,6 +292,7 @@ void test_bs_nrun() {
 	bitset bs;
 	// initialization
 	bs_init(&bs, 2, g_heap);
+	bs_set_range(&bs, 0, 1);
 	assert_equal(bs.m_bc[0], 0xC000000000000000);
 	// try acquiring the 3rd and 4th bits.
 	size_t index2 = bs_nrun(&bs, 2);
@@ -312,6 +329,7 @@ void test_bs_nrun_long() {
 	bitset bs;
 	// 8 chks right covers 4096 bytes (our heap size).
 	bs_init(&bs, 8, g_heap);
+	bs_set_range(&bs, 0, 7);
 	// we need one full byte to cover 8 chunks
 	assert_equal(bs.m_bc[0], 0xFF00000000000000);
 
@@ -361,6 +379,7 @@ void test_bs_nrun_from_long() {
 	bitset bs;
 	// 8 chks right covers 4096 bytes (our heap size).
 	bs_init(&bs, 8, g_heap);
+	bs_set_range(&bs, 0, 7);
 	// we need one full byte to cover 8 chunks
 	assert_equal(bs.m_bc[0], 0xFF00000000000000);
 
@@ -410,29 +429,29 @@ int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
 
-//	test(test_bs_init);
-//	test(test_bs_set1);
-//	test(test_bs_set1_left_boundary);
-//	test(test_bs_set1_right_boundary_hi);
-//	test(test_bs_set1_right_boundary_lo);
-//	test(test_bs_set1_same_chk);
-//	test(test_bs_set1_same_chk_middle);
-//	test(test_bs_set0);
-//	test(test_bs_set0_left_boundary);
-//	test(test_bs_set0_right_boundary_hi);
-//	test(test_bs_set0_right_boundary_lo);
-//	test(test_bs_set0_same_chk);
-//
-//	test(test_bs_chk_scann);
-//	test(test_bs_chk_scann_left_bdry);
-//	test(test_bs_chk_scann_right_bdry);
-//	test(test_set_single_bit);
-//	test(test_next_zero);
-//	test(test_next_one);
-//	test(test_check_set);
-//
-//	test(test_bs_nrun);
-//	test(test_bs_nrun_long);
+	test(test_bs_init);
+	test(test_bs_set1);
+	test(test_bs_set1_left_boundary);
+	test(test_bs_set1_right_boundary_hi);
+	test(test_bs_set1_right_boundary_lo);
+	test(test_bs_set1_same_chk);
+	test(test_bs_set1_same_chk_middle);
+	test(test_bs_set0);
+	test(test_bs_set0_left_boundary);
+	test(test_bs_set0_right_boundary_hi);
+	test(test_bs_set0_right_boundary_lo);
+	test(test_bs_set0_same_chk);
+
+	test(test_bs_chk_scann);
+	test(test_bs_chk_scann_left_bdry);
+	test(test_bs_chk_scann_right_bdry);
+	test(test_set_single_bit);
+	test(test_next_zero);
+	test(test_next_one);
+	test(test_check_set);
+
+	test(test_bs_nrun);
+	test(test_bs_nrun_long);
 	test(test_bs_nrun_from_long);
 
 	return 0;
