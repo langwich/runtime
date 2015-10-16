@@ -81,4 +81,11 @@ static inline void DEREF(void *x) {
 	}
 }
 
+static inline void COPY_ON_WRITE(void *x) {
+//	if ( x!=NULL && ((heap_object *)x)->refs > 1 ) {
+//		((heap_object *)x)->refs--;
+//		x = Vector_copy(x);
+//		((heap_object *)x)->refs = 1;
+//	}
+}
 #endif
