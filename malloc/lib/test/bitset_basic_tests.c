@@ -295,32 +295,32 @@ void test_bs_nrun() {
 	bs_set_range(&bs, 0, 1);
 	assert_equal(bs.m_bc[0], 0xC000000000000000);
 	// try acquiring the 3rd and 4th bits.
-	size_t index2 = bs_nrun(&bs, 2);
-	assert_equal(2, index2);
+	size_t index = bs_nrun(&bs, 2);
+	assert_equal(2, index);
 	assert_equal(bs.m_bc[0], 0xF000000000000000);
 	// try acquiring next 12 bits.
-	size_t index12 = bs_nrun(&bs, 12);
-	assert_equal(4, index12);
+	index = bs_nrun(&bs, 12);
+	assert_equal(4, index);
 	assert_equal(bs.m_bc[0], 0xFFFF000000000000);//16 1s
 	// setting the last 33 bits of the first chunk
 	// to 1 such that we can get the next trunk for allocation
 	// of 16 bits. there are only 15 bits left for the first
 	// chunk now.
 	bs_set_range(&bs, 31, 63);
-	size_t index16 = bs_nrun(&bs, 16);
-	assert_equal(64, index16);
+	index = bs_nrun(&bs, 16);
+	assert_equal(64, index);
 	assert_equal(bs.m_bc[1], 0xFFFF000000000000);
 	// get the 15 bits left in the first chunk.
-	size_t index15 = bs_nrun(&bs, 15);
-	assert_equal(16, index15);
+	index = bs_nrun(&bs, 15);
+	assert_equal(16, index);
 	assert_equal(bs.m_bc[0], 0xFFFFFFFFFFFFFFFF);
 	assert_equal(bs.m_bc[1], 0xFFFF000000000000);
 	// trying leading mode here
 	bs_clear_range(&bs, 50, 70);// set a 0 "island" cross two chunks
 	assert_equal(bs.m_bc[0], 0xFFFFFFFFFFFFC000);
 	assert_equal(bs.m_bc[1], 0x01FF000000000000);
-	size_t index19 = bs_nrun(&bs, 19);
-	assert_equal(50, index19);
+	index = bs_nrun(&bs, 19);
+	assert_equal(50, index);
 	assert_equal(bs.m_bc[0], 0xFFFFFFFFFFFFFFFF);
 	assert_equal(bs.m_bc[1], 0xF9FF000000000000);
 }
@@ -333,8 +333,8 @@ void test_bs_nrun_long() {
 	// we need one full byte to cover 8 chunks
 	assert_equal(bs.m_bc[0], 0xFF00000000000000);
 
-	size_t index375 = bs_nrun(&bs, 375);
-	assert_equal(8, index375);
+	size_t index = bs_nrun(&bs, 375);
+	assert_equal(8, index);
 	for (int i = 0; i < 5; ++i) {
 		// all chunks should be occupied right now.
 		assert_equal(bs.m_bc[i], ~0x0);
@@ -352,7 +352,7 @@ void test_bs_nrun_long() {
 	assert_equal(bs.m_bc[7], 0xFFFFFFFFFFFFFFFF);
 
 	// trying to get a chunk that is longer than available
-	size_t index376 = bs_nrun(&bs, 376);
+	index = bs_nrun(&bs, 376);
 	// nothing should change.
 	for (int i = 1; i < 5; ++i) {
 		assert_equal(bs.m_bc[i], 0x0);
@@ -362,11 +362,11 @@ void test_bs_nrun_long() {
 	assert_equal(bs.m_bc[6], ~0x0);
 	assert_equal(bs.m_bc[7], ~0x0);
 	// returns BITSET NON since we only have 375 bits available
-	assert_equal(BITSET_NON, index376);
+	assert_equal(BITSET_NON, index);
 
-	size_t index374 = bs_nrun(&bs, 374);
+	index = bs_nrun(&bs, 374);
 	// now we should only have one bit available.
-	assert_equal(8, index374);
+	assert_equal(8, index);
 	for (int i = 0; i < 5; ++i) {
 		assert_equal(bs.m_bc[i], ~0x0);
 	}
@@ -375,7 +375,7 @@ void test_bs_nrun_long() {
 	assert_equal(bs.m_bc[7], ~0x0);
 }
 
-void test_bs_nrun_from_long() {
+void test_bs_nrun_from() {
 	bitset bs;
 	// 8 chks right covers 4096 bytes (our heap size).
 	bs_init(&bs, 8, g_heap);
@@ -383,46 +383,25 @@ void test_bs_nrun_from_long() {
 	// we need one full byte to cover 8 chunks
 	assert_equal(bs.m_bc[0], 0xFF00000000000000);
 
-	size_t index375 = bs_nrun(&bs, 375);
-	assert_equal(8, index375);
-	for (int i = 0; i < 5; ++i) {
-		// all chunks should be occupied right now.
+	size_t index = bs_nrun_from(&bs, 311, 8);
+	assert_equal(8, index);
+	for (int i = 0; i < 4; ++i) {
 		assert_equal(bs.m_bc[i], ~0x0);
 	}
-	assert_equal(bs.m_bc[5], 0xFFFFFFFFFFFFFFFE);
-	// now the last two chunks with one extra bit should be 1s
-	bs_set_range(&bs, 383, 511);
-	bs_clear_range(&bs, 8, 382);
-	for (int i = 1; i < 5; ++i) {
-		assert_equal(bs.m_bc[i], 0x0);
-	}
-	assert_equal(bs.m_bc[0], 0xFF00000000000000);
-	assert_equal(bs.m_bc[5], 0x0000000000000001);
-	assert_equal(bs.m_bc[6], 0xFFFFFFFFFFFFFFFF);
-	assert_equal(bs.m_bc[7], 0xFFFFFFFFFFFFFFFF);
+	// the first 5 chunks except for one bit should be occupied.
+	assert_equal(bs.m_bc[4], 0xFFFFFFFFFFFFFFFE);
 
-	// trying to get a chunk that is longer than available
-	size_t index376 = bs_nrun(&bs, 376);
-	// nothing should change.
-	for (int i = 1; i < 5; ++i) {
-		assert_equal(bs.m_bc[i], 0x0);
-	}
-	assert_equal(bs.m_bc[0], 0xFF00000000000000);
-	assert_equal(bs.m_bc[5], 0x0000000000000001);
-	assert_equal(bs.m_bc[6], ~0x0);
-	assert_equal(bs.m_bc[7], ~0x0);
-	// returns BITSET NON since we only have 375 bits available
-	assert_equal(BITSET_NON, index376);
+	// should exhaust all remaining bits and start over
+	index = bs_nrun_from(&bs, 193, 320);
+	assert_equal(319, index);
 
-	size_t index374 = bs_nrun(&bs, 374);
-	// now we should only have one bit available.
-	assert_equal(8, index374);
-	for (int i = 0; i < 5; ++i) {
-		assert_equal(bs.m_bc[i], ~0x0);
-	}
-	assert_equal(bs.m_bc[5], 0xFFFFFFFFFFFFFFFD);
-	assert_equal(bs.m_bc[6], ~0x0);
-	assert_equal(bs.m_bc[7], ~0x0);
+	// build a bit board with "holes"
+	bs_set_range(&bs, 0, 511);
+	bs_clear_range(&bs, 10, 73);
+	bs_clear_range(&bs, 100, 162);
+
+	index = bs_nrun_from(&bs, 64, 100);
+	assert_equal(10, index);
 }
 
 int main(int argc, char *argv[]) {
@@ -452,7 +431,7 @@ int main(int argc, char *argv[]) {
 
 	test(test_bs_nrun);
 	test(test_bs_nrun_long);
-	test(test_bs_nrun_from_long);
+	test(test_bs_nrun_from);
 
 	return 0;
 }

@@ -86,7 +86,7 @@ static inline size_t bs_zerocnt(BITCHUNK bchk) {
 
 // check whether the bit at index is set
 static inline bool bs_check_set(bitset *bs, size_t index) {
-	return bs->m_bc[index / CHK_IN_BIT] & (1LL << (CHK_IN_BIT - index % CHK_IN_BIT - 1));
+	return (bool) (bs->m_bc[index / CHK_IN_BIT] & (1LL << (CHK_IN_BIT - index % CHK_IN_BIT - 1)));
 }
 
 void bs_init(bitset *, size_t, void *);
