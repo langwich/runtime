@@ -27,6 +27,8 @@ SOFTWARE.
  * those intrinsics. (that's for the old boundary tag implementation)
  *
  * 270s - 300s for the two-bitmap implementation.
+ *
+ * 736s after using the last freed chunk heuristic.
  */
 
 #include <stddef.h>
@@ -42,6 +44,8 @@ static size_t g_heap_size;
 static bitset g_bsm;// bit set used to keep track of heap usage.
 static bitset g_bsa;// associated bit set to mark the boundaries.
 
+static size_t last_free_index = 0;
+
 /*
  * Current implementation is really straightforward. We don't
  * dynamically adjust the arena size.
@@ -50,14 +54,16 @@ void bitmap_init(size_t size) {
 	g_pheap = morecore(size);
 	g_heap_size = size;
 
-	size_t num_chk = size / (CHK_IN_BIT *WORD_SIZE_IN_BYTE);
+	size_t num_chk = size / (WORD_SIZE_IN_BIT * WORD_SIZE_IN_BYTE);
 	bs_init(&g_bsm, num_chk, g_pheap);
+	// set the first few bits to 1.
+	// Those bits count for the space consumed by the bit score board.
+	bs_set_range(&g_bsm, 0, num_chk - 1);
 
 	// the associated bit board starts right after the main one
 	// to improve locality.
 	bs_set_range(&g_bsm, num_chk, 2 * num_chk - 1);
-	bs_init(&g_bsa, num_chk, ((BITCHUNK *)g_pheap) + num_chk);
-	bs_clear_range(&g_bsa, 0, num_chk - 1);
+	bs_init(&g_bsa, num_chk, ((WORD *)g_pheap) + num_chk);
 	bs_set(&g_bsa, 0);
 }
 
@@ -76,7 +82,7 @@ void *malloc(size_t size)
 	size_t n = ALIGN_WORD_BOUNDARY(size);
 
 	size_t run_index = 0;
-	if ((run_index = bs_nrun(&g_bsm, n /WORD_SIZE_IN_BYTE)) == BITSET_NON) return NULL;
+	if ((run_index = bs_nrun_from(&g_bsm, n / WORD_SIZE_IN_BYTE, last_free_index)) == BITSET_NON) return NULL;
 	void *ptr = WORD(g_pheap) + run_index;
 	// make sure the we set the correct boundary
 	bs_set(&g_bsa, run_index);
@@ -109,7 +115,7 @@ void free(void *ptr)
 		// then there is only one chunk in the main bitmap.
 		size_t next_unset = bs_next_zero(&g_bsm, offset + 1);
 		// the true answer means the allocated memory goes to the end.
-		size = (next_unset == BITSET_NON) ? g_bsa.m_nbc * CHK_IN_BIT - offset : next_unset - offset;
+		size = (next_unset == BITSET_NON) ? g_bsa.m_nbc * WORD_SIZE_IN_BIT - offset : next_unset - offset;
 	}
 	else {
 		size = next_set - offset;
@@ -118,6 +124,8 @@ void free(void *ptr)
 	// clear the bits in two bitmaps
 	bs_clear_range(&g_bsm, offset, offset + size - 1);
 	bs_clear(&g_bsa, offset);
+
+	last_free_index = offset;
 }
 
 #ifdef DEBUG
@@ -125,3 +133,17 @@ void *bitmap_get_heap() {
 	return g_pheap;
 }
 #endif
+
+bool check_bitmap_consistency(){
+	// 110000011111100
+	// 100000010000000
+	for (size_t i = bs_next_one(&g_bsa, 0); i != BITSET_NON; i = bs_next_one(&g_bsa, i + 1)) {
+		if (!bs_check_set(&g_bsa, i)) {
+#ifdef DEBUG
+			fprintf(stderr, "The bitmap is in an inconsistent state.");
+#endif
+			return false;
+		}
+	}
+	return true;
+}

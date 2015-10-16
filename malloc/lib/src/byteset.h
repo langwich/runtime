@@ -33,10 +33,10 @@ typedef __uint32_t              U32;
 
 #define WORD_SIZE_IN_BYTE       (sizeof(void *))
 #define NOT_FOUND       ((size_t)~0x0)
-#define ALIGN_MASK      (WORD_SIZE_IN_BYTE - 1)
+#define ALIGN_MASK_IN_BYTE      (WORD_SIZE_IN_BYTE - 1)
 
 #define WORD(x)                 ((unsigned long long *)x)
-#define ALIGN_WORD_BOUNDARY(n)  ((n & ALIGN_MASK) == 0 ? n : (n + WORD_SIZE_IN_BYTE) & ~ALIGN_MASK)
+#define ALIGN_WORD_BOUNDARY(n)  ((n & ALIGN_MASK_IN_BYTE) == 0 ? n : (n + WORD_SIZE_IN_BYTE) & ~ALIGN_MASK_IN_BYTE)
 
 typedef struct {
 	size_t num_words;
