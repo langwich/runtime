@@ -27,8 +27,6 @@ SOFTWARE.
 #include <gc.h>
 #include <cunit.h>
 
-
-
 const size_t HEAP_SIZE = 2000;
 
 Heap_Info verify_heap() {

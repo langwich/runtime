@@ -81,6 +81,8 @@ void print_vector(Vector *a);
 void *wich_malloc(size_t nbytes);
 void wich_free(heap_object *p);
 
+Vector *Vector_alloc(size_t length);
+String *String_alloc(size_t length);
 
 static void
 handle_sys_errors(int errno)

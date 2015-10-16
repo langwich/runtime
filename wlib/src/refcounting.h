@@ -25,6 +25,9 @@ SOFTWARE.
 #ifndef RUNTIME_REFCOUNTING_H_
 #define RUNTIME_REFCOUNTING_H_
 
+typedef struct {
+	int refs;
+} heap_object;
 
 /* Announce a heap reference so we can _deref() all before exiting a function */
 void _heapvar(heap_object **p);
@@ -71,18 +74,10 @@ static inline void DEREF(void *x) {
 #ifdef DEBUG
 			printf("free(%p)\n", x);
 #endif
-			wich_free((heap_object *)x);
+			free((heap_object *)x);
 
 			x = NULL;
 		}
-	}
-}
-
-static inline void COPY_ON_WRITE(void *x) {
-	if ( x!=NULL && ((heap_object *)x)->refs > 1 ) {
-		((heap_object *)x)->refs--;
-		x = Vector_copy(x);
-		((heap_object *)x)->refs = 1;
 	}
 }
 

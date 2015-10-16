@@ -25,26 +25,44 @@ SOFTWARE.
 #ifndef RUNTIME_GC_H
 #define RUNTIME_GC_H
 
-object_metadata Vector_metadata = {
-		"Vector",
-		0
-};
+extern object_metadata Vector_metadata;
+extern object_metadata String_metadata;
 
-object_metadata String_metadata = {
-		"String",
-		0
-};
+static const size_t WORD_SIZE_IN_BYTES = sizeof(void *);
+static const size_t ALIGN_MASK = WORD_SIZE_IN_BYTES - 1;
 
-static inline Vector *Vector_alloc(size_t length) {
-	Vector *p = (Vector *)gc_alloc(&Vector_metadata, sizeof(Vector) + length * sizeof(double));
-	p->length = length;
-	return p;
+/* Pad size n to include header */
+static inline size_t size_with_header(size_t n) {
+	return n + sizeof(heap_object);
 }
 
-static inline String *String_alloc(size_t length) {
-	String *p = (String *)gc_alloc(&String_metadata, sizeof(String) + length * sizeof(char));
-	p->length = length;
-	return p;
+/* Align size n to nearest word size boundary (4 or 8) */
+static inline size_t align_to_word_boundary(size_t n) {
+	return (n & ALIGN_MASK) == 0 ? n : (n + WORD_SIZE_IN_BYTES) & ~ALIGN_MASK;
 }
+
+/* Convert a user request for n bytes into a size in bytes that has all necessary
+ * header room and is word aligned.
+ */
+static inline size_t request2size(size_t n) {
+	return align_to_word_boundary(size_with_header(n));
+}
+
+/* Initialize a heap with a certain size for use with the garbage collector */
+extern void gc_init(int size);
+
+/* Announce you are done with the heap managed by the garbage collector */
+extern void gc_shutdown();
+
+/* Perform a mark_and_compact garbage collection, moving all live objects
+ * to the start of the heap.
+ */
+extern void gc();
+extern heap_object *gc_alloc(object_metadata *metadata, size_t size);
+extern void gc_add_root(void **p);
+extern void gc_mark();
+extern void gc_unmark();
+
+extern Heap_Info get_heap_info();
 
 #endif //RUNTIME_GC_H
