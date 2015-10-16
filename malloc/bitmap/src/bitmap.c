@@ -42,6 +42,8 @@ static size_t g_heap_size;
 static bitset g_bsm;// bit set used to keep track of heap usage.
 static bitset g_bsa;// associated bit set to mark the boundaries.
 
+static size_t last_free_index = 0;
+
 /*
  * Current implementation is really straightforward. We don't
  * dynamically adjust the arena size.
@@ -78,7 +80,7 @@ void *malloc(size_t size)
 	size_t n = ALIGN_WORD_BOUNDARY(size);
 
 	size_t run_index = 0;
-	if ((run_index = bs_nrun(&g_bsm, n / WORD_SIZE_IN_BYTE)) == BITSET_NON) return NULL;
+	if ((run_index = bs_nrun_from(&g_bsm, n / WORD_SIZE_IN_BYTE, last_free_index)) == BITSET_NON) return NULL;
 	void *ptr = WORD(g_pheap) + run_index;
 	// make sure the we set the correct boundary
 	bs_set(&g_bsa, run_index);
@@ -120,6 +122,8 @@ void free(void *ptr)
 	// clear the bits in two bitmaps
 	bs_clear_range(&g_bsm, offset, offset + size - 1);
 	bs_clear(&g_bsa, offset);
+
+	last_free_index = offset;
 }
 
 #ifdef DEBUG
