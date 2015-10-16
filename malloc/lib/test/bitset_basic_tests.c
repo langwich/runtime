@@ -357,33 +357,83 @@ void test_bs_nrun_long() {
 	assert_equal(bs.m_bc[7], ~0x0);
 }
 
+void test_bs_nrun_from_long() {
+	bitset bs;
+	// 8 chks right covers 4096 bytes (our heap size).
+	bs_init(&bs, 8, g_heap);
+	// we need one full byte to cover 8 chunks
+	assert_equal(bs.m_bc[0], 0xFF00000000000000);
+
+	size_t index375 = bs_nrun(&bs, 375);
+	assert_equal(8, index375);
+	for (int i = 0; i < 5; ++i) {
+		// all chunks should be occupied right now.
+		assert_equal(bs.m_bc[i], ~0x0);
+	}
+	assert_equal(bs.m_bc[5], 0xFFFFFFFFFFFFFFFE);
+	// now the last two chunks with one extra bit should be 1s
+	bs_set_range(&bs, 383, 511);
+	bs_clear_range(&bs, 8, 382);
+	for (int i = 1; i < 5; ++i) {
+		assert_equal(bs.m_bc[i], 0x0);
+	}
+	assert_equal(bs.m_bc[0], 0xFF00000000000000);
+	assert_equal(bs.m_bc[5], 0x0000000000000001);
+	assert_equal(bs.m_bc[6], 0xFFFFFFFFFFFFFFFF);
+	assert_equal(bs.m_bc[7], 0xFFFFFFFFFFFFFFFF);
+
+	// trying to get a chunk that is longer than available
+	size_t index376 = bs_nrun(&bs, 376);
+	// nothing should change.
+	for (int i = 1; i < 5; ++i) {
+		assert_equal(bs.m_bc[i], 0x0);
+	}
+	assert_equal(bs.m_bc[0], 0xFF00000000000000);
+	assert_equal(bs.m_bc[5], 0x0000000000000001);
+	assert_equal(bs.m_bc[6], ~0x0);
+	assert_equal(bs.m_bc[7], ~0x0);
+	// returns BITSET NON since we only have 375 bits available
+	assert_equal(BITSET_NON, index376);
+
+	size_t index374 = bs_nrun(&bs, 374);
+	// now we should only have one bit available.
+	assert_equal(8, index374);
+	for (int i = 0; i < 5; ++i) {
+		assert_equal(bs.m_bc[i], ~0x0);
+	}
+	assert_equal(bs.m_bc[5], 0xFFFFFFFFFFFFFFFD);
+	assert_equal(bs.m_bc[6], ~0x0);
+	assert_equal(bs.m_bc[7], ~0x0);
+}
+
 int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
 
-	test(test_bs_init);
-	test(test_bs_set1);
-	test(test_bs_set1_left_boundary);
-	test(test_bs_set1_right_boundary_hi);
-	test(test_bs_set1_right_boundary_lo);
-	test(test_bs_set1_same_chk);
-	test(test_bs_set1_same_chk_middle);
-	test(test_bs_set0);
-	test(test_bs_set0_left_boundary);
-	test(test_bs_set0_right_boundary_hi);
-	test(test_bs_set0_right_boundary_lo);
-	test(test_bs_set0_same_chk);
-
-	test(test_bs_chk_scann);
-	test(test_bs_chk_scann_left_bdry);
-	test(test_bs_chk_scann_right_bdry);
-	test(test_set_single_bit);
-	test(test_next_zero);
-	test(test_next_one);
-	test(test_check_set);
-
-	test(test_bs_nrun);
-	test(test_bs_nrun_long);
+//	test(test_bs_init);
+//	test(test_bs_set1);
+//	test(test_bs_set1_left_boundary);
+//	test(test_bs_set1_right_boundary_hi);
+//	test(test_bs_set1_right_boundary_lo);
+//	test(test_bs_set1_same_chk);
+//	test(test_bs_set1_same_chk_middle);
+//	test(test_bs_set0);
+//	test(test_bs_set0_left_boundary);
+//	test(test_bs_set0_right_boundary_hi);
+//	test(test_bs_set0_right_boundary_lo);
+//	test(test_bs_set0_same_chk);
+//
+//	test(test_bs_chk_scann);
+//	test(test_bs_chk_scann_left_bdry);
+//	test(test_bs_chk_scann_right_bdry);
+//	test(test_set_single_bit);
+//	test(test_next_zero);
+//	test(test_next_one);
+//	test(test_check_set);
+//
+//	test(test_bs_nrun);
+//	test(test_bs_nrun_long);
+	test(test_bs_nrun_from_long);
 
 	return 0;
 }
