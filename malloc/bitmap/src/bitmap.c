@@ -135,5 +135,15 @@ void *bitmap_get_heap() {
 #endif
 
 bool check_bitmap_consistency(){
-	return false;
+	// 110000011111100
+	// 100000010000000
+	for (size_t i = bs_next_one(&g_bsa, 0); i != BITSET_NON; i = bs_next_one(&g_bsa, i + 1)) {
+		if (!bs_check_set(&g_bsa, i)) {
+#ifdef DEBUG
+			fprintf(stderr, "The bitmap is in an inconsistent state.");
+#endif
+			return false;
+		}
+	}
+	return true;
 }

@@ -34,11 +34,9 @@ const size_t HEAP_SIZE = 1000000000; // try 1G
 
 static void setup()		{ bitmap_init(HEAP_SIZE); }
 static void teardown()	{
-//	assert_equal(verify_bit_score_board(), 1);
+	assert_true(check_bitmap_consistency());
 	bitmap_release();
 }
-
-
 
 void replay_ansic_grammar_with_dparser() {
 	int result = replay_malloc("/tmp/trace.txt");
