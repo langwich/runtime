@@ -52,14 +52,14 @@ void REF(heap_object *x) { }
 void DEREF(heap_object *x) { }
 #endif
 
-#if defined(MARK_AND_COMPACT) || defined(MARK_AND_SWEEP)
+#if defined(PLAIN) || defined(REFCOUNTING)
 Vector *Vector_alloc(size_t length) {
-	Vector *p = (Vector *)gc_alloc(&Vector_metadata, sizeof(Vector) + length * sizeof(double));
+	Vector *p = (Vector *)calloc(1, sizeof(Vector) + length * sizeof(double));
 	p->length = length;
 	return p;
 }
 String *String_alloc(size_t length) {
-	String *p = (String *)gc_alloc(&String_metadata, sizeof(String) + length * sizeof(char));
+	String *p = (String *)calloc(1, sizeof(String) + length * sizeof(char));
 	p->length = length;
 	return p;
 }
