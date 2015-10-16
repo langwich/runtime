@@ -64,9 +64,6 @@ void bs_init(bitset *bs, size_t nchks, void *pheap) {
 
 	bs->m_nbc = nchks;
 	bs->m_bc = pheap;
-	// set the first few bits to 1.
-	// Those bits count for the space consumed by the bit score board.
-	bs_set_range(bs, 0, nchks * CHUNK_SIZE / WORD_SIZE_IN_BYTE - 1);
 }
 
 /*

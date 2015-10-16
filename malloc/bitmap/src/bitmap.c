@@ -50,14 +50,16 @@ void bitmap_init(size_t size) {
 	g_pheap = morecore(size);
 	g_heap_size = size;
 
-	size_t num_chk = size / (CHK_IN_BIT *WORD_SIZE_IN_BYTE);
+	size_t num_chk = size / (CHK_IN_BIT * WORD_SIZE_IN_BYTE);
 	bs_init(&g_bsm, num_chk, g_pheap);
+	// set the first few bits to 1.
+	// Those bits count for the space consumed by the bit score board.
+	bs_set_range(&g_bsm, 0, num_chk * CHUNK_SIZE / WORD_SIZE_IN_BYTE - 1);
 
 	// the associated bit board starts right after the main one
 	// to improve locality.
 	bs_set_range(&g_bsm, num_chk, 2 * num_chk - 1);
 	bs_init(&g_bsa, num_chk, ((BITCHUNK *)g_pheap) + num_chk);
-	bs_clear_range(&g_bsa, 0, num_chk - 1);
 	bs_set(&g_bsa, 0);
 }
 
