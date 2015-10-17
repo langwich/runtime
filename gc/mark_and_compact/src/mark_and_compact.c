@@ -111,7 +111,9 @@ static inline void realloc_object(heap_object *p) {
 
 static inline void move_to_forwarding_addr(heap_object *p) {
 	if (DEBUG) if ( p->forwarded!=p ) printf("    move %p to %p (0x%x bytes)\n", p, p->forwarded, p->size);
-	if ( p->forwarded!=p ) memcpy(p->forwarded, p, p->size);
+	if ( p->forwarded!=p ) {
+		memcpy(p->forwarded, p, p->size);
+	}
 }
 
 static inline void move_live_objects_to_forwarding_addr(heap_object *p) {

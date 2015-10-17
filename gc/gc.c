@@ -2,13 +2,15 @@
 #include <mark_and_sweep.h>
 #elif defined(MARK_AND_COMPACT)
 #include <mark_and_compact.h>
+#include <persistent_vector.h>
+
 #endif
 
 #include "gc.h"
 #include "wich.h"
 
 object_metadata Vector_metadata = {
-		"Vector",
+		"PVector",
 		0
 };
 
@@ -17,8 +19,8 @@ object_metadata String_metadata = {
 		0
 };
 
-Vector *Vector_alloc(size_t length) {
-	Vector *p = (Vector *)gc_alloc(&Vector_metadata, sizeof(Vector) + length * sizeof(double));
+PVector *PVector_alloc(size_t length) {
+	PVector *p = (PVector *)gc_alloc(&Vector_metadata, sizeof(PVector) + length * sizeof(vec_fat_node));
 	p->length = length;
 	return p;
 }

@@ -39,11 +39,7 @@ SOFTWARE.
 typedef struct {} heap_object; // no extra header info needed
 #endif
 
-typedef struct {
-	heap_object metadata;
-	size_t length;      // number of doubles
-	double data[];      // a label to the start of the data part of vector
-} Vector;
+#include <persistent_vector.h>
 
 typedef struct string {
 	heap_object metadata;
@@ -62,7 +58,7 @@ String *String_new(char *s);
 String *String_from_char(char c);
 String *String_add(String *s, String *t);
 String *String_copy(String *s);
-String *String_from_vector(Vector *vector);
+String *String_from_vector(PVector_ptr vector);
 String *String_from_int(int value);
 String *String_from_float(float value);
 
@@ -74,26 +70,27 @@ bool String_lt(String *s, String *t);
 bool String_le(String *s, String *t);
 void print_string(String *s);
 
-Vector *Vector_empty();
-Vector *Vector_copy(Vector *v);
-Vector *Vector_new(double *data, size_t n);
-Vector *Vector_append(Vector *a, double value);
-Vector *Vector_append_vector(Vector *a, Vector *b);
-Vector *Vector_from_int(int value, Vector *v);
-Vector *Vector_from_float(float value, Vector *v);
+PVector_ptr Vector_empty(size_t n);
+PVector_ptr Vector_copy(PVector_ptr v);
+PVector_ptr Vector_new(double *data, size_t n);
+PVector_ptr Vector_append(PVector_ptr a, double value);
+PVector_ptr Vector_append_vector(PVector_ptr a, PVector_ptr b);
+PVector_ptr Vector_from_int(int value, size_t len);
+PVector_ptr Vector_from_float(double value, size_t len);
 
-Vector *Vector_add(Vector *a, Vector *b);
-Vector *Vector_sub(Vector *a, Vector *b);
-Vector *Vector_mul(Vector *a, Vector *b);
-Vector *Vector_div(Vector *a, Vector *b);
+PVector_ptr Vector_add(PVector_ptr a, PVector_ptr b);
+PVector_ptr Vector_sub(PVector_ptr a, PVector_ptr b);
+PVector_ptr Vector_mul(PVector_ptr a, PVector_ptr b);
+PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b);
 
-void print_vector(Vector *a);
+void print_vector(PVector_ptr a);
 
 // Following malloc/free are the hook where we create our own malloc/free or use the system's
 void *wich_malloc(size_t nbytes);
 void wich_free(heap_object *p);
 
-Vector *Vector_alloc(size_t length);
+// These two allocator functions could use different implementation according to compiler flags.
+PVector *PVector_alloc(size_t length);
 String *String_alloc(size_t length);
 
 static void
