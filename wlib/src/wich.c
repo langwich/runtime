@@ -26,7 +26,7 @@ SOFTWARE.
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "wich.h"
+#include <wich.h>
 #include "persistent_vector.h"
 
 static const int MAX_ROOTS = 1024;
@@ -39,8 +39,8 @@ void DEREF(heap_object *x) { }
 #endif
 
 #if defined(PLAIN) || defined(REFCOUNTING)
-Vector *Vector_alloc(size_t length) {
-	Vector *p = (Vector *)calloc(1, sizeof(Vector) + length * sizeof(double));
+PVector *PVector_alloc(size_t length) {
+	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(vec_fat_node));
 	p->length = length;
 	return p;
 }
@@ -56,136 +56,101 @@ String *String_alloc(size_t length) {
 // then DEREF before returning; it is the responsibility of the caller
 // to REF/DEREF heap return values
 
-Vector *Vector_new(double *data, size_t n)
+PVector_ptr Vector_new(double *data, size_t n)
 {
-	Vector *v = Vector_alloc(n);
-	memcpy(v->data, data, n * sizeof(double));
-	return v;
+	return PVector_new(data, n);
 }
 
-Vector *Vector_copy(Vector *v)
+PVector_ptr Vector_copy(PVector_ptr v)
 {
-	REF(v);
-	Vector *result = Vector_new(v->data, v->length);
-	DEREF(v); // might free(v)
+	REF(v.vector);
+	PVector_ptr result = PVector_copy(v);
+	DEREF(v.vector); // might free(v)
 	return result;
 }
 
-Vector *Vector_empty()
+PVector_ptr Vector_empty(size_t n)
 {
-	int n = 10;
-	Vector *v = Vector_alloc(n);
-	memset(v->data, 0, n*sizeof(double));
+	PVector_ptr v = PVector_init(0.0, n);
 	return v;
 }
 
-Vector *Vector_from_int(int value, Vector *v) {
-	int len = v->length;
-	if (len == 0) return NULL;
-	double data[len];
-	int i;
-	for (i = 0; i< len; i++) {
-		data[i] = value;
-	}
-	return Vector_new(data,len);
+PVector_ptr Vector_from_int(int value, size_t len) {
+	PVector_ptr result = PVector_init(value, len);
+	return result;
 }
 
-Vector *Vector_from_float(float value, Vector *v) {
-	int len = v->length;
-	if (len == 0) return NULL;
-	double data[len];
-	int i;
-	for (i = 0; i< len; i++) {
-		data[i] = value;
-	}
-	return Vector_new(data,len);
+PVector_ptr Vector_from_float(double value, size_t len) {
+	PVector_ptr result = PVector_init(value, len);
+	return result;
 }
 
-Vector *Vector_add(Vector *a, Vector *b)
+PVector_ptr Vector_add(PVector_ptr a, PVector_ptr b)
 {
-	REF(a);
-	REF(b);
+	REF(a.vector);
+	REF(b.vector);
 	int i;
-	if ( a==NULL || b==NULL || a->length!=b->length ) return NULL;
-	size_t n = a->length;
-	Vector * c = Vector_alloc(n);
-	for (i=0; i<n; i++) {
-		c->data[i] = a->data[i] + b->data[i];
-	}
-	DEREF(a);
-	DEREF(b);
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	size_t n = a.vector->length;
+	PVector_ptr c = PVector_init(0, n);
+	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) + ith(b, i);
+	DEREF(a.vector);
+	DEREF(b.vector);
 	return c;
 }
 
-Vector *Vector_sub(Vector *a, Vector *b)
+PVector_ptr Vector_sub(PVector_ptr a, PVector_ptr b)
 {
-	REF(a);
-	REF(b);
+	REF(a.vector);
+	REF(b.vector);
 	int i;
-	if ( a==NULL || b==NULL || a->length!=b->length ) return NULL;
-	size_t n = a->length;
-	Vector * c = Vector_alloc(n);
-	for (i=0; i<n; i++) {
-		c->data[i] = a->data[i] - b->data[i];
-	}
-	DEREF(a);
-	DEREF(b);
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	size_t n = a.vector->length;
+	PVector_ptr  c = PVector_init(0, n);
+	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) - ith(b, i);
+	DEREF(a.vector);
+	DEREF(b.vector);
 	return c;
 }
 
-Vector *Vector_mul(Vector *a, Vector *b)
+PVector_ptr Vector_mul(PVector_ptr a, PVector_ptr b)
 {
-	REF(a);
-	REF(b);
+	REF(a.vector);
+	REF(b.vector);
 	int i;
-	if ( a==NULL || b==NULL || a->length!=b->length ) return NULL;
-	size_t n = a->length;
-	Vector * c = Vector_alloc(n);
-	for (i=0; i<n; i++) {
-		c->data[i] = a->data[i] * b->data[i];
-	}
-	DEREF(a);
-	DEREF(b);
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	size_t n = a.vector->length;
+	PVector_ptr  c = PVector_init(0, n);
+	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) * ith(b, i);
+	DEREF(a.vector);
+	DEREF(b.vector);
 	return c;
 }
 
-Vector *Vector_div(Vector *a, Vector *b)
+PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b)
 {
-	REF(a);
-	REF(b);
+	REF(a.vector);
+	REF(b.vector);
 	int i;
-	if ( a==NULL || b==NULL || a->length!=b->length ) return NULL;
-	size_t n = a->length;
-	Vector * c = Vector_alloc(n);
-	for (i=0; i<n; i++) {
-		c->data[i] = a->data[i] / b->data[i];
-	}
-	DEREF(a);
-	DEREF(b);
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	size_t n = a.vector->length;
+	PVector_ptr  c = PVector_init(0, n);
+	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) / ith(b, i);
+	DEREF(a.vector);
+	DEREF(b.vector);
 	return c;
 }
 
-static char *Vector_as_string(Vector *a) // not called from Wich so no REF/DEREF
+static char *Vector_as_string(PVector_ptr a) // not called from Wich so no REF/DEREF
 {
-	char *s = calloc(a->length*20, sizeof(char));
-	char buf[50];
-	strcat(s, "[");
-	for (int i=0; i<a->length; i++) {
-		if ( i>0 ) strcat(s, ", ");
-		sprintf(buf, "%1.2f", a->data[i]);
-		strcat(s, buf);
-	}
-	strcat(s, "]");
-	return s;
+	return PVector_as_string(a);
 }
 
-void print_vector(Vector *a)
+void print_vector(PVector_ptr a)
 {
-	REF(a);
-	char *vs = Vector_as_string(a);
-	printf("%s\n", vs);
-	free(vs);
-	DEREF(a);
+	REF(a.vector);
+	print_pvector(a);
+	DEREF(a.vector);
 }
 
 String *String_new(char *orig)
@@ -201,12 +166,12 @@ String *String_from_char(char c)
 	return String_new(buf);
 }
 
-String *String_from_vector(Vector *v) {
-	if (v == NULL) return NULL;
-	char *s = calloc(v->length*20, sizeof(char));
+String *String_from_vector(PVector_ptr v) {
+	if (v.vector == NULL) return NULL;
+	char *s = calloc(v.vector->length*20, sizeof(char));
 	char buf[50];
-	for (int i=0; i<v->length; i++) {
-		sprintf(buf, "%d", (int)v->data[i]);
+	for (int i=0; i<v.vector->length; i++) {
+		sprintf(buf, "%d", (int)ith(v, i));
 		strcat(s, buf);
 	}
 	return String_new(s);

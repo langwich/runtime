@@ -111,7 +111,9 @@ static inline void realloc_object(heap_object *p) {
 
 static inline void move_to_forwarding_addr(heap_object *p) {
 	if (DEBUG) if ( p->forwarded!=p ) printf("    move %p to %p (0x%x bytes)\n", p, p->forwarded, p->size);
-	if ( p->forwarded!=p ) memcpy(p->forwarded, p, p->size);
+	if ( p->forwarded!=p ) {
+		memcpy(p->forwarded, p, p->size);
+	}
 }
 
 static inline void move_live_objects_to_forwarding_addr(heap_object *p) {
@@ -314,21 +316,23 @@ void foreach_live(void (*action)(heap_object *)) {
 	void *p = start_of_heap;
 	while (p >= start_of_heap && p < next_free) { // for each marked (live) object
 		heap_object *_p = (heap_object *)p;
+		size_t size = _p->size;
 		if (DEBUG) {
 			if (_p->magic != MAGIC_NUMBER) printf("INVALID ptr %p in foreach_live()\n", _p);
 		}
 		if ( _p->marked ) {
 			action(p);
 		}
-		p = p + _p->size;
+		p = p + size;
 	}
 }
 
 void foreach_object(void (*action)(heap_object *)) {
 	void *p = start_of_heap;
 	while (p >= start_of_heap && p < next_free) { // for each object in the heap currently allocated
+		size_t size = ((heap_object *)p)->size;
 		action(p);
-		p = p + ((heap_object *)p)->size;
+		p = p + size;
 	}
 }
 

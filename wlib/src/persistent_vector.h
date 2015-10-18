@@ -60,6 +60,7 @@ static inline PVector_ptr PVector_copy(PVector_ptr v) {
 	return (PVector_ptr){++v.vector->version_count, v.vector};
 }
 
+PVector_ptr PVector_init(double val, size_t n);
 PVector_ptr PVector_new(double *data, size_t n);
 void print_pvector(PVector_ptr a);
 double ith(PVector_ptr v, int i);

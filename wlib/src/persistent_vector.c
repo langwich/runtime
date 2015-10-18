@@ -27,7 +27,6 @@ SOFTWARE.
 #include <math.h>
 
 #include "wich.h"
-#include "persistent_vector.h"
 
 /*
  * Per "Making Data Structures Persistent"
@@ -54,9 +53,14 @@ SOFTWARE.
 
 // TODO: uses calloc for now to begin impl
 
-static inline PVector *PVector_alloc(size_t length) {
-	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(vec_fat_node));
-	p->length = length;
+PVector_ptr PVector_init(double val, size_t n) {
+	PVector *v = PVector_alloc(n);
+	v->version_count = -1; // first version is 0
+	PVector_ptr p = {++v->version_count, v};
+	for (int i = 0; i < n; i++) {
+		v->nodes[i].version = INVALID_VERSION; // indicates this node has default value.
+		v->nodes[i].data = val;
+	}
 	return p;
 }
 
