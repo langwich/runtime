@@ -316,21 +316,23 @@ void foreach_live(void (*action)(heap_object *)) {
 	void *p = start_of_heap;
 	while (p >= start_of_heap && p < next_free) { // for each marked (live) object
 		heap_object *_p = (heap_object *)p;
+		size_t size = _p->size;
 		if (DEBUG) {
 			if (_p->magic != MAGIC_NUMBER) printf("INVALID ptr %p in foreach_live()\n", _p);
 		}
 		if ( _p->marked ) {
 			action(p);
 		}
-		p = p + _p->size;
+		p = p + size;
 	}
 }
 
 void foreach_object(void (*action)(heap_object *)) {
 	void *p = start_of_heap;
 	while (p >= start_of_heap && p < next_free) { // for each object in the heap currently allocated
+		size_t size = ((heap_object *)p)->size;
 		action(p);
-		p = p + ((heap_object *)p)->size;
+		p = p + size;
 	}
 }
 
