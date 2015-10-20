@@ -25,8 +25,10 @@ SOFTWARE.
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <pthread.h>
 
 #include "wich.h"
+#include "persistent_vector.h"
 
 /*
  * Per "Making Data Structures Persistent"
@@ -51,15 +53,14 @@ SOFTWARE.
  * which the node was created."
  */
 
-// TODO: uses calloc for now to begin impl
-
 PVector_ptr PVector_init(double val, size_t n) {
 	PVector *v = PVector_alloc(n);
 	v->version_count = -1; // first version is 0
 	PVector_ptr p = {++v->version_count, v};
 	for (int i = 0; i < n; i++) {
-		v->nodes[i].version = INVALID_VERSION; // indicates this node has default value.
+		pthread_mutex_init(&v->nodes[i].lock, NULL);
 		v->nodes[i].data = val;
+		v->nodes[i].head = NULL;
 	}
 	return p;
 }
@@ -69,46 +70,60 @@ PVector_ptr PVector_new(double *data, size_t n) {
 	v->version_count = -1; // first version is 0
 	PVector_ptr p = {++v->version_count, v};
 	for (int i = 0; i < n; i++) {
-		v->nodes[i].version = INVALID_VERSION; // indicates this node has default value.
+		pthread_mutex_init(&v->nodes[i].lock, NULL);
 		v->nodes[i].data = data[i];
+		v->nodes[i].head = NULL;
 	}
 	return p;
 }
 
-double ith(PVector_ptr v, int i) {
-	if ( i>=0 && i<v.vector->length ) {
-		vec_fat_node *default_node = &v.vector->nodes[i];
+double ith(PVector_ptr vptr, int i) {
+	if ( i>=0 && i< vptr.vector->length ) {
+		PVectorFatNode *default_node = &vptr.vector->nodes[i];
+		if ( default_node->head==NULL ) {       // fast path that doesn't need a mutex.
+			return default_node->data;          // return default value if no version list
+		}
+		// Lock out any other thread that is reading or writing to this fat node element list
+		pthread_mutex_t *node_i_lock = &vptr.vector->nodes[i].lock;
+		pthread_mutex_lock(node_i_lock);
 		// Look for value associated with this version in list first
-		vec_fat_node *p = default_node->next;
+		PVectorFatNodeElem *p = default_node->head;
 		while ( p!=NULL ) {
-			if ( p->version==v.version ) {
+			if ( p->version== vptr.version ) {
+				pthread_mutex_unlock(node_i_lock);
 				return p->data;
 			}
 			p = p->next;
 		}
 		// not found? return default value
+		pthread_mutex_unlock(node_i_lock);
 		return default_node->data;
 	}
 	return NAN;
 }
 
-void set_ith(PVector_ptr v, int i, double value) {
-	if ( i>=0 && i<v.vector->length ) {
-		vec_fat_node *default_node = &v.vector->nodes[i];
-		vec_fat_node *p = default_node->next; // can never set default value in head fat node after creation
+void set_ith(PVector_ptr vptr, int i, double value) {
+	if ( i>=0 && i< vptr.vector->length ) {
+		PVectorFatNode *default_node = &vptr.vector->nodes[i];
+		// Lock out any other thread that is reading or writing to this fat node element list
+		pthread_mutex_t *node_i_lock = &vptr.vector->nodes[i].lock;
+		pthread_mutex_lock(node_i_lock);
+		PVectorFatNodeElem *p = default_node->head;  // can never set default value in fat node after creation
 		while (p != NULL) {
-			if ( p->version==v.version ) {
+			if ( p->version== vptr.version ) {       // found our version so let's update it
 				p->data = value;
+				pthread_mutex_unlock(node_i_lock);
 				return;
 			}
 			p = p->next;
 		}
-		// if not found, we create a new fat node with (version,value)
-		vec_fat_node *q = calloc(1, sizeof(vec_fat_node));
-		q->version = v.version;
+		// if not found, we create a new fat node with (version,value) and make it the head of the list
+		PVectorFatNodeElem *q = PVectorFatNodeElem_alloc();
+		q->version = vptr.version;
 		q->data = value;
-		q->next = default_node->next;
-		default_node->next = q;
+		q->next = default_node->head;
+		default_node->head = q;
+		pthread_mutex_unlock(node_i_lock);
 	}
 }
 

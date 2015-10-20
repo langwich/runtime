@@ -5,21 +5,27 @@
 
 const int NUM_THREADS = 4;
 
-const int N = 1000*1000*100;
+const int N = 1000;
 const int CHUNK_SIZE = N/NUM_THREADS;
 
 static double x[N];
 static double y[N];
 static double z[N];
 
+pthread_mutex_t mymutex = PTHREAD_MUTEX_INITIALIZER;
+
+double sum = 0.0;
+
 void *add(void *threadid)
 {
 	long tid;
 	tid = (long)threadid;
 	for (int i=tid*CHUNK_SIZE; i<tid*CHUNK_SIZE+CHUNK_SIZE; i++) {
-		z[i] = x[i] + y[i];
+		pthread_mutex_lock(&mymutex);
+		sum += x[i] + y[i];
+		pthread_mutex_unlock(&mymutex);
 	}
-//	printf("Hello World! It's me, thread #%ld!\n", tid);
+	printf("Hello World! It's me, thread #%ld!\n", tid);
 	return NULL;
 }
 

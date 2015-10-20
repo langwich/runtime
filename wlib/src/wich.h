@@ -89,8 +89,9 @@ void print_vector(PVector_ptr a);
 void *wich_malloc(size_t nbytes);
 void wich_free(heap_object *p);
 
-// These two allocator functions could use different implementation according to compiler flags.
+// These allocator functions use different implementation according to compiler flags.
 PVector *PVector_alloc(size_t length);
+PVectorFatNodeElem *PVectorFatNodeElem_alloc();
 String *String_alloc(size_t length);
 
 static void

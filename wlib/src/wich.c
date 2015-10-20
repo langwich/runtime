@@ -40,8 +40,12 @@ void DEREF(heap_object *x) { }
 
 #if defined(PLAIN) || defined(REFCOUNTING)
 PVector *PVector_alloc(size_t length) {
-	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(vec_fat_node));
+	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(PVectorFatNodeElem));
 	p->length = length;
+	return p;
+}
+PVectorFatNodeElem *PVectorFatNodeElem_alloc() {
+	PVectorFatNodeElem *p = (PVectorFatNodeElem *)calloc(1, sizeof(PVectorFatNodeElem));
 	return p;
 }
 String *String_alloc(size_t length) {

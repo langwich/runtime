@@ -14,14 +14,25 @@ object_metadata Vector_metadata = {
 		0
 };
 
+object_metadata PVectorFatNodeElem_metadata = {
+		"PVectorFatNodeElem",
+		1,
+		{__offsetof(PVectorFatNodeElem,next)}
+};
+
 object_metadata String_metadata = {
 		"String",
 		0
 };
 
 PVector *PVector_alloc(size_t length) {
-	PVector *p = (PVector *)gc_alloc(&Vector_metadata, sizeof(PVector) + length * sizeof(vec_fat_node));
+	PVector *p = (PVector *)gc_alloc(&Vector_metadata, sizeof(PVector) + length * sizeof(PVectorFatNodeElem));
 	p->length = length;
+	return p;
+}
+
+PVectorFatNodeElem *PVectorFatNodeElem_alloc() {
+	PVectorFatNodeElem *p = (PVectorFatNodeElem *)gc_alloc(&PVectorFatNodeElem_metadata, sizeof(PVectorFatNodeElem));
 	return p;
 }
 

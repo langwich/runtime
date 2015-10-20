@@ -56,7 +56,7 @@ void alloc_single_vector() {
 	assert_addr_not_equal(p, NULL);
 	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	assert_equal(p->length, 10);
-	size_t expected_size = align_to_word_boundary(sizeof(PVector) + p->length * sizeof(vec_fat_node));
+	size_t expected_size = align_to_word_boundary(sizeof(PVector) + p->length * sizeof(PVectorFatNodeElem));
 	assert_equal(p->metadata.size, expected_size);
 	assert_str_equal(p->metadata.metadata->name, "PVector");
 
@@ -91,8 +91,8 @@ void alloc_two_vectors() {
 	assert_addr_not_equal(p,q);
 
 	Heap_Info info = get_heap_info();
-	size_t p_expected_size = align_to_word_boundary(sizeof(PVector) + p->length * sizeof(vec_fat_node));
-	size_t q_expected_size = align_to_word_boundary(sizeof(PVector) + q->length * sizeof(vec_fat_node));
+	size_t p_expected_size = align_to_word_boundary(sizeof(PVector) + p->length * sizeof(PVectorFatNodeElem));
+	size_t q_expected_size = align_to_word_boundary(sizeof(PVector) + q->length * sizeof(PVectorFatNodeElem));
 	assert_addr_equal(p, info.start_of_heap);
 	assert_addr_equal(info.next_free, ((void *)q) + q_expected_size);
 	assert_equal(info.busy_size, p_expected_size + q_expected_size);
@@ -115,7 +115,7 @@ void gc_after_single_vector_one_root() {
 	gc();
 	assert_equal(gc_num_live_objects(), 1); // still there as p points at it
 	Heap_Info info = get_heap_info();
-	size_t expected_size = align_to_word_boundary(sizeof(PVector) + p->length * sizeof(vec_fat_node));
+	size_t expected_size = align_to_word_boundary(sizeof(PVector) + p->length * sizeof(PVectorFatNodeElem));
 	assert_equal(info.busy_size, expected_size);
 	assert_equal(info.free_size, info.heap_size - expected_size);
 }
