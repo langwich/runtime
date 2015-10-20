@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-const int NUM_THREADS = 2;
+const int NUM_THREADS = 4;
 
 const int N = 1000*1000*100;
 const int CHUNK_SIZE = N/NUM_THREADS;
