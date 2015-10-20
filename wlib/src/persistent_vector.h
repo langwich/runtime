@@ -52,7 +52,7 @@ typedef struct {
 	heap_object metadata;
 	int version_count;          // could use time() but avoids system call
 	size_t length;              // number of doubles (our vectors are fixed in length like arrays)
-	PVectorFatNode nodes[];       // a vector of fat nodes
+	PVectorFatNode nodes[];     // a vector of fat nodes
 } PVector;
 
 typedef struct {                // can't use "PVector *" since we need a versioned pointer

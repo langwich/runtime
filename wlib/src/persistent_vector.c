@@ -28,7 +28,6 @@ SOFTWARE.
 #include <pthread.h>
 
 #include "wich.h"
-#include "persistent_vector.h"
 
 /*
  * Per "Making Data Structures Persistent"
@@ -133,7 +132,7 @@ char *PVector_as_string(PVector_ptr a) {
 	strcat(s, "[");
 	for (int i=0; i<a.vector->length; i++) {
 		if ( i>0 ) strcat(s, ", ");
-		sprintf(buf, "%1.2f", a.vector->nodes[i].data);
+		sprintf(buf, "%1.2f", ith(a, i));
 		strcat(s, buf);
 	}
 	strcat(s, "]");

@@ -27,7 +27,10 @@ SOFTWARE.
 
 #include <stdlib.h>
 
+enum Refcounting_elemtype { VECTOR, STRING }; // note: we do not REF fat node elements for reference counting
+
 typedef struct {
+	enum Refcounting_elemtype type; // needed to deref a ptr to unknown type (vectors have lots to deallocate)
 	int refs;
 } heap_object;
 
@@ -71,14 +74,22 @@ static inline void DEREF(void *x) {
 #ifdef DEBUG
 		printf("DEREF(%p) has %d refs\n", x, ((heap_object *)x)->refs);
 #endif
-		((heap_object *)x)->refs--;
-		if ( ((heap_object *)x)->refs==0 ) {
+		heap_object *o = (heap_object *)x;
+		o->refs--;
+		if ( o->refs==0 ) {
+			if ( o->type==STRING ) {
 #ifdef DEBUG
-			printf("free(%p)\n", x);
+				printf("free(%p) string %s\n", x, (char *)o);
 #endif
-			free((heap_object *)x);
-
-			x = NULL;
+				free(o);
+			}
+			else if ( o->type==VECTOR ) {
+#ifdef DEBUG
+				printf("free(%p) vector\n", x);
+#endif
+				free(o);
+				// TODO: free all of the elements in the linked list as well
+			}
 		}
 	}
 }

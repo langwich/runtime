@@ -9,7 +9,7 @@
 #include "gc.h"
 #include "wich.h"
 
-object_metadata Vector_metadata = {
+object_metadata PVector_metadata = {
 		"PVector",
 		0
 };
@@ -26,7 +26,7 @@ object_metadata String_metadata = {
 };
 
 PVector *PVector_alloc(size_t length) {
-	PVector *p = (PVector *)gc_alloc(&Vector_metadata, sizeof(PVector) + length * sizeof(PVectorFatNodeElem));
+	PVector *p = (PVector *)gc_alloc(&PVector_metadata, sizeof(PVector) + length * sizeof(PVectorFatNode));
 	p->length = length;
 	return p;
 }

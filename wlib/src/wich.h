@@ -93,6 +93,7 @@ void wich_free(heap_object *p);
 PVector *PVector_alloc(size_t length);
 PVectorFatNodeElem *PVectorFatNodeElem_alloc();
 String *String_alloc(size_t length);
+void print_alloc_strategy();
 
 static void
 handle_sys_errors(int errno)
