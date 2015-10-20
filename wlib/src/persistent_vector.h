@@ -32,6 +32,7 @@ SOFTWARE.
  */
 
 typedef struct _PVectorFatNodeElem {
+	heap_object metadata;       // fat node elements must meet be allocated and deallocated like any other
 	int version;
 	double data;
 	struct _PVectorFatNodeElem *next;
