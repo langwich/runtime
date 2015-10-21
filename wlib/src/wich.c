@@ -92,7 +92,7 @@ PVector_ptr Vector_add(PVector_ptr a, PVector_ptr b)
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
 	size_t n = a.vector->length;
 	PVector_ptr c = PVector_init(0, n);
 	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) + ith(b, i); // safe because we have sole ptr to c for now
@@ -106,7 +106,7 @@ PVector_ptr Vector_sub(PVector_ptr a, PVector_ptr b)
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
 	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) - ith(b, i);
@@ -120,7 +120,7 @@ PVector_ptr Vector_mul(PVector_ptr a, PVector_ptr b)
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
 	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) * ith(b, i);
@@ -134,7 +134,7 @@ PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b)
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
 	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) / ith(b, i);

@@ -54,6 +54,8 @@ typedef struct string {
 	 */
 } String;
 
+static const PVector_ptr NIL_VECTOR = {-1,NULL};
+
 String *String_new(char *s);
 String *String_from_char(char c);
 String *String_add(String *s, String *t);
