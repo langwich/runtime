@@ -60,6 +60,21 @@ static inline void REF(void *x) {
 #endif
 }
 
+void free_object(heap_object *x);
+
+static inline void DEREF(void *x) {
+	if ( x!=NULL ) {
+#ifdef DEBUG
+		printf("DEREF(%p) has %d refs\n", x, ((heap_object *)x)->refs);
+#endif
+		heap_object *o = (heap_object *)x;
+		o->refs--;
+		if ( o->refs==0 ) {
+			free_object(o);
+		}
+	}
+}
+
 /* A DEREF w/o free'ing even if count goes to zero; used for returning pointers */
 static inline void DEC(void *x) {
 	if ( x!=NULL ) {
@@ -67,12 +82,8 @@ static inline void DEC(void *x) {
 		printf("DEC(%p) has %d refs\n", x, ((heap_object *)x)->refs);
 #endif
 		heap_object *o = (heap_object *)x;
-		pthread_mutex_lock(&refcounting_global_lock);
 		o->refs--;
-		pthread_mutex_unlock(&refcounting_global_lock);
 	}
 }
-
-void DEREF(void *x);
 
 #endif

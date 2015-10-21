@@ -22,22 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <stdlib.h>
-#include <pthread.h>
 
 #include "wich.h"
+
+// WARNING: refcounting is not synchronized so concurrency is not supported
+//          but we must still destroy mutex's created by persistent vector lib
+//          during free.
 
 static const int MAX_ROOTS = 1024;
 static int sp = -1; // grow upwards; inc then set for push.
 static heap_object **roots[MAX_ROOTS];
-
-/* A global lock for synchronizing ref counting. We want a lock per object but
- * we want to free when refs goes to 0 but we can't destroy lock in an object
- * that could have other threads waiting. A subtle and hideous bug.
- * This is terribly inefficient but ref counting isn't my favorite in any case.
- * Also in threaded environment, locking on every REF/DEREF is just plain
- * ridiculous so let's make it easy on ourselves.
- */
-static pthread_mutex_t refcounting_global_lock = PTHREAD_MUTEX_INITIALIZER;
 
 PVector *PVector_alloc(size_t length) {
 	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(PVectorFatNode));
@@ -87,24 +81,6 @@ void free_object(heap_object *o) {
 		}
 
 		free(o);    // free entire vector of fat nodes
-	}
-}
-
-void DEREF(void *x) {
-	if ( x!=NULL ) {
-#ifdef DEBUG
-		printf("DEREF(%p) has %d refs\n", x, ((heap_object *)x)->refs);
-#endif
-		// atomically decrement the ref count
-		heap_object *o = (heap_object *)x;
-		pthread_mutex_lock(&refcounting_global_lock);
-		o->refs--;
-		if ( o->refs==0 ) {
-			// Exactly one thread will find its reference count going to zero; any other waiting threads
-			// would find their reference count going negative. In this way only one thread will free this object.
-			free_object(o); // destroys lock so no unlock after this call
-		}
-		pthread_mutex_unlock(&refcounting_global_lock);
 	}
 }
 
