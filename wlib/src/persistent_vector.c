@@ -76,10 +76,9 @@ PVector_ptr PVector_new(double *data, size_t n) {
 double ith(PVector_ptr vptr, int i) {
 	if ( i>=0 && i< vptr.vector->length ) {
 		PVectorFatNode *default_node = &vptr.vector->nodes[i];
-		if ( default_node->head==NULL ) {       // fast path that doesn't need a mutex.
+		if ( default_node->head==NULL ) {       // fast path
 			return default_node->data;          // return default value if no version list
 		}
-		// Lock out any other thread that is reading or writing to this fat node element list
 		// Look for value associated with this version in list first
 		PVectorFatNodeElem *p = default_node->head;
 		while ( p!=NULL ) {
@@ -97,7 +96,6 @@ double ith(PVector_ptr vptr, int i) {
 void set_ith(PVector_ptr vptr, int i, double value) {
 	if ( i>=0 && i< vptr.vector->length ) {
 		PVectorFatNode *default_node = &vptr.vector->nodes[i];
-		// Lock out any other thread that is reading or writing to this fat node element list
 		PVectorFatNodeElem *p = default_node->head;  // can never set default value in fat node after creation
 		while (p != NULL) {
 			if ( p->version== vptr.version ) {       // found our version so let's update it
