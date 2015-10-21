@@ -85,10 +85,6 @@ PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b);
 
 void print_vector(PVector_ptr a);
 
-// Following malloc/free are the hook where we create our own malloc/free or use the system's
-void *wich_malloc(size_t nbytes);
-void wich_free(heap_object *p);
-
 // These allocator functions use different implementation according to compiler flags.
 PVector *PVector_alloc(size_t length);
 PVectorFatNodeElem *PVectorFatNodeElem_alloc();

@@ -69,28 +69,6 @@ static inline void DEC(void *x) {
 	}
 }
 
-static inline void DEREF(void *x) {
-	if ( x!=NULL ) {
-#ifdef DEBUG
-		printf("DEREF(%p) has %d refs\n", x, ((heap_object *)x)->refs);
-#endif
-		heap_object *o = (heap_object *)x;
-		o->refs--;
-		if ( o->refs==0 ) {
-			if ( o->type==STRING ) {
-#ifdef DEBUG
-				printf("free(%p) string %s\n", x, (char *)o);
-#endif
-				free(o);
-			}
-			else if ( o->type==VECTOR ) {
-#ifdef DEBUG
-				printf("free(%p) vector\n", x);
-#endif
-				free(o);
-				// TODO: free all of the elements in the linked list as well
-			}
-		}
-	}
-}
+void DEREF(void *x);
+
 #endif

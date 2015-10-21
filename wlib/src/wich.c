@@ -37,7 +37,6 @@ void REF(heap_object *x) { }
 void DEREF(heap_object *x) { }
 #endif
 
-#if defined(PLAIN) || defined(REFCOUNTING)
 PVector *PVector_alloc(size_t length) {
 	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(PVectorFatNode));
 	p->length = length;
@@ -55,7 +54,6 @@ String *String_alloc(size_t length) {
 //	printf("String %p\n", p);
 	return p;
 }
-#endif
 
 // There is a general assumption that support routines follow same
 // ref counting convention as Wich code: functions REF their heap args and
