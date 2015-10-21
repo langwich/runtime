@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -29,24 +28,27 @@ SOFTWARE.
 #include <wich.h>
 #include "persistent_vector.h"
 
-static const int MAX_ROOTS = 1024;
-static int sp = -1; // grow upwards; inc then set for push.
-static heap_object **roots[MAX_ROOTS];
-
 #ifndef REFCOUNTING
 void REF(heap_object *x) { }
 void DEREF(heap_object *x) { }
 #endif
 
-#if defined(PLAIN) || defined(REFCOUNTING)
+#if defined(PLAIN)
 PVector *PVector_alloc(size_t length) {
-	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(vec_fat_node));
+	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(PVectorFatNode));
 	p->length = length;
+//	printf("PVector %p\n", p);
+	return p;
+}
+PVectorFatNodeElem *PVectorFatNodeElem_alloc() {
+	PVectorFatNodeElem *p = (PVectorFatNodeElem *)calloc(1, sizeof(PVectorFatNodeElem));
+//	printf("fat node elem %p\n", p);
 	return p;
 }
 String *String_alloc(size_t length) {
 	String *p = (String *)calloc(1, sizeof(String) + length * sizeof(char));
 	p->length = length;
+//	printf("String %p\n", p);
 	return p;
 }
 #endif
@@ -63,9 +65,9 @@ PVector_ptr Vector_new(double *data, size_t n)
 
 PVector_ptr Vector_copy(PVector_ptr v)
 {
-	REF(v.vector);
+	REF((heap_object *)v.vector);
 	PVector_ptr result = PVector_copy(v);
-	DEREF(v.vector); // might free(v)
+	DEREF((heap_object *)v.vector); // might free(v)
 	return result;
 }
 
@@ -87,70 +89,65 @@ PVector_ptr Vector_from_float(double value, size_t len) {
 
 PVector_ptr Vector_add(PVector_ptr a, PVector_ptr b)
 {
-	REF(a.vector);
-	REF(b.vector);
+	REF((heap_object *)a.vector);
+	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
 	size_t n = a.vector->length;
 	PVector_ptr c = PVector_init(0, n);
-	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) + ith(b, i);
-	DEREF(a.vector);
-	DEREF(b.vector);
+	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) + ith(b, i); // safe because we have sole ptr to c for now
+	DEREF((heap_object *)a.vector);
+	DEREF((heap_object *)b.vector);
 	return c;
 }
 
 PVector_ptr Vector_sub(PVector_ptr a, PVector_ptr b)
 {
-	REF(a.vector);
-	REF(b.vector);
+	REF((heap_object *)a.vector);
+	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
 	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) - ith(b, i);
-	DEREF(a.vector);
-	DEREF(b.vector);
+	DEREF((heap_object *)a.vector);
+	DEREF((heap_object *)b.vector);
 	return c;
 }
 
 PVector_ptr Vector_mul(PVector_ptr a, PVector_ptr b)
 {
-	REF(a.vector);
-	REF(b.vector);
+	REF((heap_object *)a.vector);
+	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
 	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) * ith(b, i);
-	DEREF(a.vector);
-	DEREF(b.vector);
+	DEREF((heap_object *)a.vector);
+	DEREF((heap_object *)b.vector);
 	return c;
 }
 
 PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b)
 {
-	REF(a.vector);
-	REF(b.vector);
+	REF((heap_object *)a.vector);
+	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return (PVector_ptr){-1,NULL};
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
 	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) / ith(b, i);
-	DEREF(a.vector);
-	DEREF(b.vector);
+	DEREF((heap_object *)a.vector);
+	DEREF((heap_object *)b.vector);
 	return c;
-}
-
-static char *Vector_as_string(PVector_ptr a) // not called from Wich so no REF/DEREF
-{
-	return PVector_as_string(a);
 }
 
 void print_vector(PVector_ptr a)
 {
-	REF(a.vector);
+	REF((heap_object *)a.vector);
 	print_pvector(a);
-	DEREF(a.vector);
+	DEREF((heap_object *)a.vector);
 }
 
 String *String_new(char *orig)
@@ -195,30 +192,31 @@ String *String_from_float(float value) {
 
 void print_string(String *a)
 {
-	REF(a);
+	REF((heap_object *)a);
 	printf("%s\n", a->str);
-	DEREF(a);
+	DEREF((heap_object *)a);
 }
 
 String *String_add(String *s, String *t)
 {
 	if ( s==NULL ) return t; // don't REF/DEREF as we might free our return value
 	if ( t==NULL ) return s;
-	REF(s);
-	REF(t);
+	REF((heap_object *)s);
+	REF((heap_object *)t);
 	size_t n = strlen(s->str) + strlen(t->str);
 	String *u = String_alloc(n);
 	strcpy(u->str, s->str);
 	strcat(u->str, t->str);
-	DEREF(s);
-	DEREF(t);
+	DEREF((heap_object *)s);
+	DEREF((heap_object *)t);
 	return u;
 }
 
 bool String_eq(String *s, String *t) {
 	if (strlen(s->str) != strlen(t->str)) {
 		return false;
-	}else {
+	}
+	else {
 		size_t n = strlen(s->str);
 		int i;
 		for (i = 0; i < n; i++) {
@@ -295,36 +293,17 @@ bool String_le(String *s, String *t) {
 		return true;
 	}
 }
-/** We don't have data aggregates like structs so no need to free nested pointers. */
-void wich_free(heap_object *p)
-{
-	free(p);
-}
 
-void *wich_malloc(size_t nbytes)
-{
-	return malloc(nbytes);
-}
-
-int _heap_sp() { return sp; }
-void _set_sp(int _sp) { sp = _sp; }
-
-/* Announce a heap reference so we can _deref() all before exiting a function */
-void _heapvar(heap_object **p) {
-	roots[++sp] = p;
-}
-
-/* DEREF the stack a to b inclusive */
-void _deref(int a, int b) {
-#ifdef DEBUG
-	printf("deref(%d,%d)\n", a,b);
+void print_alloc_strategy() {
+#ifdef REFCOUNTING
+	printf("REFCOUNTING\n");
+#elif MARK_AND_SWEEP
+	printf("MARK_AND_SWEEP\n");
+#elif MARK_AND_COMPACT
+	printf("MARK_AND_COMPACT\n");
+#elif PLAIN
+	printf("PLAIN\n");
+#else
+	printf("UNKNOWN\n");
 #endif
-	for (int i=a; i<=b; i++) {
-		heap_object **addr_of_root = roots[i];
-		heap_object *root = *addr_of_root;
-#ifdef DEBUG
-		printf("deref %p\n", root);
-#endif
-		DEREF(root);
-	}
 }

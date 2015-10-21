@@ -47,11 +47,11 @@ void _assert_equal(unsigned long a, unsigned long b, const char as[], const char
 void _assert_not_equal(unsigned long a, unsigned long b, const char as[], const char bs[], const char funcname[]);
 void _assert_addr_equal(void *a, void *b, const char as[], const char bs[], const char funcname[]);
 void _assert_addr_not_equal(void *a, void *b, const char as[], const char bs[], const char funcname[]);
-void _assert_str_equal(void *a, void *b, const char as[], const char bs[], const char funcname[]);
-void _assert_str_not_equal(void *a, void *b, const char as[], const char bs[], const char funcname[]);
 void _assert_float_equal(double a, double b, const char as[], const char bs[], const char funcname[]);
 void _assert_float_not_equal(double a, double b, const char as[], const char bs[], const char funcname[]);
-void _assert_strn_equal(void *a, void *b, size_t n, const char as[], const char bs[], const char funcname[]);
-void _assert_strn_not_equal(void *a, void *b, size_t n, const char as[], const char bs[], const char funcname[]);
+void _assert_str_equal(char *a, char *b, const char as[], const char bs[], const char funcname[]);
+void _assert_str_not_equal(char *a, char *b, const char as[], const char bs[], const char funcname[]);
+void _assert_strn_equal(char *a, char *b, size_t n, const char as[], const char bs[], const char funcname[]);
+void _assert_strn_not_equal(char *a, char *b, size_t n, const char as[], const char bs[], const char funcname[]);
 
 void cunit_test(void (*f)(), const char funcname[]);

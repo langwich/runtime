@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef RUNTIME_GC_H
 #define RUNTIME_GC_H
 
-extern object_metadata Vector_metadata;
+extern object_metadata PVector_metadata;
 extern object_metadata String_metadata;
 
 static const size_t WORD_SIZE_IN_BYTES = sizeof(void *);
