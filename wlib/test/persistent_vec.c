@@ -2,22 +2,16 @@
 #include <stdlib.h>
 #include <time.h>
 #include "cunit.h"
-
-#ifdef REFCOUNTING
-#elif MARK_AND_SWEEP
-#elif MARK_AND_COMPACT
-#else // PLAIN
-typedef struct {} heap_object; // no extra header info needed
-#endif
-
-#include <persistent_vector.h>
+#include "wich.h"
 
 int main(int argc, char *argv[])
 {
 	// var x = [1,2,3]
 	PVector_ptr x = PVector_new((double[]){1,2,3}, 3);
 	assert_equal(x.version, 0);
-	assert_str_equal(PVector_as_string(x), "[1.00, 2.00, 3.00]");
+	char *vs = PVector_as_string(x);
+	assert_str_equal(vs, "[1.00, 2.00, 3.00]");
+	free(vs);
 
 	// check default values
 	assert_float_equal(ith(x,0), 1.0);
