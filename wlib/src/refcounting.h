@@ -26,8 +26,9 @@ SOFTWARE.
 #define RUNTIME_REFCOUNTING_H_
 
 #include <stdlib.h>
+#include <pthread.h>
 
-enum Refcounting_elemtype { VECTOR, STRING }; // note: we do not REF fat node elements for reference counting
+enum Refcounting_elemtype { VECTOR, STRING }; // note: we do not REF fat node list elements for reference counting
 
 typedef struct {
 	enum Refcounting_elemtype type; // needed to deref a ptr to unknown type (vectors have lots to deallocate)
@@ -65,7 +66,10 @@ static inline void DEC(void *x) {
 #ifdef DEBUG
 		printf("DEC(%p) has %d refs\n", x, ((heap_object *)x)->refs);
 #endif
-		((heap_object *)x)->refs--;
+		heap_object *o = (heap_object *)x;
+		pthread_mutex_lock(&refcounting_global_lock);
+		o->refs--;
+		pthread_mutex_unlock(&refcounting_global_lock);
 	}
 }
 

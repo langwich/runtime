@@ -45,7 +45,7 @@ typedef struct _PVectorFatNodeElem {
 typedef struct _PVectorFatNode {
 	double data;                // Default/initial value
 	pthread_mutex_t lock;       // one lock per fat node
-	PVectorFatNodeElem *head; // the start of the fat node element linked list
+	PVectorFatNodeElem *head;   // the start of the fat node element linked list
 } PVectorFatNode;
 
 typedef struct {

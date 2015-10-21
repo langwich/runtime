@@ -28,15 +28,12 @@ SOFTWARE.
 #include <wich.h>
 #include "persistent_vector.h"
 
-static const int MAX_ROOTS = 1024;
-static int sp = -1; // grow upwards; inc then set for push.
-static heap_object **roots[MAX_ROOTS];
-
 #ifndef REFCOUNTING
 void REF(heap_object *x) { }
 void DEREF(heap_object *x) { }
 #endif
 
+#if defined(PLAIN)
 PVector *PVector_alloc(size_t length) {
 	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(PVectorFatNode));
 	p->length = length;
@@ -54,6 +51,7 @@ String *String_alloc(size_t length) {
 //	printf("String %p\n", p);
 	return p;
 }
+#endif
 
 // There is a general assumption that support routines follow same
 // ref counting convention as Wich code: functions REF their heap args and
@@ -143,11 +141,6 @@ PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b)
 	DEREF((heap_object *)a.vector);
 	DEREF((heap_object *)b.vector);
 	return c;
-}
-
-static char *Vector_as_string(PVector_ptr a) // not called from Wich so no REF/DEREF
-{
-	return PVector_as_string(a);
 }
 
 void print_vector(PVector_ptr a)
@@ -298,39 +291,6 @@ bool String_le(String *s, String *t) {
 			}
 		}
 		return true;
-	}
-}
-/** We don't have data aggregates like structs so no need to free nested pointers. */
-void wich_free(heap_object *p)
-{
-	free(p);
-}
-
-void *wich_malloc(size_t nbytes)
-{
-	return malloc(nbytes);
-}
-
-int _heap_sp() { return sp; }
-void _set_sp(int _sp) { sp = _sp; }
-
-/* Announce a heap reference so we can _deref() all before exiting a function */
-void _heapvar(heap_object **p) {
-	roots[++sp] = p;
-}
-
-/* DEREF the stack a to b inclusive */
-void _deref(int a, int b) {
-#ifdef DEBUG
-	printf("deref(%d,%d)\n", a,b);
-#endif
-	for (int i=a; i<=b; i++) {
-		heap_object **addr_of_root = roots[i];
-		heap_object *root = *addr_of_root;
-#ifdef DEBUG
-		printf("deref %p\n", root);
-#endif
-		DEREF(root);
 	}
 }
 

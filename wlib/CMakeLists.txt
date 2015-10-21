@@ -2,17 +2,15 @@ cmake_minimum_required(VERSION 3.3)
 project(runtime)
 
 set(MODULE_NAME wlib)
-set(SOURCE src/wich.c src/persistent_vector.c src/refcounting.c)
+set(SOURCE src/wich.c src/persistent_vector.c)
 
 set(TEST_TARGETS persistent_vec)
-
-set_source_files_properties(src/refcounting.c PROPERTIES COMPILE_FLAGS "-DREFCOUNTING")
 
 add_library(${MODULE_NAME} ${SOURCE})
 set_target_properties(${MODULE_NAME} PROPERTIES COMPILE_FLAGS "-DPLAIN")
 INSTALL_LIBRARY(${MODULE_NAME})
 
-add_library("${MODULE_NAME}_refcounting" ${SOURCE})
+add_library("${MODULE_NAME}_refcounting" ${SOURCE} src/refcounting.c)
 set_target_properties("${MODULE_NAME}_refcounting" PROPERTIES COMPILE_FLAGS "-DREFCOUNTING")
 INSTALL_LIBRARY("${MODULE_NAME}_refcounting")
 
