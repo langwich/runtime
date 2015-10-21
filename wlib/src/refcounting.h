@@ -27,7 +27,10 @@ SOFTWARE.
 
 #include <stdlib.h>
 
+enum Refcounting_elemtype { VECTOR, STRING }; // note: we do not REF fat node list elements for reference counting
+
 typedef struct {
+	enum Refcounting_elemtype type; // needed to deref a ptr to unknown type (vectors have lots to deallocate)
 	int refs;
 } heap_object;
 
@@ -36,7 +39,6 @@ void _heapvar(heap_object **p);
 void _deref(int,int);
 int _heap_sp();
 void _set_sp(int);
-
 
 // enter/exit a function
 #define ENTER()		int _funcsp = _heap_sp();// printf("ENTER; sp=%d\n", _funcsp);
@@ -56,30 +58,30 @@ static inline void REF(void *x) {
 #endif
 }
 
-/* A DEREF w/o free'ing even if count goes to zero; used for returning pointers */
-static inline void DEC(void *x) {
-	if ( x!=NULL ) {
-#ifdef DEBUG
-		printf("DEC(%p) has %d refs\n", x, ((heap_object *)x)->refs);
-#endif
-		((heap_object *)x)->refs--;
-	}
-}
+void free_object(heap_object *x);
 
 static inline void DEREF(void *x) {
 	if ( x!=NULL ) {
 #ifdef DEBUG
 		printf("DEREF(%p) has %d refs\n", x, ((heap_object *)x)->refs);
 #endif
-		((heap_object *)x)->refs--;
-		if ( ((heap_object *)x)->refs==0 ) {
-#ifdef DEBUG
-			printf("free(%p)\n", x);
-#endif
-			free((heap_object *)x);
-
-			x = NULL;
+		heap_object *o = (heap_object *)x;
+		o->refs--;
+		if ( o->refs==0 ) {
+			free_object(o);
 		}
 	}
 }
+
+/* A DEREF w/o free'ing even if count goes to zero; used for returning pointers */
+static inline void DEC(void *x) {
+	if ( x!=NULL ) {
+#ifdef DEBUG
+		printf("DEC(%p) has %d refs\n", x, ((heap_object *)x)->refs);
+#endif
+		heap_object *o = (heap_object *)x;
+		o->refs--;
+	}
+}
+
 #endif

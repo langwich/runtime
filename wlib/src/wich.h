@@ -54,6 +54,8 @@ typedef struct string {
 	 */
 } String;
 
+static const PVector_ptr NIL_VECTOR = {-1,NULL};
+
 String *String_new(char *s);
 String *String_from_char(char c);
 String *String_add(String *s, String *t);
@@ -85,13 +87,11 @@ PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b);
 
 void print_vector(PVector_ptr a);
 
-// Following malloc/free are the hook where we create our own malloc/free or use the system's
-void *wich_malloc(size_t nbytes);
-void wich_free(heap_object *p);
-
-// These two allocator functions could use different implementation according to compiler flags.
+// These allocator functions use different implementation according to compiler flags.
 PVector *PVector_alloc(size_t length);
+PVectorFatNodeElem *PVectorFatNodeElem_alloc();
 String *String_alloc(size_t length);
+void print_alloc_strategy();
 
 static void
 handle_sys_errors(int errno)

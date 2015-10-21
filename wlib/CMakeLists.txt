@@ -10,7 +10,7 @@ add_library(${MODULE_NAME} ${SOURCE})
 set_target_properties(${MODULE_NAME} PROPERTIES COMPILE_FLAGS "-DPLAIN")
 INSTALL_LIBRARY(${MODULE_NAME})
 
-add_library("${MODULE_NAME}_refcounting" ${SOURCE})
+add_library("${MODULE_NAME}_refcounting" ${SOURCE} src/refcounting.c)
 set_target_properties("${MODULE_NAME}_refcounting" PROPERTIES COMPILE_FLAGS "-DREFCOUNTING")
 INSTALL_LIBRARY("${MODULE_NAME}_refcounting")
 

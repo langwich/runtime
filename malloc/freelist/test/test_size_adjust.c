@@ -55,10 +55,10 @@ static inline size_t request2size(size_t n) {
 
 int main(int argc, char *argv[])
 {
-	printf("sizeof(Busy_Header) == %zu\n", sizeof(Busy_Header));
-	printf("sizeof(Free_Header) == %zu\n", sizeof(Free_Header));
+//	printf("sizeof(Busy_Header) == %zu\n", sizeof(Busy_Header));
+//	printf("sizeof(Free_Header) == %zu\n", sizeof(Free_Header));
 	for (int i=0; i<=MINSIZE-sizeof(Busy_Header); i++) {
-		fprintf(stderr, "request2size(%d) == %lu\n", i, request2size((size_t)i));
+//		fprintf(stderr, "request2size(%d) == %lu\n", i, request2size((size_t)i));
 		assert(request2size((size_t) i) == MINSIZE );
 	}
 	if ( MINSIZE==16 )
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 		};
 		for (int i=0; i < 2*N; i += 2)
 		{
-			fprintf(stderr, "request2size(%zu) == %lu\n", sizes[i], request2size(sizes[i]));
+//			fprintf(stderr, "request2size(%zu) == %lu\n", sizes[i], request2size(sizes[i]));
 			assert(request2size(sizes[i]) == sizes[i+1]);
 		}
 	}
