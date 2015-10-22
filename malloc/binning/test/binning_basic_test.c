@@ -24,9 +24,9 @@ SOFTWARE.
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "binning.h"
 #include "cunit.h"
 
+#include "binning.h"
 
 Heap_Info verify_heap() {
     Heap_Info info = get_heap_info();

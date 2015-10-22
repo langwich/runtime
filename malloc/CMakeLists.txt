@@ -7,4 +7,5 @@ add_subdirectory(lib)
 add_subdirectory(freelist)
 add_subdirectory(bitmap)
 add_subdirectory(bytemap)
-
+add_subdirectory(binning)
+add_subdirectory(merging)
