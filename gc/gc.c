@@ -37,7 +37,7 @@ PVectorFatNodeElem *PVectorFatNodeElem_alloc() {
 }
 
 String *String_alloc(size_t length) {
-	String *p = (String *)gc_alloc(&String_metadata, sizeof(String) + length * sizeof(char));
+	String *p = (String *)gc_alloc(&String_metadata, sizeof(String) + (length+1) * sizeof(char));
 	p->length = length;
 	return p;
 }

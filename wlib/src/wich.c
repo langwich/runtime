@@ -46,7 +46,7 @@ PVectorFatNodeElem *PVectorFatNodeElem_alloc() {
 	return p;
 }
 String *String_alloc(size_t length) {
-	String *p = (String *)calloc(1, sizeof(String) + length * sizeof(char));
+	String *p = (String *)calloc(1, sizeof(String) + (length+1) * sizeof(char));
 	p->length = length;
 //	printf("String %p\n", p);
 	return p;
@@ -153,6 +153,8 @@ void print_vector(PVector_ptr a)
 String *String_new(char *orig)
 {
 	String *s = String_alloc(strlen(orig));
+//	printf("String_new == %p\n", s);
+//	printf("String_new @s->str == %p\n", s->str);
 	strcpy(s->str, orig);
 	return s;
 }

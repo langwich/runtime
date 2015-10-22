@@ -24,6 +24,8 @@ SOFTWARE.
 #include <stdlib.h>
 
 #include "wich.h"
+#include "persistent_vector.h"
+#include "refcounting.h"
 
 // WARNING: refcounting is not synchronized so concurrency is not supported
 //          but we must still destroy mutex's created by persistent vector lib
@@ -35,6 +37,8 @@ static heap_object **roots[MAX_ROOTS];
 
 PVector *PVector_alloc(size_t length) {
 	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(PVectorFatNode));
+	p->metadata.refs = 0;
+	p->metadata.type = REFCOUNT_VECTOR_TYPE;
 	p->length = length;
 //	printf("PVector %p\n", p);
 	return p;
@@ -46,20 +50,23 @@ PVectorFatNodeElem *PVectorFatNodeElem_alloc() {
 }
 
 String *String_alloc(size_t length) {
-	String *p = (String *)calloc(1, sizeof(String) + length * sizeof(char));
+//	printf("sizeof(String) == %d, len=%d\n", sizeof(String), length);
+	String *p = (String *)calloc(1, sizeof(String) + (length+1) * sizeof(char));
+	p->metadata.refs = 0;
+	p->metadata.type = REFCOUNT_STRING_TYPE;
+//	printf("String addr %p\n", p);
 	p->length = length;
-//	printf("String %p\n", p);
 	return p;
 }
 
 void free_object(heap_object *o) {
-	if ( o->type==STRING ) {
+	if ( o->type==REFCOUNT_STRING_TYPE ) {
 #ifdef DEBUG
 		printf("free(%p) string %s\n", x, (char *)o);
 #endif
 		free(o);
 	}
-	else if ( o->type==VECTOR ) {
+	else if (o->type == REFCOUNT_VECTOR_TYPE) {
 #ifdef DEBUG
 		printf("free(%p) vector\n", x);
 #endif

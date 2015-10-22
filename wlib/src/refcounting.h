@@ -27,7 +27,9 @@ SOFTWARE.
 
 #include <stdlib.h>
 
-enum Refcounting_elemtype { VECTOR, STRING }; // note: we do not REF fat node list elements for reference counting
+enum Refcounting_elemtype {
+	REFCOUNT_VECTOR_TYPE, REFCOUNT_STRING_TYPE // note: we do not REF fat node list elements for reference counting
+};
 
 typedef struct {
 	enum Refcounting_elemtype type; // needed to deref a ptr to unknown type (vectors have lots to deallocate)
@@ -49,7 +51,7 @@ void _set_sp(int);
 #define RELEASE()	{_deref(_savesp+1,_heap_sp()); _set_sp(_savesp);}
 
 #define STRING(s)	String *s; _heapvar((heap_object **)&s);
-#define VECTOR(v)	Vector *v; _heapvar((heap_object **)&v);
+#define VECTOR(v)	PVector_ptr v; _heapvar((heap_object **)&v.vector);
 
 static inline void REF(void *x) {
 	if ( x!=NULL ) ((heap_object *)x)->refs++;
