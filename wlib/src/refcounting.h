@@ -43,15 +43,15 @@ int _heap_sp();
 void _set_sp(int);
 
 // enter/exit a function
-#define ENTER()		int _funcsp = _heap_sp();// printf("ENTER; sp=%d\n", _funcsp);
+#define ENTER()		int _funcsp = _heap_sp(); //printf("ENTER; sp=%d\n", _funcsp);
 #define EXIT()		{/*printf("EXIT; sp=%d\n", _heap_sp());*/ _deref(_funcsp+1,_heap_sp()); _set_sp(_funcsp);}
 
 // enter/exit a block
 #define MARK()		int _savesp = _heap_sp();
 #define RELEASE()	{_deref(_savesp+1,_heap_sp()); _set_sp(_savesp);}
 
-#define STRING(s)	String *s; _heapvar((heap_object **)&s);
-#define VECTOR(v)	PVector_ptr v; _heapvar((heap_object **)&v.vector);
+#define STRING(s)	String *s = NULL; _heapvar((heap_object **)&s);
+#define VECTOR(v)	PVector_ptr v = NIL_VECTOR; _heapvar((heap_object **)&v.vector);
 
 static inline void REF(void *x) {
 	if ( x!=NULL ) ((heap_object *)x)->refs++;

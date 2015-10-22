@@ -92,6 +92,10 @@ void _set_sp(int _sp) { sp = _sp; }
 
 /* Announce a heap reference so we can _deref() all before exiting a function */
 void _heapvar(heap_object **p) {
+#ifdef DEBUG
+	printf("_heapvar &p==%p\n", p);
+	printf("_heapvar p=%p\n", *p);
+#endif
 	roots[++sp] = p;
 }
 
