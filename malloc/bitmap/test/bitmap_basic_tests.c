@@ -33,7 +33,6 @@ static WORD *g_pbsa;
 static void *g_pheap;
 
 static void setup() {
-	bitmap_init(HEAP_SIZE);
 	g_pheap = bitmap_get_heap();
 	g_pbsm = (WORD *) g_pheap;
 	g_pbsa = &(g_pbsm[HEAP_SIZE / WORD_SIZE_IN_BIT / WORD_SIZE_IN_BYTE]);

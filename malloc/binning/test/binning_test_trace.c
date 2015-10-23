@@ -34,7 +34,7 @@ Heap_Info verify_heap() {
     assert_equal(info.heap_size, info.busy_size+info.free_size);
     return info;
 }
-static void setup()		{ heap_init(); }
+static void setup()		{ }
 static void teardown()	{ verify_heap();heap_shutdown();}
 
 void replay_ansic_grammar_with_dparser() {
@@ -50,7 +50,6 @@ int main(int argc, char *argv[]) {
     cunit_setup = setup;
     cunit_teardown = teardown;
 
-    heap_init();
     {
         time_t start = time(NULL);
         test(replay_ansic_grammar_with_dparser);

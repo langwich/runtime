@@ -26,20 +26,13 @@ SOFTWARE.
 #include <stdlib.h>
 #include "merging.h"
 
-//#define DEBUG
-
-typedef struct {
-    Free_Header *freelist; // Pointer to the first free chunk in heap
-    void *base;			   // point to data obtained from OS
-} Free_List_Heap;
-
-static Free_List_Heap heap;
-
-static int heap_size;
+static Free_Header *freelist;   // Pointer to the first free chunk in heap
+static void *heap;		        // point to data obtained from OS
+static int heap_size = -1;
 
 static Free_Header *nextfree(uint32_t size);
 
-void freelist_init(uint32_t max_heap_size) {
+void heap_init(size_t max_heap_size) {
 /*#ifdef DEBUG
     printf("allocate heap size == %d\n", max_heap_size);
     printf("sizeof(Busy_Header) == %zu\n", sizeof(Busy_Header));
@@ -47,8 +40,9 @@ void freelist_init(uint32_t max_heap_size) {
     printf("BUSY_BIT == %x\n", BUSY_BIT);
     printf("SIZEMASK == %x\n", SIZEMASK);
 #endif*/
-    heap_size = max_heap_size;
-    heap.base = morecore(max_heap_size);
+	if ( heap!=NULL ) heap_shutdown();
+    heap = morecore(max_heap_size);
+	heap_size = (int)max_heap_size;
 /*
 #ifdef DEBUG
     if ( heap==NULL ) {
@@ -60,19 +54,19 @@ void freelist_init(uint32_t max_heap_size) {
     }
 #endif
 */
-    heap.freelist = heap.base;
-    heap.freelist->size = max_heap_size & SIZEMASK; // mask off upper bit to say free
-    heap.freelist->next = NULL;
-    heap.freelist->prev = NULL;
+    freelist = heap;
+    freelist->size = (uint32_t)max_heap_size & SIZEMASK; // mask off upper bit to say free
+    freelist->next = NULL;
+    freelist->prev = NULL;
 }
 
-void freelist_shutdown() {
-    dropcore(heap.base, ((Free_Header *)heap.base)->size);
+void heap_shutdown() {
+    dropcore(heap, (size_t)heap_size);
 }
 
 void *malloc(size_t size) {
-    // TODO: 	if ( heap==NULL ) freelist_init(...)
-    if (heap.freelist == NULL) {
+	if ( heap==NULL ) { heap_init(DEFAULT_MAX_HEAP_SIZE); }
+    if (freelist == NULL) {
         return NULL; // out of heap
     }
     uint32_t n = (uint32_t) size & SIZEMASK;
@@ -116,14 +110,14 @@ void free(void *p) {
         q->prev = NULL;  //q will be the head
         merge_on_free(q, f);
     }else{                //if next chunk is busy, simply add q to the head
-        q->next = heap.freelist;
+        q->next = freelist;
         q->prev = NULL;
-        heap.freelist->prev = q;
+        freelist->prev = q;
 /*#ifdef DEBUG
         check_infinite_loop(q, "no merge");
 #endif*/
     }
-    heap.freelist = q; //set to head
+    freelist = q; //set to head
 }
 
 void merge_on_free(Free_Header *q, Free_Header *f){
@@ -145,8 +139,8 @@ void merge_on_free(Free_Header *q, Free_Header *f){
     }
     //f is the tail but not the head of the freelist
     else if (f->prev != NULL && f->next == NULL) {
-        q->next = heap.freelist;
-        heap.freelist->prev = q;
+        q->next = freelist;
+        freelist->prev = q;
         f->prev->next = NULL;
 /*#ifdef DEBUG
         check_infinite_loop(q, "merge with tail");
@@ -154,8 +148,8 @@ void merge_on_free(Free_Header *q, Free_Header *f){
     }
     //f is neither head nor tail of the freelist
     else {
-        q->next = heap.freelist;
-        heap.freelist->prev = q;
+        q->next = freelist;
+        freelist->prev = q;
         f->prev->next = f->next;
         f->next->prev = f->prev;
 /*#ifdef DEBUG
@@ -188,7 +182,7 @@ void check_infinite_loop(Free_Header *f, char *msg ){
  *  bytes depending on word size.
  */
 static Free_Header *nextfree(uint32_t size) {
-    Free_Header *p = heap.freelist;
+    Free_Header *p = freelist;
     /* Scan until one of:
         1. end of free list
         2. exact size match between chunk and size
@@ -202,8 +196,8 @@ static Free_Header *nextfree(uint32_t size) {
             // merge_on_malloc
             Free_Header *f = (Free_Header *) find_next(p);
             merge_on_malloc(p, f);
-            if (f == heap.freelist)  //move freelist forward if f is the head
-                heap.freelist = f->next;
+            if (f == freelist)  //move freelist forward if f is the head
+                freelist = f->next;
 
             if (size == p->size && p->size >= size + MIN_CHUNK_SIZE)  //re-check size after merge
                 break;
@@ -218,13 +212,13 @@ static Free_Header *nextfree(uint32_t size) {
         nextchunk = p->next;
         if (nextchunk != NULL) {
             nextchunk->prev = p->prev;
-            if (p == heap.freelist) {
-                heap.freelist = nextchunk;
+            if (p == freelist) {
+                freelist = nextchunk;
             } else {
                 p->prev->next = nextchunk;
             }
         }else{
-            heap.freelist = NULL; //out of heap
+            freelist = NULL; //out of heap
         }
     }
     else {                      // split p into p', q
@@ -236,11 +230,11 @@ static Free_Header *nextfree(uint32_t size) {
         nextchunk = q;
         if (p->prev == NULL && p->next == NULL) {
             nextchunk->next = NULL;
-            heap.freelist = nextchunk;
+            freelist = nextchunk;
         } else if (p->prev == NULL && p->next != NULL) {
             nextchunk->next = p->next;
             p->next->prev = nextchunk;
-            heap.freelist = nextchunk;
+            freelist = nextchunk;
         } else if (p->prev != NULL && p->next == NULL) {
             nextchunk->next = NULL;
             p->prev->next = nextchunk;
@@ -287,8 +281,8 @@ void merge_on_malloc(Free_Header *p, Free_Header *f){
     }
 }
 
-Free_Header *get_freelist() { return heap.freelist; }
-void *get_heap_base()		{ return heap.base; }
+Free_Header *get_freelist() { return freelist; }
+void *get_heap_base()		{ return heap; }
 
 /* Walk heap jumping by size field of chunk header. Return an info record. */
 Heap_Info get_heap_info() {

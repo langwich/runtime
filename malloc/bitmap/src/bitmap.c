@@ -50,7 +50,8 @@ static size_t last_free_index = 0;
  * Current implementation is really straightforward. We don't
  * dynamically adjust the arena size.
  */
-void bitmap_init(size_t size) {
+void heap_init(size_t size) {
+	if ( g_pheap!=NULL ) bitmap_release();
 	g_pheap = morecore(size);
 	g_heap_size = size;
 
@@ -79,6 +80,7 @@ void bitmap_release() {
  */
 void *malloc(size_t size)
 {
+	if ( g_pheap==NULL ) { heap_init(DEFAULT_MAX_HEAP_SIZE); }
 	size_t n = ALIGN_WORD_BOUNDARY(size);
 
 	size_t run_index = 0;

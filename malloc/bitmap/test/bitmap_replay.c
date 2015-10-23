@@ -30,9 +30,7 @@ SOFTWARE.
 #include "replay.h"
 #include "bitmap.h"
 
-const size_t HEAP_SIZE = 1000000000; // try 1G
-
-static void setup()		{ bitmap_init(HEAP_SIZE); }
+static void setup()		{ }
 static void teardown()	{
 	assert_true(check_bitmap_consistency());
 	bitmap_release();
@@ -52,7 +50,6 @@ int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
 
-	bitmap_init(HEAP_SIZE);
 	{
 		time_t start = time(NULL);
 		test(replay_ansic_grammar_with_dparser);
