@@ -88,7 +88,6 @@ void alloc_two_vectors() {
 	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	PVector *q = PVector_alloc(5);
 	assert_equal(gc_num_live_objects(), 0); // no roots into heap
-	assert_equal(gc_num_alloc_objects(), 2);
 	assert_addr_not_equal(p, NULL);
 	assert_addr_not_equal(q, NULL);
 	assert_addr_not_equal(p, q);
@@ -106,7 +105,6 @@ void gc_after_single_vector_no_roots() {
 	assert_equal(gc_num_live_objects(), 0); // no roots into heap
 	gc();
 	assert_equal(gc_num_live_objects(), 0);
-	assert_equal(gc_num_alloc_objects(), 1);
 }
 
 void gc_after_single_vector_one_root() {
