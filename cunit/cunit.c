@@ -141,12 +141,14 @@ setup_error_handlers() {
 void cunit_test(void (*f)(), const char funcname[]) {
 	current_test_name = funcname;
 	setup_error_handlers(); // ensure signals are trapped each time
+	int exit_code = 0;
 	if ( cunit_setup!=NULL ) {
 		if ( setjmp(longjmp_env)==0 ) {
 			(*cunit_setup)();
 		}
 		else {
 			fprintf(stderr, "FAIL SETUP %s\n", funcname);
+			exit_code = -1;
 		}
 	}
 	if ( setjmp(longjmp_env)==0 ) {
@@ -155,6 +157,7 @@ void cunit_test(void (*f)(), const char funcname[]) {
 	}
 	else {
 		fprintf(stderr, "FAIL %s\n", funcname);
+		exit_code = -1;
 	}
 	if ( cunit_teardown!=NULL ) {
 		if ( setjmp(longjmp_env)==0 ) {
@@ -162,6 +165,8 @@ void cunit_test(void (*f)(), const char funcname[]) {
 		}
 		else {
 			fprintf(stderr, "FAIL TEARDOWN %s\n", funcname);
+			exit_code = -1;
 		}
 	}
+	exit(exit_code);
 }
