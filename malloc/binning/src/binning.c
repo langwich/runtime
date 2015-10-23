@@ -41,7 +41,7 @@ Free_Header *bin_split_malloc(uint32_t size);
 
 void heap_init(size_t max_heap_size) {
 #ifdef DEBUG
-	printf("allocate heap size == %d\n", DEFAULT_MAX_HEAP_SIZE);
+	printf("allocate heap size == %d\n", max_heap_size);
 	printf("sizeof(Busy_Header) == %zu\n", sizeof(Busy_Header));
 	printf("sizeof(Free_Header) == %zu\n", sizeof(Free_Header));
 	printf("BUSY_BIT == %x\n", BUSY_BIT);
@@ -52,7 +52,7 @@ void heap_init(size_t max_heap_size) {
 	heap = morecore(max_heap_size);
 #ifdef DEBUG
 	if ( heap == NULL ) {
-		fprintf(stderr, "Cannot allocate %d bytes of memory for heap\n",DEFAULT_MAX_HEAP_SIZE);
+		fprintf(stderr, "Cannot allocate %d bytes of memory for heap\n",max_heap_size);
 	}
 	else {
 		fprintf(stderr, "morecore returns %p\n", heap);
@@ -110,7 +110,7 @@ void *malloc(size_t size) {
 void free(void *p) {
 	if (p == NULL) return;
 	void *start_of_heap = get_heap_base();
-	void *end_of_heap = start_of_heap + DEFAULT_MAX_HEAP_SIZE - 1; // last valid address of heap
+	void *end_of_heap = start_of_heap + heap_size - 1; // last valid address of heap
 	if ( p<start_of_heap || p>end_of_heap ) {
 #ifdef DEBUG
 		fprintf(stderr, "free of non-heap address %p\n", p);
@@ -220,7 +220,7 @@ void heap_shutdown() {
 
 Heap_Info get_heap_info() {
 	void *heap = get_heap_base();
-	void *end_of_heap = heap + DEFAULT_MAX_HEAP_SIZE - 1;
+	void *end_of_heap = heap + heap_size - 1;
 	Busy_Header *p = heap;
 	uint32_t busy = 0;
 	uint32_t free = 0;
@@ -237,7 +237,7 @@ Heap_Info get_heap_info() {
 		}
 		p = (Busy_Header *)((char *) p + chunksize(p));
 	}
-	return (Heap_Info){DEFAULT_MAX_HEAP_SIZE, busy, busy_size, free, free_size};
+	return (Heap_Info){heap_size, busy, busy_size, free, free_size};
 }
 
 
