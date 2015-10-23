@@ -38,13 +38,13 @@ static Free_Header *next_small_free(uint32_t size);
 Free_Header *bin_split_malloc(uint32_t size);
 
 void heap_init() {
-//#ifdef DEBUG
-//	printf("allocate heap size == %d\n", DEFAULT_MAX_HEAP_SIZE);
-//	printf("sizeof(Busy_Header) == %zu\n", sizeof(Busy_Header));
-//	printf("sizeof(Free_Header) == %zu\n", sizeof(Free_Header));
-//	printf("BUSY_BIT == %x\n", BUSY_BIT);
-//	printf("SIZEMASK == %x\n", SIZEMASK);
-//#endif
+#ifdef DEBUG
+	printf("allocate heap size == %d\n", DEFAULT_MAX_HEAP_SIZE);
+	printf("sizeof(Busy_Header) == %zu\n", sizeof(Busy_Header));
+	printf("sizeof(Free_Header) == %zu\n", sizeof(Free_Header));
+	printf("BUSY_BIT == %x\n", BUSY_BIT);
+	printf("SIZEMASK == %x\n", SIZEMASK);
+#endif
 	heap = morecore(DEFAULT_MAX_HEAP_SIZE);
 #ifdef DEBUG
 	if ( heap == NULL ) {

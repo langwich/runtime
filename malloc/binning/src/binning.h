@@ -21,6 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
+#ifndef MALLOC_BINNING_H
+#define MALLOC_BINNING_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "morecore.h"
@@ -74,3 +78,5 @@ Heap_Info get_heap_info();
 Free_Header *get_heap_freelist();
 Free_Header *get_bin_freelist(uint32_t);
 void *get_heap_base();
+
+#endif //MALLOC_BINNING_H
