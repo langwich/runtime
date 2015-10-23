@@ -25,6 +25,8 @@ SOFTWARE.
 #include <assert.h>
 #include <sys/mman.h>
 
+static const size_t DEFAULT_MAX_HEAP_SIZE = 100000000;
+
 void *morecore(size_t size_in_bytes);
 
 void dropcore(void *p, size_t size_in_bytes);

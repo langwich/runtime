@@ -28,7 +28,7 @@ SOFTWARE.
 #include <stddef.h>
 #include "bitset.h"
 
-void bitmap_init(size_t size);
+void heap_init(size_t size);
 void bitmap_release();
 
 void *bitmap_get_heap();

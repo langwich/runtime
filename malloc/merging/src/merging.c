@@ -32,7 +32,7 @@ static int heap_size = -1;
 
 static Free_Header *nextfree(uint32_t size);
 
-void freelist_init(uint32_t max_heap_size) {
+void heap_init(size_t max_heap_size) {
 /*#ifdef DEBUG
     printf("allocate heap size == %d\n", max_heap_size);
     printf("sizeof(Busy_Header) == %zu\n", sizeof(Busy_Header));
@@ -40,8 +40,9 @@ void freelist_init(uint32_t max_heap_size) {
     printf("BUSY_BIT == %x\n", BUSY_BIT);
     printf("SIZEMASK == %x\n", SIZEMASK);
 #endif*/
-    heap_size = max_heap_size;
+	if ( heap!=NULL ) heap_shutdown();
     heap = morecore(max_heap_size);
+	heap_size = (int)max_heap_size;
 /*
 #ifdef DEBUG
     if ( heap==NULL ) {
@@ -54,17 +55,17 @@ void freelist_init(uint32_t max_heap_size) {
 #endif
 */
     freelist = heap;
-    freelist->size = max_heap_size & SIZEMASK; // mask off upper bit to say free
+    freelist->size = (uint32_t)max_heap_size & SIZEMASK; // mask off upper bit to say free
     freelist->next = NULL;
     freelist->prev = NULL;
 }
 
-void freelist_shutdown() {
-    dropcore(heap, ((Free_Header *)heap)->size);
+void heap_shutdown() {
+    dropcore(heap, (size_t)heap_size);
 }
 
 void *malloc(size_t size) {
-    // TODO: 	if ( heap==NULL ) freelist_init(...)
+	if ( heap==NULL ) { heap_init(DEFAULT_MAX_HEAP_SIZE); }
     if (freelist == NULL) {
         return NULL; // out of heap
     }

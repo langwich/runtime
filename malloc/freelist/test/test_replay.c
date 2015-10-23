@@ -30,8 +30,7 @@ SOFTWARE.
 
 const size_t HEAP_SIZE = 1000000000; // try 1G
 
-extern void freelist_init(uint32_t max_heap_size);
-extern void freelist_shutdown();
+extern void heap_shutdown();
 
 Heap_Info verify_heap() {
 	Heap_Info info = get_heap_info();
@@ -40,8 +39,9 @@ Heap_Info verify_heap() {
 	return info;
 }
 
-static void setup()		{ freelist_init(HEAP_SIZE); }
-static void teardown()	{ verify_heap(); freelist_shutdown(); }
+static void setup()		{ }
+static void teardown()	{ verify_heap();
+	heap_shutdown(); }
 
 void replay_ansic_grammar_with_dparser() {
 	int result = replay_malloc("/tmp/trace.txt");
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
 
-	freelist_init(HEAP_SIZE);
+	heap_init(HEAP_SIZE);
 
 	{
 		time_t start = time(NULL);

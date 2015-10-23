@@ -28,8 +28,7 @@ SOFTWARE.
 
 const size_t HEAP_SIZE = 2000;
 
-extern void freelist_init(uint32_t max_heap_size);
-extern void freelist_shutdown();
+extern void heap_shutdown();
 
 Heap_Info verify_heap() {
 	Heap_Info info = get_heap_info();
@@ -38,8 +37,9 @@ Heap_Info verify_heap() {
 	return info;
 }
 
-static void setup()		{ freelist_init(HEAP_SIZE); }
-static void teardown()	{ verify_heap(); freelist_shutdown(); }
+static void setup()		{ }
+static void teardown()	{ verify_heap();
+	heap_shutdown(); }
 
 void malloc0() {
 	void *p = malloc(0);
@@ -161,9 +161,9 @@ void test_core() {
 }
 
 void test_init_shutdown() {
-	freelist_init(HEAP_SIZE);
+	heap_init(HEAP_SIZE);
 	assert_addr_equal(get_freelist(), get_heap_base());
-	freelist_shutdown();
+	heap_shutdown();
 }
 
 int main(int argc, char *argv[]) {
@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
 	test_core();
 	test_init_shutdown();
 
-	freelist_init(HEAP_SIZE);
+	heap_init(HEAP_SIZE);
 
 	test(malloc0);
 	test(malloc1);

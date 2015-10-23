@@ -24,20 +24,22 @@ SOFTWARE.
 
 #include "binning.h"
 
-static void *heap;		        // point to data obtained from OS
+static void *heap = NULL;  // point to data obtained from OS
+
+static int heap_size = 0;
 
 /*except bins, we have another freelist to handle the malloc and free request which size over 1024*/
-Free_Header *freelist;
+static Free_Header *freelist = NULL;
 
 /* 1204 bins, each bin has a freelist with fix-sized(size = index of bin) free chunks*/
-Free_Header * bin[BIN_SIZE];
+static Free_Header *bin[BIN_SIZE];
 
 static Free_Header *freelist_malloc(uint32_t size);
 static Free_Header *next_small_free(uint32_t size);
 
 Free_Header *bin_split_malloc(uint32_t size);
 
-void heap_init() {
+void heap_init(size_t max_heap_size) {
 #ifdef DEBUG
 	printf("allocate heap size == %d\n", DEFAULT_MAX_HEAP_SIZE);
 	printf("sizeof(Busy_Header) == %zu\n", sizeof(Busy_Header));
@@ -45,7 +47,9 @@ void heap_init() {
 	printf("BUSY_BIT == %x\n", BUSY_BIT);
 	printf("SIZEMASK == %x\n", SIZEMASK);
 #endif
-	heap = morecore(DEFAULT_MAX_HEAP_SIZE);
+	if ( heap!=NULL ) heap_shutdown();
+	heap_size = (int)max_heap_size;
+	heap = morecore(max_heap_size);
 #ifdef DEBUG
 	if ( heap == NULL ) {
 		fprintf(stderr, "Cannot allocate %d bytes of memory for heap\n",DEFAULT_MAX_HEAP_SIZE);
@@ -55,7 +59,7 @@ void heap_init() {
 	}
 #endif
 	freelist = (Free_Header *)heap;
-	freelist->size = DEFAULT_MAX_HEAP_SIZE & SIZEMASK; // mask off upper bit to say free
+	freelist->size = (uint32_t)max_heap_size & SIZEMASK; // mask off upper bit to say free
 	freelist->next = NULL;
 }
 
@@ -67,6 +71,7 @@ void heap_init() {
 * if not, return NULL, out of heap error
 */
 void *malloc(size_t size) {
+	if ( heap==NULL ) { heap_init(DEFAULT_MAX_HEAP_SIZE); }
 	uint32_t n = (uint32_t) size & SIZEMASK;
 	size_t actual_size =(uint32_t) align_to_word_boundary(size_with_header(n));
 	Busy_Header *b;
@@ -210,7 +215,7 @@ Free_Header *get_bin_freelist(uint32_t index) { return bin[index];}
 
 
 void heap_shutdown() {
-	dropcore(heap, DEFAULT_MAX_HEAP_SIZE);
+	dropcore(heap, heap_size);
 }
 
 Heap_Info get_heap_info() {
