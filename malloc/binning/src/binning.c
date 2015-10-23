@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "binning.h"
 
-static void * heap;
+static void *heap;		        // point to data obtained from OS
 
 /*except bins, we have another freelist to handle the malloc and free request which size over 1024*/
 Free_Header *freelist;
