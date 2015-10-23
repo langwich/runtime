@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.3)
 project(runtime)
 
+enable_testing()
+
 # common compiler flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -g")
 
 # setup installation path
 set(INSTALL_NAME wich)
@@ -43,6 +45,7 @@ function(ADD_TEST_TARGET TARGET_NAMES MODULE_NAME)
 	foreach(TARGET_NAME ${TARGET_NAMES})
 		add_executable(${TARGET_NAME} test/${TARGET_NAME}.c)
 		target_link_libraries(${TARGET_NAME} ${MODULE_NAME} cunit)
+		add_test(NAME ${TARGET_NAME} COMMAND ${TARGET_NAME})
 	endforeach()
 endfunction(ADD_TEST_TARGET)
 
