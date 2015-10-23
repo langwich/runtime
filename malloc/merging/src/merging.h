@@ -82,15 +82,13 @@ static inline uint32_t chunksize(void *p) {
     return ((Busy_Header *)p)->size & SIZEMASK;
 }
 
-void freelist_init(uint32_t max_heap_size);
-void freelist_shutdown();
+void heap_init(size_t max_heap_size);
+void heap_shutdown();
 Free_Header *get_freelist();
 void *get_heap_base();
 Heap_Info get_heap_info();
 
-void *malloc(size_t);
-void free(void *);
-void * find_next(void* p);
+void *find_next(void* p);
 void merge_on_free(Free_Header *q, Free_Header *f);
 void merge_on_malloc(Free_Header *q, Free_Header *f);
 void check_infinite_loop(Free_Header *f, char *msg);

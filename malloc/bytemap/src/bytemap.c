@@ -47,6 +47,8 @@ static size_t g_heap_size;
  * empty unallocated memory.
  */
 void *malloc(size_t size) {
+	if ( g_pheap==NULL ) { heap_init(DEFAULT_MAX_HEAP_SIZE); }
+
 	// number of words to satisfy request
 	size_t n = ALIGN_WORD_BOUNDARY(size);
 
@@ -77,7 +79,8 @@ void free(void *ptr) {
 	boundary[0] = 0;
 }
 
-void bytemap_init(size_t size) {
+void heap_init(size_t size) {
+	if ( g_pheap!=NULL ) bytemap_release();
 	g_pheap = morecore(size);
 	g_heap_size = size;
 	byset_init(&g_bys, g_heap_size / WORD_SIZE_IN_BYTE, g_pheap);

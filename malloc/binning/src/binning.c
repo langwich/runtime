@@ -24,38 +24,42 @@ SOFTWARE.
 
 #include "binning.h"
 
-static void * heap;
+static void *heap = NULL;  // point to data obtained from OS
+
+static int heap_size = 0;
 
 /*except bins, we have another freelist to handle the malloc and free request which size over 1024*/
-Free_Header *freelist;
+static Free_Header *freelist = NULL;
 
 /* 1204 bins, each bin has a freelist with fix-sized(size = index of bin) free chunks*/
-Free_Header * bin[BIN_SIZE];
+static Free_Header *bin[BIN_SIZE];
 
 static Free_Header *freelist_malloc(uint32_t size);
 static Free_Header *next_small_free(uint32_t size);
 
 Free_Header *bin_split_malloc(uint32_t size);
 
-void heap_init() {
+void heap_init(size_t max_heap_size) {
 #ifdef DEBUG
-	printf("allocate heap size == %d\n", DEFAULT_MAX_HEAP_SIZE);
+	printf("allocate heap size == %d\n", max_heap_size);
 	printf("sizeof(Busy_Header) == %zu\n", sizeof(Busy_Header));
 	printf("sizeof(Free_Header) == %zu\n", sizeof(Free_Header));
 	printf("BUSY_BIT == %x\n", BUSY_BIT);
 	printf("SIZEMASK == %x\n", SIZEMASK);
 #endif
-	heap = morecore(DEFAULT_MAX_HEAP_SIZE);
+	if ( heap!=NULL ) heap_shutdown();
+	heap_size = (int)max_heap_size;
+	heap = morecore(max_heap_size);
 #ifdef DEBUG
 	if ( heap == NULL ) {
-		fprintf(stderr, "Cannot allocate %d bytes of memory for heap\n",DEFAULT_MAX_HEAP_SIZE);
+		fprintf(stderr, "Cannot allocate %d bytes of memory for heap\n",max_heap_size);
 	}
 	else {
 		fprintf(stderr, "morecore returns %p\n", heap);
 	}
 #endif
 	freelist = (Free_Header *)heap;
-	freelist->size = DEFAULT_MAX_HEAP_SIZE & SIZEMASK; // mask off upper bit to say free
+	freelist->size = (uint32_t)max_heap_size & SIZEMASK; // mask off upper bit to say free
 	freelist->next = NULL;
 }
 
@@ -67,6 +71,7 @@ void heap_init() {
 * if not, return NULL, out of heap error
 */
 void *malloc(size_t size) {
+	if ( heap==NULL ) { heap_init(DEFAULT_MAX_HEAP_SIZE); }
 	uint32_t n = (uint32_t) size & SIZEMASK;
 	size_t actual_size =(uint32_t) align_to_word_boundary(size_with_header(n));
 	Busy_Header *b;
@@ -105,7 +110,7 @@ void *malloc(size_t size) {
 void free(void *p) {
 	if (p == NULL) return;
 	void *start_of_heap = get_heap_base();
-	void *end_of_heap = start_of_heap + DEFAULT_MAX_HEAP_SIZE - 1; // last valid address of heap
+	void *end_of_heap = start_of_heap + heap_size - 1; // last valid address of heap
 	if ( p<start_of_heap || p>end_of_heap ) {
 #ifdef DEBUG
 		fprintf(stderr, "free of non-heap address %p\n", p);
@@ -210,12 +215,12 @@ Free_Header *get_bin_freelist(uint32_t index) { return bin[index];}
 
 
 void heap_shutdown() {
-	dropcore(heap, DEFAULT_MAX_HEAP_SIZE);
+	dropcore(heap, heap_size);
 }
 
 Heap_Info get_heap_info() {
 	void *heap = get_heap_base();
-	void *end_of_heap = heap + DEFAULT_MAX_HEAP_SIZE - 1;
+	void *end_of_heap = heap + heap_size - 1;
 	Busy_Header *p = heap;
 	uint32_t busy = 0;
 	uint32_t free = 0;
@@ -232,7 +237,7 @@ Heap_Info get_heap_info() {
 		}
 		p = (Busy_Header *)((char *) p + chunksize(p));
 	}
-	return (Heap_Info){DEFAULT_MAX_HEAP_SIZE, busy, busy_size, free, free_size};
+	return (Heap_Info){heap_size, busy, busy_size, free, free_size};
 }
 
 

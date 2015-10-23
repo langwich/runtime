@@ -25,20 +25,13 @@ SOFTWARE.
 #include <stdlib.h>
 #include "freelist.h"
 
-//#define DEBUG
-
-typedef struct {
-	Free_Header *freelist; // Pointer to the first free chunk in heap
-	void *base;			   // point to data obtained from OS
-} Free_List_Heap;
-
-static Free_List_Heap heap;
-
-static int heap_size;
+static Free_Header *freelist;   // Pointer to the first free chunk in heap
+static void *heap = NULL;	    // point to data obtained from OS
+static int heap_size = 0;
 
 static Free_Header *nextfree(uint32_t size);
 
-void freelist_init(uint32_t max_heap_size) {
+void heap_init(size_t max_heap_size) {
 #ifdef DEBUG
 	printf("allocate heap size == %d\n", max_heap_size);
 	printf("sizeof(Busy_Header) == %zu\n", sizeof(Busy_Header));
@@ -46,8 +39,9 @@ void freelist_init(uint32_t max_heap_size) {
 	printf("BUSY_BIT == %x\n", BUSY_BIT);
 	printf("SIZEMASK == %x\n", SIZEMASK);
 #endif
-	heap_size = max_heap_size;
-	heap.base = morecore(max_heap_size);
+	if ( heap!=NULL ) heap_shutdown();
+	heap_size = (int)max_heap_size;
+	heap = morecore(max_heap_size);
 #ifdef DEBUG
 	if ( heap==NULL ) {
 		fprintf(stderr, "Cannot allocate %zu bytes of memory for heap\n",
@@ -57,18 +51,18 @@ void freelist_init(uint32_t max_heap_size) {
 		fprintf(stderr, "morecore returns %p\n", heap);
 	}
 #endif
-	heap.freelist = heap.base;
-	heap.freelist->size = max_heap_size & SIZEMASK; // mask off upper bit to say free
-	heap.freelist->next = NULL;
+	freelist = heap;
+	freelist->size = (uint32_t)max_heap_size & SIZEMASK; // mask off upper bit to say free
+	freelist->next = NULL;
 }
 
-void freelist_shutdown() {
-	dropcore(heap.base, ((Free_Header *)heap.base)->size);
+void heap_shutdown() {
+	dropcore(heap, (size_t)heap_size);
 }
 
 void *malloc(size_t size) {
-	// TODO: 	if ( heap==NULL ) freelist_init(...)
-	if (heap.freelist == NULL) {
+	if ( heap==NULL ) { heap_init(DEFAULT_MAX_HEAP_SIZE); }
+	if (freelist == NULL) {
 		return NULL; // out of heap
 	}
 	uint32_t n = (uint32_t) size & SIZEMASK;
@@ -97,9 +91,9 @@ void free(void *p) {
 #endif
 		return;
 	}
-	q->next = heap.freelist;
+	q->next = freelist;
 	q->size &= SIZEMASK; // turn off busy bit
-	heap.freelist = q;
+	freelist = q;
 }
 
 /** Find first free chunk that fits size else NULL if no chunk big enough.
@@ -108,7 +102,7 @@ void free(void *p) {
  *  bytes depending on word size.
  */
 static Free_Header *nextfree(uint32_t size) {
-	Free_Header *p = heap.freelist;
+	Free_Header *p = freelist;
 	Free_Header *prev = NULL;
 	/* Scan until one of:
 	    1. end of free list
@@ -136,8 +130,8 @@ static Free_Header *nextfree(uint32_t size) {
 	p->size = size;
 
 	// add nextchunk to free list
-	if (p == heap.freelist) {       // head of free list is our chunk
-		heap.freelist = nextchunk;
+	if (p == freelist) {       // head of free list is our chunk
+		freelist = nextchunk;
 	}
 	else {
 		prev->next = nextchunk;
@@ -146,8 +140,8 @@ static Free_Header *nextfree(uint32_t size) {
 	return p;
 }
 
-Free_Header *get_freelist() { return heap.freelist; }
-void *get_heap_base()		{ return heap.base; }
+Free_Header *get_freelist() { return freelist; }
+void *get_heap_base()		{ return heap; }
 
 /* Walk heap jumping by size field of chunk header. Return an info record. */
 Heap_Info get_heap_info() {
