@@ -35,6 +35,7 @@ static char test_buf[HEAP_SIZE / WORD_SIZE_IN_BYTE];
 static void *g_pheap;
 
 static void setup() {
+	heap_init(HEAP_SIZE);
 	g_pheap = bytemap_get_heap();
 	memset(test_buf, '0', sizeof(test_buf));
 }

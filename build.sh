@@ -12,7 +12,7 @@ DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 
 # make install the project
 BUILD_DIR=/tmp/wich-build/
-CUNIT_DIR=$BUILD_DIR/malloc/cunit/
+SAMPLE_DIR=$BUILD_DIR/malloc/samples/
 
 function install {
     rm -rf $BUILD_DIR
@@ -24,9 +24,9 @@ function test {
     rm -rf $BUILD_DIR && mkdir $BUILD_DIR 2>/dev/null
     cd $BUILD_DIR && cmake $DIR >/dev/null  && make >/dev/null
     
-    rm -rf $CUNIT_DIR && mkdir $CUNIT_DIR 2>/dev/null    
-    cp $DIR/cunit/addr2index.py $CUNIT_DIR
-    cp $DIR/cunit/ANSIC_MALLOC_FREE_TRACE.txt $CUNIT_DIR
+    rm -rf $SAMPLE_DIR && mkdir $SAMPLE_DIR 2>/dev/null
+    cp $DIR/malloc/samples/addr2index.py $SAMPLE_DIR
+    cp $DIR/malloc/samples/ANSIC_MALLOC_FREE_TRACE.txt $SAMPLE_DIR
     
     cd $BUILD_DIR && ctest ./
 }
