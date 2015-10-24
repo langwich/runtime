@@ -88,6 +88,8 @@ void heap_init(size_t size) {
 
 void bytemap_release() {
 	dropcore(g_pheap, g_heap_size);
+	g_pheap = NULL;
+	g_heap_size = 0;
 }
 
 #ifdef DEBUG

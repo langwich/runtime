@@ -30,7 +30,6 @@ SOFTWARE.
 
 #define HEAP_SIZE           4096
 
-
 static char test_buf[HEAP_SIZE / WORD_SIZE_IN_BYTE];
 static void *g_pheap;
 

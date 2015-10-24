@@ -25,11 +25,36 @@ SOFTWARE.
 #ifndef RUNTIME_GC_H
 #define RUNTIME_GC_H
 
-extern object_metadata PVector_metadata;
-extern object_metadata String_metadata;
+#include <stddef.h>
+#include <stdbool.h>
 
 static const size_t WORD_SIZE_IN_BYTES = sizeof(void *);
 static const size_t ALIGN_MASK = WORD_SIZE_IN_BYTES - 1;
+
+typedef struct _object_metadata {
+	char *name;               // "class" name of instances of this type; useful for debugging
+	uint16_t num_ptr_fields;  // how many managed pointers (pointers into the heap) in this object
+	uint16_t field_offsets[]; // list of offsets base of object to fields that are managed ptrs
+} object_metadata;
+
+extern object_metadata PVector_metadata;
+extern object_metadata String_metadata;
+
+/* Generic heap info; not all fields used by all collectors but field offsets
+ * are identical in this struct across collectors.
+ */
+typedef struct {
+	void *start_of_heap;    // first byte of heap
+	void *end_of_heap;      // last byte of heap
+	void *next_free;        // next addr where we'll allocate an object
+	int heap_size;          // total space obtained from OS
+	int busy;               // num allocated objects (computed by walking heap)
+	int live;               // num live objects (computed by walking heap)
+	int computed_busy_size; // total allocated size computed by walking heap
+	int computed_free_size; // total free computed by walking heap
+	int busy_size;          // size from calculation
+	int free_size;          // size from calculation
+} Heap_Info;
 
 /* Pad size n to include header */
 static inline size_t size_with_header(size_t n) {
@@ -63,11 +88,24 @@ extern void gc_add_root(void **p);
 extern int gc_num_roots();
 extern void gc_set_num_roots(int roots);
 
+
+// GC internals; peek into internals for testing and hidden use in macros
+
+extern int gc_num_live_objects();
+extern void gc_debug(bool debug);
+extern char *gc_get_state();
+extern void gc_mark();
+extern void gc_unmark();
+extern void foreach_live(void (*action)(heap_object *));
+extern void foreach_object(void (*action)(heap_object *));
+extern bool ptr_is_in_heap(heap_object *p);
+
+
 extern Heap_Info get_heap_info();
 
 // enter/exit a function
-#define ENTER()		int _funcsp = gc_num_roots(); //printf("ENTER; sp=%d\n", _funcsp);
-#define EXIT()		{/*printf("EXIT; sp=%d\n", gc_num_roots);*/ gc_set_num_roots(_funcsp);}
+#define gc_begin_func()		int _funcsp = gc_num_roots(); //printf("ENTER; sp=%d\n", _funcsp);
+#define gc_end_func()		{/*printf("EXIT; sp=%d\n", gc_num_roots);*/ gc_set_num_roots(_funcsp);}
 
 #define STRING(s)	String *s = NULL; gc_add_root((void **)&s);
 #define VECTOR(v)	PVector_ptr v = NIL_VECTOR; gc_add_root((void **)&v.vector);

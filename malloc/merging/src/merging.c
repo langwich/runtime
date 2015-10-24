@@ -62,6 +62,8 @@ void heap_init(size_t max_heap_size) {
 
 void heap_shutdown() {
     dropcore(heap, (size_t)heap_size);
+	heap = NULL;
+	heap_size = 0;
 }
 
 void *malloc(size_t size) {
@@ -294,16 +296,16 @@ Heap_Info get_heap_info() {
     uint32_t busy_size = 0;
     uint32_t free_size = 0;
     while ( (void*)p>=heap && (void*)p<=end_of_heap ) { // stay inbounds, walking heap
-        // track
-        if ( p->size & BUSY_BIT ) {
-            busy++;
-            busy_size += chunksize(p);
-        }
-        else {
-            free++;
-            free_size += chunksize(p);
-        }
-        p = (Busy_Header *)((char *) p + chunksize(p));
-    }
+		// track
+		if ( p->size & BUSY_BIT ) {
+			busy++;
+			busy_size += chunksize(p);
+		}
+		else {
+			free++;
+			free_size += chunksize(p);
+		}
+		p = (Busy_Header *)((char *) p + chunksize(p));
+	}
     return (Heap_Info){heap_size, busy, busy_size, free, free_size};
 }

@@ -39,9 +39,8 @@ Heap_Info verify_heap() {
 	return info;
 }
 
-static void setup()		{ }
-static void teardown()	{ verify_heap();
-	heap_shutdown(); }
+static void setup()		{ heap_init(HEAP_SIZE); }
+static void teardown()	{ verify_heap(); heap_shutdown(); }
 
 void replay_ansic_grammar_with_dparser() {
 	int result = replay_malloc("/tmp/trace.txt");

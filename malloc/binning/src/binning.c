@@ -31,8 +31,8 @@ static int heap_size = 0;
 /*except bins, we have another freelist to handle the malloc and free request which size over 1024*/
 static Free_Header *freelist = NULL;
 
-/* 1204 bins, each bin has a freelist with fix-sized(size = index of bin) free chunks*/
-static Free_Header *bin[BIN_SIZE];
+/* MAX_BIN_SIZE bins, each bin has a freelist with fix-sized(size = index of bin) free chunks */
+static Free_Header *bin[MAX_BIN_SIZE+1]; // index 0 ignored. index 1..MAX_BIN_SIZE valid
 
 static Free_Header *freelist_malloc(uint32_t size);
 static Free_Header *next_small_free(uint32_t size);
@@ -75,7 +75,7 @@ void *malloc(size_t size) {
 	uint32_t n = (uint32_t) size & SIZEMASK;
 	size_t actual_size =(uint32_t) align_to_word_boundary(size_with_header(n));
 	Busy_Header *b;
-	if (actual_size >BIN_SIZE) {
+	if (actual_size > MAX_BIN_SIZE) {
 		Free_Header *q = freelist_malloc(actual_size);
 		if (q == NULL) {
 #ifdef DEBUG
@@ -104,7 +104,7 @@ void *malloc(size_t size) {
 
 /*
 * for each free request
-* if chunk size over 1024, free it and add to free list (sorted)
+* if chunk size over max, free it and add to free list (sorted)
 * other wise add to bin[chunk_size-1]
 */
 void free(void *p) {
@@ -125,9 +125,9 @@ void free(void *p) {
 		return;
 	}
 	q->size &= SIZEMASK;
-	if (q->size<= BIN_SIZE){
-		q->next = bin[q->size-1];
-		bin[q->size-1] = q;
+	if (q->size <= MAX_BIN_SIZE){
+		q->next = bin[q->size];
+		bin[q->size] = q;
 	}
 	else {
 		q->next = freelist;
@@ -136,9 +136,9 @@ void free(void *p) {
 }
 
 static Free_Header *next_small_free(uint32_t size){
-	if (bin[size-1] != NULL) {
-		Free_Header *chunk = bin[size-1];
-		bin[size-1] = bin[size-1]->next;
+	if (bin[size] != NULL) {
+		Free_Header *chunk = bin[size];
+		bin[size] = bin[size]->next;
 		return chunk;
 	}
 	else if (freelist != NULL){
@@ -186,23 +186,23 @@ static Free_Header *freelist_malloc(uint32_t size) {
 
 Free_Header *bin_split_malloc(uint32_t size) {
 	size_t index = size;
-	while (bin[index-1] == NULL && index < BIN_SIZE) {
+	while (bin[index] == NULL && index < MAX_BIN_SIZE) {
 		index ++;
 	}
-	if(index == BIN_SIZE) {
+	if(index == MAX_BIN_SIZE) {
 		return NULL;
 	}
-	Free_Header *p = bin[index-1];
+	Free_Header *p = bin[index];
 	Free_Header *q = (Free_Header *) (((char *) p) + size);
-	bin[index-1] = bin[index-1]->next;
+	bin[index] = bin[index]->next;
 	q->size = index - size;
-	Free_Header *prev = bin[q->size-1];
+	Free_Header *prev = bin[q->size];
 	if (prev == NULL) {
-		bin[q->size-1] = q;
+		bin[q->size] = q;
 	}
 	else {
 		q->next = prev;
-		bin[q->size-1] = q;
+		bin[q->size] = q;
 	}
 	return p;
 }
@@ -211,11 +211,12 @@ void *get_heap_base() { return heap; }
 
 Free_Header *get_heap_freelist() { return freelist;}
 
-Free_Header *get_bin_freelist(uint32_t index) { return bin[index];}
-
+Free_Header *get_bin_freelist(uint32_t size) { return bin[request2size(size)];}
 
 void heap_shutdown() {
 	dropcore(heap, heap_size);
+	heap = NULL;
+	heap_size = 0;
 }
 
 Heap_Info get_heap_info() {

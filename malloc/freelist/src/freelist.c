@@ -58,6 +58,8 @@ void heap_init(size_t max_heap_size) {
 
 void heap_shutdown() {
 	dropcore(heap, (size_t)heap_size);
+	heap = NULL;
+	heap_size = 0;
 }
 
 void *malloc(size_t size) {
