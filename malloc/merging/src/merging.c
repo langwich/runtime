@@ -293,7 +293,7 @@ Heap_Info get_heap_info() {
     uint32_t free = 0;
     uint32_t busy_size = 0;
     uint32_t free_size = 0;
-    while ( p>=heap && p<=end_of_heap ) { // stay inbounds, walking heap
+    while ( (void*)p>=heap && (void*)p<=end_of_heap ) { // stay inbounds, walking heap
         // track
         if ( p->size & BUSY_BIT ) {
             busy++;
