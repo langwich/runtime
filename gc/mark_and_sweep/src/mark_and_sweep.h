@@ -48,7 +48,6 @@ extern void gc_shutdown();
  */
 extern void gc();
 extern heap_object *gc_alloc(object_metadata *metadata, size_t size);
-extern void gc_add_root(void **p);
 
 extern Heap_Info get_heap_info();
 
@@ -59,12 +58,11 @@ extern Heap_Info get_heap_info();
 
 extern int gc_num_live_objects();
 extern int gc_num_alloc_objects();
+extern void gc_mark();
+extern void gc_unmark();
 extern void gc_debug(bool debug);
-extern int gc_num_roots();
-extern void gc_set_num_roots(int roots);
 extern void foreach_live(void (*action)(heap_object *));
 extern void foreach_object(void (*action)(heap_object *));
-
 
 #ifdef __cplusplus
 }

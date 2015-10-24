@@ -37,7 +37,8 @@ void gc_debug(bool debug) { DEBUG = debug; }
 
 /* Initialize a heap with a certain size for use with the garbage collector */
 void gc_init(int size) {
-    heap_size = size;
+    if ( start_of_heap!=NULL ) { gc_shutdown(); }
+    heap_size = (size_t)size;
     start_of_heap = morecore((size_t)size);
     end_of_heap = start_of_heap + size - 1;
     next_free = (Free_Header *)start_of_heap;
@@ -67,6 +68,7 @@ void gc_set_num_roots(int roots)
 
 //Allocation
 heap_object *gc_alloc(object_metadata *metadata, size_t size) {
+    if ( start_of_heap==NULL ) { gc_init(DEFAULT_MAX_HEAP_SIZE); }
     size = align_to_word_boundary(size);
     heap_object *p = gc_raw_alloc(size);
 
@@ -91,7 +93,6 @@ static void *gc_raw_alloc(size_t size) {
 }
 
 static void *gc_alloc_space(int size) {
-
     Free_Header *p = next_free;
     Free_Header *prev = NULL;
     while (p != NULL && size != p->size && p->size < size + sizeof(Free_Header)) {
