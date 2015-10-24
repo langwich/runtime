@@ -34,15 +34,9 @@ extern "C" {
 typedef struct heap_object {
     struct _object_metadata *metadata;
     uint32_t size;      // total size including header information used by each heap_object
-    bool marked;	    // used during the mark phase of garbage collection
+    bool marked;        // used during the mark phase of garbage collection
+    struct heap_object *next;
 } heap_object;
-
-typedef struct _Free_Header {//maintain a free list for unallocated chunks, also for sweep action
-    int size;                //size of current chunk
-    struct _Free_Header *next;//point to next free chunk
-} Free_Header;
-
-extern int gc_num_alloc_objects();
 
 #ifdef __cplusplus
 }

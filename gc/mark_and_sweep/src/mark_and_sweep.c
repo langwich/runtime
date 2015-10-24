@@ -24,37 +24,35 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mark_and_sweep.h"
-#include <morecore.h>
+
+#include <mark_and_sweep.h>
 #include <gc.h>
+#include <morecore.h>
+
 
 static void mark();
 static void mark_object(heap_object *p);
 static void unmark_object(heap_object *p);
 static void sweep();
-static void free_heapobject(int i, heap_object *p);
-
+static void free_object(heap_object *p);
 static void *gc_raw_alloc(size_t size);
-static void *gc_alloc_space(int size);
-static void update_roots();
+static void *gc_alloc_from_freelist(size_t size);
 static void gc_chase_ptr_fields(const heap_object *p);
-static void update_ptr_fields(heap_object *p);
+static bool already_in_freelist(heap_object *p);
 
 static bool DEBUG = false;
 
-static const int MAX_ROOTS = 1000; // obviously this is ok only for the educational purpose of this code
-static const int MAX_OBJECTS = 10000;
-/* Track every pointer into the heap; includes globals, args, and locals */
+static const int MAX_ROOTS = 1000;
+
 static heap_object **_roots[MAX_ROOTS];
-static heap_object *_objects[MAX_OBJECTS];
-/* index of next free space in _roots for a root */
 static int num_roots = 0;
-static int num_objects = 0;
 
 static size_t heap_size;
 static void *start_of_heap;
 static void *end_of_heap;
-Free_Header *next_free;
+static void *free_list;
+static void *alloc_bump_ptr;
+
 
 void gc_debug(bool debug) { DEBUG = debug; }
 
@@ -64,13 +62,11 @@ void gc_init(int size) {
     heap_size = (size_t)size;
     start_of_heap = morecore((size_t)size);
     end_of_heap = start_of_heap + size - 1;
-    next_free = (Free_Header *)start_of_heap;
-    next_free->size = size;
+    alloc_bump_ptr = start_of_heap;
+    free_list = NULL;
     num_roots = 0;
-    num_objects = 0;
 }
 
-/* Announce you are done with the heap managed by the garbage collector */
 void gc_shutdown() {
     dropcore(start_of_heap, heap_size);
 }
@@ -95,48 +91,54 @@ heap_object *gc_alloc(object_metadata *metadata, size_t size) {
     size = align_to_word_boundary(size);
     heap_object *p = gc_raw_alloc(size);
 
-    memset(p, 0, size);         // wipe out object's data space and the header
-    p->metadata = metadata;     // make sure object knows where its metadata is
+    memset(p, 0, size);
+    p->metadata = metadata;
     p->size = (uint32_t)size;
-    _objects[num_objects++] = p;
     return p;
 }
 
 static void *gc_raw_alloc(size_t size) {
-    void *object = gc_alloc_space(size);
-    if(NULL == object) {
-        gc();
-        object = gc_alloc_space(size);
-        if (object == NULL) {
-            if (DEBUG) printf("memory is full");
-            return NULL;
+    if (alloc_bump_ptr + size > end_of_heap) {
+        void *object = gc_alloc_from_freelist(size);
+        if (NULL == object) {
+            gc();
+            object = gc_alloc_from_freelist(size);
+            if (object == NULL) {
+                if (DEBUG) printf("memory is full");
+                return NULL;
+            }
+            return object;
         }
     }
-    return object;
+    void *p = alloc_bump_ptr;
+    alloc_bump_ptr += size;
+    return p;
 }
 
-static void *gc_alloc_space(int size) {
-    Free_Header *p = next_free;
-    Free_Header *prev = NULL;
-    while (p != NULL && size != p->size && p->size < size + sizeof(Free_Header)) {
+
+static void *gc_alloc_from_freelist(size_t size) {
+
+    heap_object *p = free_list;
+    heap_object *prev = NULL;
+    while (p != NULL && size != p->size && p->size < size) {
         prev = p;
         p = p->next;
     }
     if (p == NULL) return p;
 
-    Free_Header *nextchunk;
+    heap_object *nextchunk;
     if (p->size == size) {
         nextchunk = p->next;
     }
     else {
-        Free_Header *q = (Free_Header *) (((char *) p) + size);
+        heap_object *q = (heap_object *) (((char *) p) + size);
         q->size = p->size - size;
         q->next = p->next;
         nextchunk = q;
     }
     p->size = size;
-    if (p == next_free) {
-        next_free = nextchunk;
+    if (p == free_list) {
+        free_list = nextchunk;
     }
     else {
         prev->next = nextchunk;
@@ -144,7 +146,8 @@ static void *gc_alloc_space(int size) {
     return p;
 }
 
-inline bool ptr_is_in_heap(heap_object *p) {
+
+bool ptr_is_in_heap(heap_object *p) {
     return  p >= (heap_object *) start_of_heap &&
             p <= (heap_object *) end_of_heap;
 }
@@ -171,6 +174,8 @@ static void mark() {
     }
 }
 
+void unmark() { foreach_object(unmark_object); }
+
 static void mark_object(heap_object *p) {
     if ( !p->marked ) {
         if (DEBUG) printf("mark    %s@%p (0x%x bytes)\n", p->metadata->name, p, p->size);
@@ -179,7 +184,7 @@ static void mark_object(heap_object *p) {
     }
 }
 
-static void gc_chase_ptr_fields(const heap_object *p) {// check for tracked heap ptrs in this object
+static void gc_chase_ptr_fields(const heap_object *p) {
     for (int i = 0; i < p->metadata->num_ptr_fields; i++) {
         int offset_of_ptr_field = p->metadata->field_offsets[i];
         void *ptr_to_ptr_field = ((void *)p) + offset_of_ptr_field;
@@ -194,64 +199,85 @@ static void gc_chase_ptr_fields(const heap_object *p) {// check for tracked heap
 int gc_num_live_objects() {
     mark();
     int n = 0;
-    for(int i = 0; i < num_objects; i++) {
-        heap_object *p = _objects[i];
-        if (p!= NULL && p->marked) {
+    void *p = start_of_heap;
+    while (p >= start_of_heap && p < alloc_bump_ptr) {
+        if (((heap_object *)p)->marked) {
             n++;
-            unmark_object(p);
         }
+        p = p + ((heap_object *)p)->size;
     }
+    unmark();
     return n;
 }
 
+
 static void unmark_object(heap_object *p) { p->marked = false; }
 
-int gc_num_alloc_objects() {
-    return num_objects;
+static void sweep() {
+    void *p = start_of_heap;
+    while (p >= start_of_heap && p < alloc_bump_ptr) {
+        heap_object * o = ((heap_object *)p);
+        if (o->marked) {
+            unmark_object(o);
+        }
+        else {
+            free_object(o);
+        }
+        size_t size = ((heap_object *)p)->size;
+        p = p + size;
+    }
 }
 
-static void sweep() {
-    for(int i = 0; i < num_objects; i++) {
-        heap_object *p = _objects[i];
-        if(p != NULL){
-            if (p->marked) { p->marked = false; }
-            else {
-                if( p != NULL ) {
-                    free_heapobject(i, p);
-                }
-            }
+static void free_object(heap_object *p) {
+    if (!already_in_freelist(p)){
+        p->next = free_list;
+        free_list = p;
+        if (DEBUG) {
+            printf("sweep object@%p\n", p);
         }
     }
 }
 
-static void free_heapobject(int i,heap_object *p) {
-    _objects[i] = NULL;
-    Free_Header *q  = (Free_Header*)p;
-    q->size = p->size;
-    q->next = next_free;
-    next_free = q;
-    if (DEBUG) {
-        printf("sweep object@%p\n", q);
+static bool already_in_freelist(heap_object *p) {
+    heap_object * ptr = free_list;
+    while (ptr != NULL) {
+        if (p == ptr) {
+            return true;
+        }
+        ptr = ptr->next;
     }
+    return false;
 }
 
 Heap_Info get_heap_info() {
+    void *p = start_of_heap;
     int busy = 0;
     int live = gc_num_live_objects();
     int computed_busy_size = 0; //size of chunks was allocated
     int computed_free_size = 0;
-    for (int i = 0; i < num_objects; i++) {
-        heap_object *p = _objects[i];
-        if(p != NULL) {
-            busy++;
-            computed_busy_size += p->size;
+
+    while ( p>=start_of_heap && p<alloc_bump_ptr ) { // stay inbounds, walking heap
+
+        if (already_in_freelist((heap_object *)p)) {
+            computed_free_size += ((heap_object *)p)->size;
         }
+        else {
+            busy++;
+            computed_busy_size += ((heap_object *)p)->size;
+        }
+        p = p + ((heap_object *)p)->size;
     }
-    Free_Header* ptr = next_free;
-    while (ptr != NULL) {
-        computed_free_size += ptr->size;
-        ptr = ptr->next;
+    computed_free_size += (uint32_t)(end_of_heap - alloc_bump_ptr + 1);
+
+    return (Heap_Info){ start_of_heap, end_of_heap, alloc_bump_ptr,(uint32_t)heap_size,
+                        busy, live, computed_busy_size, computed_free_size,computed_busy_size,computed_free_size};
+}
+
+void foreach_object(void (*action)(heap_object *)) {
+    void *p = start_of_heap;
+    while (p >= start_of_heap && p < alloc_bump_ptr) { // for each object in the heap currently allocated
+        size_t size = ((heap_object *)p)->size;
+        action(p);
+        p = p + size;
     }
-    return (Heap_Info){ start_of_heap, end_of_heap, NULL, (uint32_t)heap_size,
-                        busy, live, computed_busy_size, computed_free_size, 0, 0 };
 }

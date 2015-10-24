@@ -26,9 +26,7 @@ SOFTWARE.
 #include <string.h>
 
 #include <cunit.h>
-#include <mark_and_sweep.h>
 #include <wich.h>
-#include <gc.h>
 
 const size_t HEAP_SIZE = 2000;
 

@@ -4,8 +4,8 @@ project(runtime)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -DMARK_AND_SWEEP -Wall")
 
 set(MODULE_NAME mark_and_sweep)
-set(SOURCE src/mark_and_sweep.c)
-set(TEST_TARGETS ms_test_basics ms_test_ptr_fields)
+set(SOURCE src/mark_and_sweep.c test/bitset.c )
+set(TEST_TARGETS ms_test_basics ms_test_ptr_fields ms_test_random_graph)
 
 add_library(${MODULE_NAME} ${SOURCE})
 target_link_libraries(${MODULE_NAME} malloc_common gc_mark_and_sweep)
