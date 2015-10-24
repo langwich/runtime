@@ -50,7 +50,7 @@ typedef struct {
 static const size_t MIN_CHUNK_SIZE = sizeof(Free_Header);
 static const size_t WORD_SIZE_IN_BYTES = sizeof(void *);
 static const size_t ALIGN_MASK = WORD_SIZE_IN_BYTES - 1;
-static const uint32_t BIN_SIZE = 1024;
+static const uint32_t MAX_BIN_SIZE = 1024;
 
 static const uint32_t BUSY_BIT = ((uint32_t)1) << 31; // the high bit (normally the sign bit)
 static const uint32_t SIZEMASK = ~BUSY_BIT;

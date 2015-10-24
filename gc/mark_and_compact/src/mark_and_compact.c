@@ -1,3 +1,26 @@
+/*
+The MIT License (MIT)
+
+Copyright (c) 2015 Terence Parr, Hanzhou Shi, Shuai Yuan, Yuanyuan Zhang
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,7 +48,7 @@ static heap_object **_roots[MAX_ROOTS];
 static int num_roots = 0;
 
 static size_t heap_size;
-static void *start_of_heap;
+static void *heap;
 static void *end_of_heap;
 static void *next_free;
 static void *next_free_forwarding; // next_free used during forwarding address computation
@@ -37,16 +60,17 @@ void gc_debug(bool debug) { DEBUG = debug; }
 
 /* Initialize a heap with a certain size for use with the garbage collector */
 void gc_init(int size) {
-    heap_size = size;
-    start_of_heap = morecore((size_t)size);
-    end_of_heap = start_of_heap + size - 1;
-    next_free = start_of_heap;
+	if (heap != NULL ) { gc_shutdown(); }
+    heap_size = (size_t)size;
+    heap = morecore((size_t)size);
+    end_of_heap = heap + size - 1;
+    next_free = heap;
     num_roots = 0;
 }
 
 /* Announce you are done with the heap managed by the garbage collector */
 void gc_shutdown() {
-    dropcore(start_of_heap, heap_size);
+	dropcore(heap, heap_size);
 }
 
 void gc_add_root(void **p)
@@ -71,6 +95,7 @@ void gc_set_num_roots(int roots)
  * The object is zeroed out and the header is initialized.
  */
 heap_object *gc_alloc(object_metadata *metadata, size_t size) {
+	if (heap == NULL ) { gc_init(DEFAULT_MAX_HEAP_SIZE); }
 	size = align_to_word_boundary(size);
 	heap_object *p = gc_raw_alloc(size);
 
@@ -129,7 +154,7 @@ static inline void move_live_objects_to_forwarding_addr(heap_object *p) {
 }
 
 bool ptr_is_in_heap(heap_object *p) {
-	return  p >= (heap_object *) start_of_heap &&
+	return  p >= (heap_object *) heap &&
 			p <= (heap_object *) end_of_heap &&
 			p->magic == MAGIC_NUMBER;
 }
@@ -161,7 +186,7 @@ void gc() {
 
 	// reallocate all live objects starting from start_of_heap
 	if (DEBUG) printf("FORWARD\n");
-	next_free_forwarding = start_of_heap;
+	next_free_forwarding = heap;
 	foreach_live(realloc_object);  		// for each marked (live) object, record forwarding address
 
 	// make sure all roots point at new object addresses
@@ -255,8 +280,8 @@ int gc_num_live_objects() {
 	gc_mark();
 
 	int n = 0;
-	void *p = start_of_heap;
-	while (p >= start_of_heap && p < next_free) { // for each marked (live) object, record forwarding address
+	void *p = heap;
+	while (p >= heap && p < next_free) { // for each marked (live) object, record forwarding address
 		if (((heap_object *)p)->marked) {
 			n++;
 		}
@@ -295,26 +320,26 @@ static void gc_chase_ptr_fields(const heap_object *p) {// check for tracked heap
  * does not do liveness trace.
  */
 Heap_Info get_heap_info() {
-	void *p = start_of_heap;
+	void *p = heap;
 	int busy = 0;
 	int live = gc_num_live_objects();
 	int computed_busy_size = 0;
-	int busy_size = (uint32_t)(next_free - start_of_heap);
+	int busy_size = (uint32_t)(next_free - heap);
 	int free_size = (uint32_t)(end_of_heap - next_free + 1);
-	while ( p>=start_of_heap && p<next_free ) { // stay inbounds, walking heap
+	while (p >= heap && p < next_free ) { // stay inbounds, walking heap
 		// track
 		busy++;
 		computed_busy_size += ((heap_object *)p)->size;
 		p = p + ((heap_object *)p)->size;
 	}
-	return (Heap_Info){ start_of_heap, end_of_heap, next_free, (uint32_t)heap_size,
-	                    busy, live, computed_busy_size, busy_size, free_size };
+	return (Heap_Info){heap, end_of_heap, next_free, (uint32_t)heap_size,
+	                   busy, live, computed_busy_size, 0, busy_size, free_size };
 }
 
 /* Apply function action to each marked (live) object in the heap; assumes live are marked */
 void foreach_live(void (*action)(heap_object *)) {
-	void *p = start_of_heap;
-	while (p >= start_of_heap && p < next_free) { // for each marked (live) object
+	void *p = heap;
+	while (p >= heap && p < next_free) { // for each marked (live) object
 		heap_object *_p = (heap_object *)p;
 		size_t size = _p->size;
 		if (DEBUG) {
@@ -328,8 +353,8 @@ void foreach_live(void (*action)(heap_object *)) {
 }
 
 void foreach_object(void (*action)(heap_object *)) {
-	void *p = start_of_heap;
-	while (p >= start_of_heap && p < next_free) { // for each object in the heap currently allocated
+	void *p = heap;
+	while (p >= heap && p < next_free) { // for each object in the heap currently allocated
 		size_t size = ((heap_object *)p)->size;
 		action(p);
 		p = p + size;

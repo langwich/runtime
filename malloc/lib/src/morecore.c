@@ -58,8 +58,10 @@ void *morecore(size_t size_in_bytes) {
  * with non page sizes.
  */
 void dropcore(void *p, size_t size_in_bytes) {
-	int ret = munmap(p, size_in_bytes);
-	assert(ret == 0); // munmap returns non-zero on failure
+	if ( p!=NULL ) {
+		int ret = munmap(p, size_in_bytes);
+		assert(ret == 0); // munmap returns non-zero on failure
+	}
 }
 
 void *calloc(size_t num, size_t size) { // calls our malloc if we link properly

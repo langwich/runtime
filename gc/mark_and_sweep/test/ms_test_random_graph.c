@@ -26,8 +26,8 @@ SOFTWARE.
 #include <cunit.h>
 #include <string.h>
 #include <time.h>
-#include <mark_and_sweep.h>
 #include "bitset.h"
+#include <mark_and_sweep.h>
 
 const size_t HEAP_SIZE = 20000000;
 

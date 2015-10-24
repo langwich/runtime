@@ -40,8 +40,7 @@ Heap_Info verify_heap() {
 }
 
 static void setup()		{ heap_init(HEAP_SIZE); }
-static void teardown()	{ //verify_heap();
-    heap_shutdown(); }
+static void teardown()	{ verify_heap(); heap_shutdown(); }
 
 void replay_ansic_grammar_with_dparser() {
     int result = replay_malloc("/tmp/trace.txt");
@@ -51,7 +50,7 @@ void replay_ansic_grammar_with_dparser() {
 int main(int argc, char *argv[]) {
     // TODO: currently must run from cmd-line: no way to set working dir in cmake?
     printf("converting addresses to indexes\n");
-    system("python /Users/Shuai/Dropbox/cs690/master_project/malloc/cunit/addr2index.py < /Users/Shuai/Dropbox/cs690/master_project/malloc/cunit/ANSIC_MALLOC_FREE_TRACE.txt > /tmp/trace.txt");
+    system("python samples/addr2index.py < samples/ANSIC_MALLOC_FREE_TRACE.txt > /tmp/trace.txt");
     printf("simulating...\n");
 
     cunit_setup = setup;

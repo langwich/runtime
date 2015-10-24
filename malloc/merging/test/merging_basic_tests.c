@@ -38,8 +38,7 @@ Heap_Info verify_heap() {
 }
 
 static void setup()		{ heap_init(HEAP_SIZE); }
-static void teardown()	{ verify_heap();
-    heap_shutdown(); }
+static void teardown()	{ verify_heap(); heap_shutdown(); }
 
 void malloc0() {
     void *p = malloc(0);

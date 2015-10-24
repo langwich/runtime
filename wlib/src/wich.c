@@ -26,7 +26,6 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdbool.h>
 #include <wich.h>
-#include "persistent_vector.h"
 
 #ifndef REFCOUNTING
 void REF(heap_object *x) { }

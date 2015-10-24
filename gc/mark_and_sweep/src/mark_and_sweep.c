@@ -1,9 +1,34 @@
+/*
+The MIT License (MIT)
+
+Copyright (c) 2015 Terence Parr, Hanzhou Shi, Shuai Yuan, Yuanyuan Zhang
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mark_and_sweep.h"
-#include <morecore.h>
+
+#include <mark_and_sweep.h>
 #include <gc.h>
+#include <morecore.h>
+
 
 static void mark();
 static void mark_object(heap_object *p);
@@ -33,7 +58,8 @@ void gc_debug(bool debug) { DEBUG = debug; }
 
 /* Initialize a heap with a certain size for use with the garbage collector */
 void gc_init(int size) {
-    heap_size = size;
+    if ( start_of_heap!=NULL ) { gc_shutdown(); }
+    heap_size = (size_t)size;
     start_of_heap = morecore((size_t)size);
     end_of_heap = start_of_heap + size - 1;
     alloc_bump_ptr = start_of_heap;
@@ -61,6 +87,7 @@ void gc_set_num_roots(int roots)
 
 //Allocation
 heap_object *gc_alloc(object_metadata *metadata, size_t size) {
+    if ( start_of_heap==NULL ) { gc_init(DEFAULT_MAX_HEAP_SIZE); }
     size = align_to_word_boundary(size);
     heap_object *p = gc_raw_alloc(size);
 
@@ -87,6 +114,7 @@ static void *gc_raw_alloc(size_t size) {
     alloc_bump_ptr += size;
     return p;
 }
+
 
 static void *gc_alloc_from_freelist(size_t size) {
 
@@ -117,6 +145,7 @@ static void *gc_alloc_from_freelist(size_t size) {
     }
     return p;
 }
+
 
 bool ptr_is_in_heap(heap_object *p) {
     return  p >= (heap_object *) start_of_heap &&
@@ -240,8 +269,8 @@ Heap_Info get_heap_info() {
     }
     computed_free_size += (uint32_t)(end_of_heap - alloc_bump_ptr + 1);
 
-    return (Heap_Info){ start_of_heap, end_of_heap, (uint32_t)heap_size,
-                        busy, live, computed_busy_size, computed_free_size};
+    return (Heap_Info){ start_of_heap, end_of_heap, alloc_bump_ptr,(uint32_t)heap_size,
+                        busy, live, computed_busy_size, computed_free_size,computed_busy_size,computed_free_size};
 }
 
 void foreach_object(void (*action)(heap_object *)) {
@@ -252,5 +281,3 @@ void foreach_object(void (*action)(heap_object *)) {
         p = p + size;
     }
 }
-
-
