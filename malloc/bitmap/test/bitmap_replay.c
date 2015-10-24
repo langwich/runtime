@@ -44,7 +44,7 @@ void replay_ansic_grammar_with_dparser() {
 int main(int argc, char *argv[]) {
 	// TODO: currently must run from cmd-line: no way to set working dir in cmake?
 	printf("converting addresses to indexes\n");
-	system("python ../cunit/addr2index.py < ../cunit/ANSIC_MALLOC_FREE_TRACE.txt > /tmp/trace.txt");
+	system("python samples/addr2index.py < samples/ANSIC_MALLOC_FREE_TRACE.txt > /tmp/trace.txt");
 	printf("simulating...\n");
 
 	cunit_setup = setup;

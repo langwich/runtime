@@ -168,5 +168,5 @@ void cunit_test(void (*f)(), const char funcname[]) {
 			exit_code = -1;
 		}
 	}
-	exit(exit_code);
+	if ( exit_code != 0 ) exit(exit_code);
 }
