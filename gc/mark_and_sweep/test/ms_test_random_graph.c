@@ -139,7 +139,7 @@ void _many_connected_nodes_wack_random_roots(bool edges) {
 
     assert_equal(gc_num_live_objects(), NUM_NODES);
 
-    set wacked = wack_random_roots(nodes, NUM_NODES/1.5);
+    wack_random_roots(nodes, NUM_NODES/1.5);
 //	printf("wacked = "); set_print(wacked);
     set after_wacking = get_reachable_objects((heap_object **) nodes);
 
