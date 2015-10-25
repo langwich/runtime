@@ -21,10 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
+#include "binning.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "binning.h"
 #include "cunit.h"
 
 const size_t HEAP_SIZE = 4000;
@@ -150,18 +149,17 @@ void bin_split_malloc_test(){
 	assert_addr_equal(p, freelist1);
 
 	const int N2 = 512;
-    void *p1 = malloc(MAX_BIN_SIZE+10); // get chunk from free list (beyond max bin size)
+    void *p1 = malloc(2500); // get chunk from free list (beyond max bin size)
     assert_addr_not_equal(p1,NULL);
-    Free_Header *freelist4 = get_bin_freelist(N-N2);
-    void *p2 = malloc(N2);   // should get chunk from bin[request2size(128)-request2size(99)] ???????
+    Free_Header *freelist4 = get_bin_freelist(N-N2-sizeof(Busy_Header));
+    void *p2 = malloc(N2);   // should get chunk from bin[request2size(N)],will split bin[request2size(N)]
     assert_addr_not_equal(p2,NULL);
     Free_Header *freelist2 = get_bin_freelist(N);
     assert_addr_not_equal(freelist1,freelist2);
     assert_addr_equal(freelist2,NULL);
-    Free_Header *freelist3 = get_bin_freelist(N-N2);
+    Free_Header *freelist3 = get_bin_freelist(N-N2-sizeof(Busy_Header));
     assert_addr_not_equal(freelist3,NULL);
     assert_addr_not_equal(freelist3,freelist4);
-    free(p1);
 }
 
 void free_NULL() {
