@@ -27,6 +27,7 @@ set(INCLUDE_DIRS
 		malloc/bytemap/src
 		malloc/binning/src
 		malloc/merging/src
+		vm/src
 		wlib/src)
 include_directories(${INCLUDE_DIRS})
 # install all headers in directories listed above
@@ -62,7 +63,7 @@ endfunction()
 ################# S u b d i r s #################
 
 # add all subdirectories
-set(SUB_DIRS malloc wlib cunit gc)
+set(SUB_DIRS malloc wlib cunit gc vm)
 foreach(SUB_DIR ${SUB_DIRS})
 	add_subdirectory(${SUB_DIR})
 endforeach()
