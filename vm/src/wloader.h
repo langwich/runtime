@@ -24,9 +24,9 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "vm.h"
 
 extern VM *vm_load(FILE *f);
 extern BYTECODE vm_opcode(char *name);
 extern VM_INSTRUCTION *vm_instr(char *name);
 extern Function_metadata *vm_function(VM *vm, char *name);
+extern void save_string(char *filename, char *s);

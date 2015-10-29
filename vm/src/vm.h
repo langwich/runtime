@@ -35,9 +35,6 @@ static const int MAX_CALL_STACK = 1000;
 static const int MAX_OPND_STACK = 1000;
 static const int NUM_INSTRS		= 64;
 
-static const int VM_FALSE       = 0;
-static const int VM_TRUE        = 1;
-
 static const int VM_NIL         = ((uintptr_t)0);
 
 typedef unsigned char byte;
@@ -141,6 +138,14 @@ typedef struct {
     int opnd_size; // size in bytes
 } VM_INSTRUCTION;
 
+typedef union {
+	int i;
+	double f;
+	bool b;
+	char *s;
+	PVector_ptr vptr;
+} element;
+
 // meta-data
 
 // to call a func, we use index into table of Function descriptors
@@ -155,7 +160,7 @@ typedef struct function {
 typedef struct activation_record {
 	Function_metadata *func;
 	addr32 retaddr;
-	word locals[MAX_LOCALS]; // args + locals go here per func def
+	element locals[MAX_LOCALS]; // args + locals go here per func def
 } Activation_Record;
 
 typedef struct {
@@ -167,7 +172,7 @@ typedef struct {
 
 	byte *code;   		// byte-addressable code memory.
 	int code_size;
-	word stack[MAX_OPND_STACK]; 	// operand stack, grows upwards; word addressable
+	element stack[MAX_OPND_STACK]; 	// operand stack, grows upwards; word addressable
 	Activation_Record call_stack[MAX_CALL_STACK];
 
 	int data_size;

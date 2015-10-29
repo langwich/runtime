@@ -24,31 +24,36 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <wich.h>
 #include "vm.h"
 
 #include <cunit.h>
+#include <wloader.h>
 
 static void setup()		{ }
 static void teardown()	{ }
 
-void hello() {
-	printf("hello ----------------------\n");
-	// code memory is little-endian
-	byte hello[] = {
-		ICONST, 34, 0, 0, 0,
-	    IPRINT,
-		SCONST, 0, 0,
-		SPRINT,
-	    HALT
-	};
-
-    VM *vm = vm_alloc();
-	vm_init(vm, hello, sizeof(hello));
-	vm->strings = (char **)calloc(1, sizeof(char *));
-	vm->num_strings = 1;
-	vm->strings[0] = "hello";
-	def_function(vm, "main", VOID_TYPE, 0, 0, 0);
+static void run(char *code) {
+	save_string("/tmp/t.wasm", code);
+	FILE *f = fopen("/tmp/t.wasm", "r");
+	VM *vm = vm_load(f);
+	fclose(f);
 	vm_exec(vm, true);
+}
+
+
+void hello() {
+	char *code =
+		"1 strings\n"
+		"\t0: 5/hello\n"
+		"1 functions\n"
+		"\t0: addr=0 args=0 locals=0 type=1 4/main\n"
+		"3 instr, 5 bytes\n"
+		"\tSCONST 0\n"
+		"\tSPRINT\n"
+		"\tHALT";
+
+	run(code);
 }
 
 void callme() {
@@ -95,32 +100,19 @@ void callarg1() {
 	vm_exec(vm, true);
 }
 
-//void array() {
-//	printf("array ----------------------\n");
-//	byte code[] = {
-//	// a = new int[10]
-//		ICONST, 10, 0, 0, 0,
-//		VECTOR,
-//		STORE, 0, 0,
-//	// a[2] = 99
-//		VLOAD,  0, 0,
-//		ICONST, 02, 0, 0, 0,
-//		ICONST, 99, 0, 0, 0,
-//		STORE_INDEX,
-//	// print a[2]
-//		VLOAD,  0, 0,
-//		ICONST, 02, 0, 0, 0,
-//		LOAD_INDEX,
-//	    IPRINT,
-//	    HALT
-//	};
-//    int data_size = 1 * sizeof(word); // save array ptr
-//
-//    VM *vm = vm_alloc();
-//	vm_init(vm, code, sizeof(code));
-//	def_function(vm, "main", VOID_TYPE, 0, 0, 0);
-//	vm_exec(vm, true);
-//}
+void vec0() {
+	char *code =
+		"0 strings\n"
+		"1 functions\n"
+		"	0: addr=0 args=0 locals=0 type=1 4/main\n"
+		"4 instr, 8 bytes\n"
+		"	ICONST 5\n"
+		"	VECTOR\n"
+		"	VPRINT\n"
+		"	HALT";
+
+	run(code);
+}
 
 void locals() {
     printf("locals ----------------------\n");
@@ -143,8 +135,6 @@ void locals() {
             IPRINT,
             RET
     };
-    int data_size = 0;
-    word *data = NULL;
 
     VM *vm = vm_alloc();
 	vm_init(vm, code, sizeof(code));
@@ -176,8 +166,6 @@ void locals_and_args() {
             IPRINT,
             RET
     };
-    int data_size = 0;
-    word *data = NULL;
 
     VM *vm = vm_alloc();
 	vm_init(vm, code, sizeof(code));
@@ -190,11 +178,12 @@ int main(int argc, char *argv[]) {
     cunit_setup = setup;
     cunit_teardown = teardown;
 
-    test(hello);
-	test(locals_and_args);
-	test(locals);
-	test(callme);
-	test(callarg1);
+	test(vec0);
+//    test(hello);
+//	test(locals_and_args);
+//	test(locals);
+//	test(callme);
+//	test(callarg1);
 
     return 0;
 }

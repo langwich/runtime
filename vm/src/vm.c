@@ -24,13 +24,16 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "vm.h"
-#include "wloader.h"
-
 #include <wich.h>
+
+#include <gc.h>
+#include "vm.h"
+
+#include "wloader.h"
 
 VM_INSTRUCTION vm_instructions[] = {
         {"HALT", HALT, 0},
+
         {"IADD", IADD, 0},
         {"ISUB", ISUB, 0},
         {"IMUL", IMUL, 0},
@@ -39,6 +42,7 @@ VM_INSTRUCTION vm_instructions[] = {
         {"FSUB", FSUB, 0},
         {"FMUL", FMUL, 0},
         {"FDIV", FDIV, 0},
+
         {"OR", OR, 0},
         {"AND", AND, 0},
         {"INEG", INEG, 0},
@@ -152,12 +156,15 @@ static void inline validate_stack_address(int a) {
 
 void vm_exec(VM *vm, bool trace)
 {
-    word a = 0;
+	int a = 0;
+	word aver = 0;
+	word avec = 0;
     word b = 0;
-    word i = 0;
-    float f,g;
+    int i = 0;
+	bool b1, b2;
+	double f,g;
     word address = 0;
-//    PVector_ptr arr;
+    PVector_ptr vptr;
     int x, y;
     Activation_Record *frame;
 
@@ -172,7 +179,7 @@ void vm_exec(VM *vm, bool trace)
     register int sp = vm->sp;
     register int fp = vm->fp;
     const byte *code = vm->code;
-    word *stack = vm->stack;
+	element *stack = vm->stack;
 
     int opcode = code[ip];
 
@@ -182,160 +189,163 @@ void vm_exec(VM *vm, bool trace)
         switch (opcode) {
             case IADD:
                 validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = (word)(x + y);
+                y = stack[sp--].i;
+                x = stack[sp].i;
+                stack[sp].i = x + y;
                 break;
             case ISUB:
                 validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = (word)(x - y);
+				y = stack[sp--].i;
+				x = stack[sp].i;
+				stack[sp].i = x - y;
                 break;
             case IMUL:
-                validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = (word)(x * y);
+				y = stack[sp--].i;
+				x = stack[sp].i;
+				stack[sp].i = x * y;
                 break;
             case IDIV:
-                validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = (word)(x / y);
+				y = stack[sp--].i;
+				x = stack[sp].i;
+				stack[sp].i = x / y;
                 break;
             case FADD:
-                validate_stack_address(sp-1);
-                g = (float)stack[sp--];
-                f = (float)stack[sp];
-                stack[sp] = (word)(f + g);
+				f = stack[sp--].f;
+				g = stack[sp].f;
+				stack[sp].f = f + g;
                 break;
             case FSUB:
                 validate_stack_address(sp-1);
-                g = (float)stack[sp--];
-                f = (float)stack[sp];
-                stack[sp] = (word)(f - g);
+				f = stack[sp--].f;
+				g = stack[sp].f;
+				stack[sp].f = f - g;
                 break;
             case FMUL:
                 validate_stack_address(sp-1);
-                g = (float)stack[sp--];
-                f = (float)stack[sp];
-                stack[sp] = (word)(f * g);
+				f = stack[sp--].f;
+				g = stack[sp].f;
+				stack[sp].f = f * g;
                 break;
             case FDIV:
                 validate_stack_address(sp-1);
-                g = (float)stack[sp--];
-                f = (float)stack[sp];
-                stack[sp] = (word)(f / g);
+				f = stack[sp--].f;
+				g = stack[sp].f;
+				stack[sp].f = f / g;
                 break;
             case OR :
                 validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = x || y ? VM_TRUE : VM_FALSE;
+                b2 = stack[sp--].b;
+                b1 = stack[sp].b;
+                stack[sp].b = b1 || b2;
                 break;
             case AND :
-                validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = x && y ? VM_TRUE : VM_FALSE;
+				validate_stack_address(sp-1);
+				b2 = stack[sp--].b;
+				b1 = stack[sp].b;
+				stack[sp].b = b1 && b2;
                 break;
             case INEG:
                 validate_stack_address(sp);
-                stack[sp] = (word)((int)stack[sp]);
+                stack[sp].i = -stack[sp].i;
                 break;
             case FNEG:
                 validate_stack_address(sp);
-                stack[sp] = (word)((float)stack[sp]);
+				stack[sp].f = -stack[sp].f;
                 break;
             case NOT:
                 validate_stack_address(sp);
-                stack[sp] = stack[sp]!=VM_FALSE ? VM_FALSE : VM_TRUE;
+                stack[sp].b = !stack[sp].b;
                 break;
-            case I2F: validate_stack_address(sp); stack[sp] = (word)(float)((int)stack[sp]); break;
-            case F2I: validate_stack_address(sp); stack[sp] = (word)(int)((float)stack[sp]); break;
+            case I2F:
+				validate_stack_address(sp);
+				stack[sp].f = stack[sp].i;
+				break;
+            case F2I:
+				validate_stack_address(sp);
+				stack[sp].i = (int)stack[sp].f;
+				break;
             case IEQ:
                 validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = x==y ? VM_TRUE : VM_FALSE;
+				y = stack[sp--].i;
+				x = stack[sp].i;
+				stack[sp].b = x == y;
                 break;
             case INEQ:
                 validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = x!=y ? VM_TRUE : VM_FALSE;
+				y = stack[sp--].i;
+				x = stack[sp].i;
+				stack[sp].b = x != y;
                 break;
             case ILT:
                 validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = x<y ? VM_TRUE : VM_FALSE;
+				y = stack[sp--].i;
+				x = stack[sp].i;
+				stack[sp].b = x < y;
                 break;
             case ILE:
                 validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = x<=y ? VM_TRUE : VM_FALSE;
+				y = stack[sp--].i;
+				x = stack[sp].i;
+				stack[sp].b = x <= y;
                 break;
             case IGT:
                 validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = x>y ? VM_TRUE : VM_FALSE;
+				y = stack[sp--].i;
+				x = stack[sp].i;
+				stack[sp].b = x > y;
                 break;
             case IGE:
                 validate_stack_address(sp-1);
-                y = (int)stack[sp--];
-                x = (int)stack[sp];
-                stack[sp] = x>=y ? VM_TRUE : VM_FALSE;
+				y = stack[sp--].i;
+				x = stack[sp].i;
+				stack[sp].b = x >= y;
                 break;
             case FEQ:
                 validate_stack_address(sp-1);
-                g = (float)stack[sp--];
-                f = (float)stack[sp];
-                stack[sp] = f==g ? VM_TRUE : VM_FALSE;
+				g = stack[sp--].f;
+				f = stack[sp].f;
+                stack[sp].b = f == g;
                 break;
             case FNEQ:
                 validate_stack_address(sp-1);
-                g = (float)stack[sp--];
-                f = (float)stack[sp];
-                stack[sp] = f!=g ? VM_TRUE : VM_FALSE;
+				g = stack[sp--].f;
+				f = stack[sp].f;
+				stack[sp].b = f != g;
                 break;
             case FLT:
                 validate_stack_address(sp-1);
-                g = (float)stack[sp--];
-                f = (float)stack[sp];
-                stack[sp] = f<g ? VM_TRUE : VM_FALSE;
+				g = stack[sp--].f;
+				f = stack[sp].f;
+				stack[sp].b = f < g;
                 break;
             case FLE:
                 validate_stack_address(sp-1);
-                g = (float)stack[sp--];
-                f = (float)stack[sp];
-                stack[sp] = f<=g ? VM_TRUE : VM_FALSE;
+				g = stack[sp--].f;
+				f = stack[sp].f;
+				stack[sp].b = f <= g;
                 break;
             case FGT:
                 validate_stack_address(sp-1);
-                g = (float)stack[sp--];
-                f = (float)stack[sp];
-                stack[sp] = f>g ? VM_TRUE : VM_FALSE;
+				g = stack[sp--].f;
+				f = stack[sp].f;
+				stack[sp].b = f > g;
                 break;
             case FGE:
                 validate_stack_address(sp-1);
-                g = (float)stack[sp--];
-                f = (float)stack[sp];
-                stack[sp] = f>=g ? VM_TRUE : VM_FALSE;
+				g = stack[sp--].f;
+				f = stack[sp].f;
+				stack[sp].b = f >= g;
                 break;
             case ISNIL:
                 validate_stack_address(sp);
-                stack[sp] = stack[sp]== VM_NIL ? VM_FALSE : VM_TRUE;
+                stack[sp].b = false; // = stack[sp]== VM_NIL ? VM_FALSE : VM_TRUE;
                 break;
             case BR:
                 ip += int16(code,ip) - 1;
                 break;
             case BRT:
                 validate_stack_address(sp);
-                if ( stack[sp--]>0 ) {
+                if ( stack[sp--].b ) {
                     int offset = int16(code,ip);
                     ip += offset - 1;
                 }
@@ -345,7 +355,7 @@ void vm_exec(VM *vm, bool trace)
                 break;
             case BRF:
                 validate_stack_address(sp);
-                if ( stack[sp--]==0 ) {
+                if ( !stack[sp--].b ) {
                     int offset = int16(code,ip);
                     ip += offset - 1;
                 }
@@ -354,55 +364,53 @@ void vm_exec(VM *vm, bool trace)
                 }
                 break;
             case ICONST: // code4[ip]
-                a = int32(code,ip); // load int from code memory
-                ip += 4;
-                push(a);
+				stack[++sp].i = int32(code,ip);
+				ip += 4;
                 break;
             case FCONST:
-                a = (word)float32(code,ip); // load int from code memory
-                ip += 4;
-                push(a);
+				stack[++sp].f = float32(code,ip);
+				ip += 4;
                 break;
             case SCONST :
                 i = int16(code,ip);
                 ip += 2;
-                push(vm->strings[i]);
+				stack[++sp].s = vm->strings[i];
                 break;
             case ILOAD:
+				i = int16(code,ip); // get index into locals
+				ip += 2;
+				stack[++sp].i = vm->call_stack[vm->callsp].locals[i].i;
+				break;
             case FLOAD:
                 i = int16(code,ip); // get index into locals
                 ip += 2;
-                push(vm->call_stack[vm->callsp].locals[i]);
+				stack[++sp].f = vm->call_stack[vm->callsp].locals[i].f;
                 break;
             case STORE:
                 i = int16(code,ip);
                 ip += 2;
-                vm->call_stack[vm->callsp].locals[i] = stack[sp--];
+                vm->call_stack[vm->callsp].locals[i] = stack[sp--]; // untyped store; it'll just copy all bits
                 break;
             case VECTOR:
-//                validate_stack_address(sp);
-//                a = stack[sp--];
-//                push((word)Array_ctor(vm, a, vm->float_type));
+				i = stack[sp--].i;
+				PVector_ptr pvec = PVector_init(0, i);
+				stack[++sp].vptr = pvec;
                 break;
             case LOAD_INDEX:
                 validate_stack_address(sp-1);
-                i = stack[sp--];
-                a = stack[sp--];
-//                arr = (Array *)a;
-//                valid_array_index(arr, (int)i);
-//                push(arr->elements[i]);
+				i = stack[sp--].i;
+				vptr = stack[sp--].vptr;
+				vm->stack[++sp].f = ith(vptr, i);
                 break;
             case STORE_INDEX:
                 validate_stack_address(sp-2);
-                b = stack[sp--];
-                i = stack[sp--];
-                a = stack[sp--];
-//                arr = (Array *)a;
-//                valid_array_index(arr, (int)i);
-//                arr->elements[i] = b;
+				f = stack[sp--].f;
+				i = stack[sp--].i;
+				vptr = stack[sp--].vptr;
+				set_ith(vptr, i, f);
                 break;
             case NIL:
-                push(0);
+//                push(0);
                 break;
             case POP:
                 sp--;
@@ -413,8 +421,10 @@ void vm_exec(VM *vm, bool trace)
                 vm_call(vm, &vm->functions[a]);
                 LOAD_REGISTERS(vm);
                 break;
-            case RETV:
-                b = stack[sp--];  // pop return value
+			case RETV:
+                //element retv = stack[sp--];  // pop return value
+				// TODO: can't we just leave on opnd stack and return?
+				break;
             case RET:
                 frame = &vm->call_stack[vm->callsp--];
                 ip = frame->retaddr;
@@ -422,28 +432,23 @@ void vm_exec(VM *vm, bool trace)
                 break;
             case IPRINT:
                 validate_stack_address(sp);
-                a = stack[sp--];
-                printf("%d\n", (int)a);
+                printf("%d\n", stack[sp--].i);
                 break;
 			case FPRINT:
 				validate_stack_address(sp);
-				f = stack[sp--];
-				printf("%f\n", f);
+				printf("%f\n", stack[sp--].f);
 				break;
 			case BPRINT:
 				validate_stack_address(sp);
-				x = stack[sp--];
-				printf("%s\n", x ? "true" : "false");
+				printf("%s\n", stack[sp--].b ? "true" : "false");
 				break;
 			case SPRINT:
 				validate_stack_address(sp);
-				printf("%s\n", (char *)stack[sp--]);
+				printf("%s\n", stack[sp--].s);
 				break;
 			case VPRINT:
 				validate_stack_address(sp);
-				PVector_ptr p = {0, (PVector *)stack[sp--]};
-				print_vector(p);
-				printf("%f\n", f);
+				print_vector(stack[sp--].vptr);
 				break;
             case NOP : break;
             default:
@@ -459,7 +464,7 @@ void vm_exec(VM *vm, bool trace)
 //    if (trace) vm_print_data(vm, 0, vm->data_size+vm->heap_size);
 }
 
-void vm_push(VM *vm, word value)
+void vm_push(VM *vm, element value)
 {
     if (vm->sp >= -1) vm->stack[++vm->sp] = value; \
     else fprintf(stderr, "whoa. sp < -1");
@@ -476,7 +481,7 @@ void vm_call(VM *vm, Function_metadata *func)
         r->locals[i] = vm->stack[vm->sp--];
     }
     for (int i = 0; i<func->nlocals; i++) {
-        r->locals[func->nargs+i] = 0; // init locals
+        r->locals[func->nargs+i].i = 0; // init locals
     }
     vm->ip = func->address; // jump!
 }
@@ -524,14 +529,14 @@ static void vm_print_stack(VM *vm) {
         Function_metadata *func = frame->func;
         fprintf(stderr, " %s=[", func->name);
         for (int j = 0; j < func->nlocals+func->nargs; ++j) {
-            vm_print_stack_value(vm, frame->locals[j]);
+            vm_print_stack_value(vm, frame->locals[j].i);
         }
         fprintf(stderr, " ]");
     }
     fprintf(stderr, " ]  ");
     fprintf(stderr, "opnds=[");
     for (int i = 0; i <= vm->sp; i++) {
-        word p = vm->stack[i];
+        word p = vm->stack[i].i;
         vm_print_stack_value(vm, p);
     }
     fprintf(stderr, " ] fp=%d sp=%d\n", vm->fp, vm->sp);

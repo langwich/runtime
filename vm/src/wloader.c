@@ -21,8 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include "wloader.h"
+#include <sys/stat.h>
+#include <wich.h>
 #include "vm.h"
+#include "wloader.h"
 
 static void vm_write16(byte *data, unsigned int n);
 static void vm_write32(byte *data, unsigned int n);
@@ -161,4 +163,35 @@ Function_metadata *vm_function(VM *vm, char *name) {
         }
     }
     return NULL;
+}
+
+void save_string(char *filename, char *s) {
+	FILE *f = fopen(filename, "w");
+	if ( f==NULL ) {
+		fprintf(stderr, "can't open %s\n", filename);
+		return;
+	}
+	fputs(s, f);
+	fclose(f);
+}
+
+char *file_contents(char *filename) {
+    struct stat sb;
+    if ( stat(filename, &sb)!=0 ) {
+        fprintf(stderr, "can't stat %s\n", filename);
+        return NULL;
+    }
+    char *buf = malloc((size_t)sb.st_size);
+    FILE *f = fopen(filename, "r");
+    if ( f==NULL ) {
+        fprintf(stderr, "can't open %s\n", filename);
+        return NULL;
+    }
+    size_t read = fread(buf, sizeof(unsigned char), sb.st_size, f);
+    fclose(f);
+    if (read != sb.st_size) {
+        fprintf(stderr, "read %d not %d bytes\n", (int)read, (int)sb.st_size);
+        return NULL;
+    }
+    return buf;
 }

@@ -22,8 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <stdio.h>
-#include "wloader.h"
+#include <wich.h>
 #include "vm.h"
+#include "wloader.h"
 
 int main(int argc, char *argv[])
 {
