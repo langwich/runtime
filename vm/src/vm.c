@@ -111,38 +111,16 @@ VM *vm_alloc()
     return vm;
 }
 
-void vm_init(
-        VM *vm,
-        byte *code, int code_size,
-        word *global_data, int num_globals,
-        int heap_size_in_bytes, int stack_size_in_words)
+void vm_init(VM *vm, byte *code, int code_size, word *global_data, int num_globals)
 {
+	// we are linking in mark-and-compact collector so allocations all occur outside of the VM
     vm->code = code;
     vm->code_size = code_size;
     vm->data = global_data; // stores global vars
     vm->data_size = num_globals;
-    vm->heap_size = heap_size_in_bytes;
-    vm->heap = malloc(heap_size_in_bytes);
-    vm->end_of_heap = vm->heap + heap_size_in_bytes - 1;
-    vm->next_free = vm->heap;
-    vm->stack = calloc(stack_size_in_words, sizeof(word));
-    vm->stack_size = stack_size_in_words;
     vm->sp = -1; // grow upwards, stack[sp] is top of stack and valid
     vm->fp = -1; // frame pointer is invalid initially
-
-    vm->call_stack_size = 1000;
-    vm->call_stack = calloc(vm->call_stack_size, sizeof(Activation_Record *));
     vm->callsp = -1;
-
-//    vm->void_type = def_class(vm, "void", 0, NULL);
-//    vm->int_type = def_class(vm, "int", 0, NULL);
-//    vm->char_type = def_class(vm, "char", 0, NULL);
-//    vm->float_type = def_class(vm, "float", 0, NULL);
-//    vm->object_type = def_class(vm, "object", 0, NULL);
-//    vm->string_type = def_class(vm, "string", 0, NULL);
-//    vm->array_type = def_class(vm, "array", 0, NULL);
-//    vm->iarray_type = def_class(vm, "iarray", 0, NULL);
-//    vm->farray_type = def_class(vm, "farray", 0, NULL);
 }
 
 int def_global(VM *vm, char *name, int type, addr32 address)
@@ -178,8 +156,11 @@ int def_function(VM *vm, char *name, int return_type, addr32 address, int nargs,
 #define WRITE_BACK_REGISTERS(vm) vm->ip = ip; vm->sp = sp; vm->fp = fp;
 #define LOAD_REGISTERS(vm) ip = vm->ip; sp = vm->sp; fp = vm->fp;
 
-#define validate_stack_address(a) \
-    if ( (a)<0 || (a)>=vm->stack_size ) {fprintf(stderr, "%d stack ptr out of range 0..%d\n", a, vm->stack_size-1);}
+static void inline validate_stack_address(int a) {
+	if ((a) < 0 || (a) >= MAX_OPND_STACK) {
+		fprintf(stderr, "%d stack ptr out of range 0..%d\n", a, MAX_OPND_STACK - 1);
+	}
+}
 
 #define valid_array_index(arr,i) \
     if ( i<0 || i>=arr->length ) {fprintf(stderr, "index %d out of bounds 0..%d\n", i, arr->length);}
@@ -196,9 +177,8 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
     float f,g;
     word address = 0;
 //    PVector_ptr arr;
-    int t;
+//    int t;
     int x, y;
-    Object *o;
     Activation_Record *frame;
 
     // simulate a call to main()
@@ -421,12 +401,12 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
             case CLOAD:
                 i = int16(code,ip);
                 ip += 2;
-                push(vm->call_stack[vm->callsp]->locals[i]);
+                push(vm->call_stack[vm->callsp].locals[i]);
                 break;
             case STORE:
                 i = int16(code,ip);
                 ip += 2;
-                vm->call_stack[vm->callsp]->locals[i] = stack[sp--];
+                vm->call_stack[vm->callsp].locals[i] = stack[sp--];
                 break;
             case LOAD_GLOBAL:
                 i = int16(code,ip);
@@ -441,26 +421,6 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
                 address = vm->globals[i].address;
                 validate_stack_address(sp);
                 data[address] = stack[sp--];
-                break;
-            case FREE:
-                address = int32(code,ip);
-                ip += 4;
-                vm_free(vm, (byte *) address);
-                break;
-            case LOAD_FIELD:
-                validate_stack_address(sp);
-                o = (Object *)stack[sp--];  // get address of object
-                i = int16(code,ip);     // get field number
-                ip += 2;
-                push(o->fields[i]);
-                break;
-            case STORE_FIELD:
-                validate_stack_address(sp-1);
-                a = stack[sp--];
-                o = (Object *)stack[sp--];  // get address of object
-                i = int16(code,ip);
-                ip += 2;
-                o->fields[i] = a;
                 break;
             case FARRAY:
 //                validate_stack_address(sp);
@@ -499,10 +459,9 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
             case RETV:
                 b = stack[sp--];  // pop return value
             case RET:
-                frame = vm->call_stack[vm->callsp--];
+                frame = &vm->call_stack[vm->callsp--];
                 ip = frame->retaddr;
                 fprintf(stderr, "returning from %s to %d\n", frame->func->name, ip);
-                vm_free(vm, (byte *)frame);
                 break;
             case IPRINT:
                 validate_stack_address(sp);
@@ -513,20 +472,6 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
                 validate_stack_address(sp);
                 f = stack[sp--];
                 printf("%f\n", f);
-                break;
-            case PPRINT:
-                validate_stack_address(sp);
-                address = stack[sp--]; // get address into data space
-                o = ((Object *)address);
-                t = o->type;
-//			printf("pprint %d is %s\n", a, t->name);
-                if ( t==vm->string_type ) {
-                    String *s = (String *)o;
-                    printf("%s\n", s->str);
-                }
-                else {
-                    printf("%lx\n", (word)o);
-                }
                 break;
             case CPRINT:
                 validate_stack_address(sp);
@@ -556,9 +501,7 @@ void vm_push(VM *vm, word value)
 void vm_call(VM *vm, Function_metadata *func)
 {
     fprintf(stderr, "call %s\n", func->name);
-    int nlocals = func->nargs+func->nlocals;
-    Activation_Record *r =
-        (Activation_Record *)vm_malloc(vm, sizeof(Activation_Record)+nlocals*sizeof(word));
+	Activation_Record *r = &vm->call_stack[++vm->callsp];
     r->func = func;
     r->retaddr = vm->ip + 2; // save return address (assume ip is 1st byte of operand)
     // copy args to frame activation record
@@ -568,7 +511,6 @@ void vm_call(VM *vm, Function_metadata *func)
     for (int i = 0; i<func->nlocals; i++) {
         r->locals[func->nargs+i] = 0; // init locals
     }
-    vm->call_stack[++vm->callsp] = r;
     vm->ip = func->address; // jump!
 }
 
@@ -585,23 +527,6 @@ static inline float float32(const byte *data, addr32 ip)
 static inline int int16(const byte *data, addr32 ip)
 {
     return *((short *)&data[ip]); // could be negative value
-}
-
-extern byte *vm_malloc(VM *vm, int nbytes)
-{
-    if (vm->next_free + nbytes > vm->end_of_heap) {
-        fprintf(stderr, "out of memory");
-        return NULL;
-    }
-
-    byte *p = vm->next_free;
-    vm->next_free += nbytes;
-    return p;
-}
-
-extern void vm_free(VM *vm, byte *p)
-{
-    // for now, do nothing
 }
 
 static void vm_print_instr(VM *vm, addr32 ip)
@@ -628,7 +553,7 @@ static void vm_print_stack(VM *vm) {
     // stack grows upwards; stack[sp] is top of stack
     fprintf(stderr, "calls=[");
     for (int i = 0; i <= vm->callsp; i++) {
-        Activation_Record *frame = vm->call_stack[i];
+        Activation_Record *frame = &vm->call_stack[i];
         Function_metadata *func = frame->func;
         fprintf(stderr, " %s=[", func->name);
         for (int j = 0; j < func->nlocals+func->nargs; ++j) {
@@ -646,31 +571,18 @@ static void vm_print_stack(VM *vm) {
 }
 
 void vm_print_stack_value(VM *vm, word p) {
-    byte *bp = (byte *) p;
-    if (bp >= vm->heap && bp <= vm->end_of_heap) {
-            Object *o = (Object *) p;
-            if (o->type == vm->string_type) {
-                String *s = (String *) o;
-                fprintf(stderr, " \"%s\"", s->str);
-            }
-            else {
-                fprintf(stderr, " 0x%lx", p);
-            }
-        }
-        else {
-            if ( ((long)p) >= 0 ) {
-                fprintf(stderr, " %lu", p);
-            }
-            else {
-                fprintf(stderr, " %ld", p); // assume negative value is correct (and not a huge unsigned)
-            }
-        }
+	if ( ((long)p) >= 0 ) {
+		fprintf(stderr, " %lu", p);
+	}
+	else {
+		fprintf(stderr, " %ld", p); // assume negative value is correct (and not a huge unsigned)
+	}
 }
 
 static void vm_print_data(VM *vm, addr32 address, int length)
 {
-    printf("Data memory:\n");
-    for (int i = 0; i < vm->data_size; i++) {
-        printf("%04d: %d\n", i, (unsigned int)vm->data[i]);
+	printf("Data memory:\n");
+	for (int i = 0; i < vm->data_size; i++) {
+		printf("%04d: %d\n", i, (unsigned int)vm->data[i]);
     }
 }

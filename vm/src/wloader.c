@@ -133,7 +133,7 @@ VM *vm_load(FILE *f)
 
     fclose(f);
 
-    vm_init(vm, code, nbytes, global_data, nglobals, 1000, 100);
+    vm_init(vm, code, nbytes, global_data, nglobals);
     return vm;
 }
 
@@ -154,7 +154,7 @@ static void vm_write16(byte *data, unsigned int n)
 }
 
 BYTECODE vm_opcode(char *name) {
-    for (int i = 0; i < NUM_INSTRUCTIONS; ++i) {
+    for (int i = 0; i < NUM_INSTRS; ++i) {
         if ( strcmp(name, vm_instructions[i].name)==0 ) {
             return vm_instructions[i].opcode;
         }
@@ -163,7 +163,7 @@ BYTECODE vm_opcode(char *name) {
 }
 
 VM_INSTRUCTION *vm_instr(char *name) {
-    for (int i = 0; i < NUM_INSTRUCTIONS; ++i) {
+    for (int i = 0; i < NUM_INSTRS; ++i) {
         if ( strcmp(name, vm_instructions[i].name)==0 ) {
             return &vm_instructions[i];
         }

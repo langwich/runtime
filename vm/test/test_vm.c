@@ -35,7 +35,6 @@ void hello() {
 	printf("hello ----------------------\n");
 	// code memory is little-endian
 	byte hello[] = {
-	//#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 		ICONST, 34, 0, 0, 0,
 	    IPRINT,
 		SCONST, 0, 0,
@@ -49,11 +48,12 @@ void hello() {
 	word *data = NULL;
 
     VM *vm = vm_alloc();
-    vm_init(vm, hello, sizeof(hello), data, data_size, heap_size, stack_size);
+	vm_init(vm, hello, sizeof(hello), data, data_size);
 	vm->strings = (char **)calloc(1, sizeof(char *));
 	vm->num_strings = 1;
 	vm->strings[0] = "hello";
-    vm_exec(vm, 0, true);
+	def_function(vm, "main", VOID_TYPE, 0, 0, 0);
+	vm_exec(vm, 0, true);
 }
 
 void callme() {
@@ -73,11 +73,11 @@ void callme() {
     word *data = NULL;
 
     VM *vm = vm_alloc();
-    vm_init(vm, code, sizeof(code), data, data_size, heap_size, stack_size);
+	vm_init(vm, code, sizeof(code), data, data_size);
     vm->strings = (char **)calloc(1, sizeof(char *));
     vm->num_strings = 1;
     vm->strings[0] = "hello";
-    def_function(vm, "foo", vm->void_type, 4, 0, 0);
+    def_function(vm, "foo", VOID_TYPE, 4, 0, 0);
     vm_exec(vm, 0, true);
 }
 
@@ -104,8 +104,8 @@ void callarg1() {
     int data_size = 0;
 
     VM *vm = vm_alloc();
-    vm_init(vm, code, sizeof(code), data, data_size, heap_size, stack_size);
-    def_function(vm, "f", vm->void_type, 10, 1, 0);
+	vm_init(vm, code, sizeof(code), data, data_size);
+    def_function(vm, "f", VOID_TYPE, 10, 1, 0);
     vm_exec(vm, 0, true);
 }
 
@@ -134,8 +134,8 @@ void array() {
 	word *data = (word *)malloc(data_size);
 
     VM *vm = vm_alloc();
-	vm_init(vm, code, sizeof(code), data, data_size, heap_size, stack_size);
-    def_global(vm, "a", vm->array_type, 0);
+	vm_init(vm, code, sizeof(code), data, data_size);
+    def_global(vm, "a", VECTOR_TYPE, 0);
     vm_exec(vm, 0, true);
 }
 
@@ -166,9 +166,9 @@ void locals() {
     word *data = NULL;
 
     VM *vm = vm_alloc();
-    vm_init(vm, code, sizeof(code), data, data_size, heap_size, stack_size);
-    def_global(vm, "a", vm->array_type, 0);
-    def_function(vm, "foo", vm->void_type, 9, 0, 2);
+	vm_init(vm, code, sizeof(code), data, data_size);
+    def_global(vm, "a", VECTOR_TYPE, 0);
+    def_function(vm, "foo", VOID_TYPE, 9, 0, 2);
     vm_exec(vm, 0, true);
 }
 
@@ -201,8 +201,8 @@ void locals_and_args() {
     word *data = NULL;
 
     VM *vm = vm_alloc();
-    vm_init(vm, code, sizeof(code), data, data_size, heap_size, stack_size);
-    def_function(vm, "foo", vm->void_type, 14, 2, 2);
+	vm_init(vm, code, sizeof(code), data, data_size);
+    def_function(vm, "foo", VOID_TYPE, 14, 2, 2);
     vm_exec(vm, 0, true);
 }
 

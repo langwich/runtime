@@ -29,14 +29,17 @@ SOFTWARE.
 #ifndef VM_H_
 #define VM_H_
 
-#define MAX_FUNCTIONS		1000
-#define MAX_CLASSES			1000
-#define MAX_GLOBALS			1000
+static const int MAX_FUNCTIONS	= 1000;
+static const int MAX_GLOBALS	= 1000;
+static const int MAX_LOCALS		= 10;	// max locals/args in activation record
+static const int MAX_CALL_STACK = 1000;
+static const int MAX_OPND_STACK = 1000;
+static const int NUM_INSTRS		= 64;
 
-#define VM_FALSE            0
-#define VM_TRUE             1
+static const int VM_FALSE       = 0;
+static const int VM_TRUE        = 1;
 
-#define VM_NIL              ((uintptr_t)0)
+static const int VM_NIL         = ((uintptr_t)0);
 
 typedef unsigned char byte;
 typedef uintptr_t word; // has to be big enough to hold a native machine pointer
@@ -49,14 +52,12 @@ typedef unsigned short word16;
 // for example, to define the metadata for a global variable of type int, we need to specify
 // the type somehow. We use this INT_TYPE value in olava object files.
 
-#define VOID_TYPE	0
-#define INT_TYPE	1
-#define FLOAT_TYPE	2
-#define CHAR_TYPE	3
-#define STRING_TYPE	4
-#define ARRAY_TYPE	5
-#define IARRAY_TYPE	6
-#define FARRAY_TYPE	7
+static const int VOID_TYPE = 0;
+static const int INT_TYPE = 1;
+static const int FLOAT_TYPE	= 2;
+static const int BOOLEAN_TYPE = 3;
+static const int STRING_TYPE = 4;
+static const int VECTOR_TYPE = 5;
 
 // Bytecodes are all 8 bits but operand size can vary
 // Explicitly type the operations, even the loads/stores
@@ -144,7 +145,6 @@ typedef enum {
 } BYTECODE;
 
 typedef struct {
-//	struct hash_elem hash_elem; /* Hash table element. */
 	char *name;
 	BYTECODE opcode;
     int opnd_size; // size in bytes
@@ -170,17 +170,8 @@ typedef struct global_variable {
 typedef struct activation_record {
 	Function_metadata *func;
 	addr32 retaddr;
-	word locals[]; // args + locals go here per func def
+	word locals[MAX_LOCALS]; // args + locals go here per func def
 } Activation_Record;
-
-// A generic object definition has a type ptr and slots for fields.
-// All of this metadata has to be defined as global data, not in the
-// VM heap.
-// The number of fields is known by the metadata via type ptr.
-typedef struct object {
-	int type;
-	word fields[];
-} Object;
 
 typedef struct {
 	// registers
@@ -191,47 +182,24 @@ typedef struct {
 
 	byte *code;   		// byte-addressable code memory.
 	int code_size;
-	word *stack;		// operand stack, grows upwards; word addressable
-	int stack_size;
-	Activation_Record **call_stack;
-	int call_stack_size;
+	word stack[MAX_OPND_STACK]; 	// operand stack, grows upwards; word addressable
+	Activation_Record call_stack[MAX_CALL_STACK];
 
 	word *data;  		// global variable space; word addressable
-	byte *heap;			// heap space
 	int data_size;
-	int heap_size;
-	byte *end_of_heap;
-	byte *next_free;
-
-	// define predefined types
-	int void_type;
-	int int_type;
-	int float_type;
-	int char_type;
-	int string_type;	// generic metadata for a string
-	int array_type;		// generic metadata for all arrays
-	int iarray_type;	// int array
-	int farray_type;	// float array
-	int object_type;	// generic metadata for all objects
-						// used when creating an array of any ptr type, for example.
 
 	int num_strings;
 	int num_globals;
 	int num_functions;
-	int num_classes;
 
 	char **strings;
-	// hardcode sizes since C is so primitive
+
 	Global_metadata globals[MAX_GLOBALS];		// array of global variables
 	Function_metadata functions[MAX_FUNCTIONS]; // array of function defs
 } VM;
 
 extern VM *vm_alloc();
-extern void vm_init(
-		VM *vm,
-		byte *code, int code_size,
-		word *globals, int num_globals,
-		int heap_size_in_bytes, int stack_size_in_words);
+extern void vm_init(VM *vm, byte *code, int code_size, word *globals, int num_globals);
 
 extern void vm_exec(VM *vm, addr32 main_func_ip, bool trace);
 
@@ -241,7 +209,6 @@ extern void vm_free(VM *vm, byte *p);
 extern int def_global(VM *vm, char *name, int type, addr32 address);
 extern int def_function(VM *vm, char *name, int return_type, addr32 address, int nargs, int nlocals);
 
-static const int NUM_INSTRUCTIONS=64;
 extern VM_INSTRUCTION vm_instructions[];
 
 #endif
