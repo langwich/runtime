@@ -8,7 +8,7 @@ set(SOURCE src/vm.c src/wloader.c src/wrun.c)
 set(TEST_TARGETS test_vm)
 
 add_library(${MODULE_NAME} ${SOURCE})
-target_link_libraries(${MODULE_NAME} malloc_common gc_mark_and_compact wlib_mark_and_compact)
+target_link_libraries(${MODULE_NAME} malloc_common mark_and_compact gc_mark_and_compact wlib_mark_and_compact)
 
 INSTALL_LIBRARY(${MODULE_NAME})
 

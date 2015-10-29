@@ -38,11 +38,9 @@ void hello() {
 		ICONST, 34, 0, 0, 0,
 	    IPRINT,
 		SCONST, 0, 0,
-		PPRINT,
+		SPRINT,
 	    HALT
 	};
-	int heap_size = 100;
-	int stack_size = 100;
 
 	int data_size = 0;
 	word *data = NULL;
@@ -53,7 +51,7 @@ void hello() {
 	vm->num_strings = 1;
 	vm->strings[0] = "hello";
 	def_function(vm, "main", VOID_TYPE, 0, 0, 0);
-	vm_exec(vm, 0, true);
+	vm_exec(vm, true);
 }
 
 void callme() {
@@ -62,12 +60,9 @@ void callme() {
             CALL, 0, 0,				// 0
             HALT,					// 3
             SCONST, 0, 0,			// 4
-            PPRINT,
+            SPRINT,
             RET
     };
-
-    int heap_size = 100;
-    int stack_size = 100;
 
     int data_size = 0;
     word *data = NULL;
@@ -78,7 +73,7 @@ void callme() {
     vm->num_strings = 1;
     vm->strings[0] = "hello";
     def_function(vm, "foo", VOID_TYPE, 4, 0, 0);
-    vm_exec(vm, 0, true);
+	vm_exec(vm, true);
 }
 
 void callarg1() {
@@ -97,8 +92,6 @@ void callarg1() {
             ICONST, 99, 0, 0, 0,
             RETV
     };
-    int heap_size = 100;
-    int stack_size = 100;
 
     word *data = NULL;
     int data_size = 0;
@@ -106,7 +99,7 @@ void callarg1() {
     VM *vm = vm_alloc();
 	vm_init(vm, code, sizeof(code), data, data_size);
     def_function(vm, "f", VOID_TYPE, 10, 1, 0);
-    vm_exec(vm, 0, true);
+	vm_exec(vm, true);
 }
 
 void array() {
@@ -114,7 +107,7 @@ void array() {
 	byte code[] = {
 	// a = new int[10]
 		ICONST, 10, 0, 0, 0,
-		IARRAY,
+		VECTOR,
 		STORE_GLOBAL, 0, 0,
 	// a[2] = 99
 		LOAD_GLOBAL,  0, 0,
@@ -128,15 +121,13 @@ void array() {
 	    IPRINT,
 	    HALT
 	};
-	int heap_size = 100;
-	int stack_size = 100;
     int data_size = 1 * sizeof(word); // save array ptr
 	word *data = (word *)malloc(data_size);
 
     VM *vm = vm_alloc();
 	vm_init(vm, code, sizeof(code), data, data_size);
     def_global(vm, "a", VECTOR_TYPE, 0);
-    vm_exec(vm, 0, true);
+	vm_exec(vm, true);
 }
 
 void locals() {
@@ -160,8 +151,6 @@ void locals() {
             IPRINT,
             RET
     };
-    int heap_size = 100;
-    int stack_size = 100;
     int data_size = 0;
     word *data = NULL;
 
@@ -169,7 +158,7 @@ void locals() {
 	vm_init(vm, code, sizeof(code), data, data_size);
     def_global(vm, "a", VECTOR_TYPE, 0);
     def_function(vm, "foo", VOID_TYPE, 9, 0, 2);
-    vm_exec(vm, 0, true);
+	vm_exec(vm, true);
 }
 
 void locals_and_args() {
@@ -195,15 +184,13 @@ void locals_and_args() {
             IPRINT,
             RET
     };
-    int heap_size = 100;
-    int stack_size = 100;
     int data_size = 0;
     word *data = NULL;
 
     VM *vm = vm_alloc();
 	vm_init(vm, code, sizeof(code), data, data_size);
     def_function(vm, "foo", VOID_TYPE, 14, 2, 2);
-    vm_exec(vm, 0, true);
+	vm_exec(vm, true);
 }
 
 int main(int argc, char *argv[]) {

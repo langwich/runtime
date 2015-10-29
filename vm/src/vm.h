@@ -83,8 +83,10 @@ typedef enum {
 
 	I2F,                // int to float
 	F2I,                // float to int
-	I2C,                // int to char
-	C2I,                // chart to int
+	I2S,                // int to str
+	F2S,                // float to str
+	V2S,                // vector to str
+	F2V,                // float to vector
 
 	IEQ,                // int equal
 	INEQ,
@@ -106,26 +108,18 @@ typedef enum {
 
 	ICONST,             // push 32-bit constant integer
 	FCONST,             // floating point constant
-	CCONST,             // char const
 	SCONST,				// string const from from literal in vm via index
 
 	ILOAD,              // load int from local context using arg or local index
 	FLOAD,              // load float from local context
-	PLOAD,				// load ptr
-	CLOAD,              // load char from local context
-	STORE,              // store int in local context
+	VLOAD,				// load vector
+	SLOAD,              // load string from local context
+	STORE,              // store into local context
 
 	LOAD_GLOBAL,        // load ith global
 	STORE_GLOBAL,       // store value to ith global
 
-	NEW,             	// create new obj/struct in heap using struct index, push hardware pointer
-	FREE,               // release hardware ptr into heap memory
-	LOAD_FIELD,         // load ith field
-	STORE_FIELD,        // field store
-
-	IARRAY,             // create array of size n from stack top with element type int in heap, push pointer
-	FARRAY,             // create array of size n with element type float
-	PARRAY,             // create array of size n with element type object ptr
+	VECTOR,             // create vector of size n with element type float
 	LOAD_INDEX,         // array index a[i]
 	STORE_INDEX,		// store into a[i]
 
@@ -138,8 +132,9 @@ typedef enum {
 
 	IPRINT,             // print stack top (mostly debugging)
 	FPRINT,
-	PPRINT,             // pointer print (must know type of the object)
-	CPRINT,
+	BPRINT,
+	SPRINT,
+	VPRINT,
 
 	NOP                 // no-op, no operation
 } BYTECODE;
@@ -201,7 +196,7 @@ typedef struct {
 extern VM *vm_alloc();
 extern void vm_init(VM *vm, byte *code, int code_size, word *globals, int num_globals);
 
-extern void vm_exec(VM *vm, addr32 main_func_ip, bool trace);
+extern void vm_exec(VM *vm, bool trace);
 
 extern byte *vm_malloc(VM *vm, int nbytes);
 extern void vm_free(VM *vm, byte *p);

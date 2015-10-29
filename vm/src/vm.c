@@ -44,10 +44,14 @@ VM_INSTRUCTION vm_instructions[] = {
         {"INEG", INEG, 0},
         {"FNEG", FNEG, 0},
         {"NOT", NOT, 0},
-        {"I2F", I2F, 0},
+
+		{"I2F", I2F, 0},
         {"F2I", F2I, 0},
-        {"I2C", I2C, 0},
-        {"C2I", C2I, 0},
+		{"I2S", I2S, 0},
+		{"F2S", F2S, 0},
+		{"V2S", V2S, 0},
+		{"F2V", F2V, 0},
+
         {"IEQ", IEQ, 0},
         {"INEQ", INEQ, 0},
         {"ILT", ILT, 0},
@@ -61,27 +65,21 @@ VM_INSTRUCTION vm_instructions[] = {
         {"FGT", FGT, 0},
         {"FGE", FGE, 0},
         {"ISNIL", ISNIL, 0},
+
         {"BR",  BR, 2},
         {"BRT", BRT, 2},
         {"BRF", BRF, 2},
         {"ICONST", ICONST, 4},
         {"FCONST", FCONST, 4},
-        {"CCONST", CCONST, 1},
         {"SCONST", SCONST, 2},
         {"ILOAD", ILOAD, 2},
         {"FLOAD", FLOAD, 2},
-        {"PLOAD", PLOAD, 2},
-        {"CLOAD", CLOAD, 2},
+        {"VLOAD", VLOAD, 2},
+        {"SLOAD", SLOAD, 2},
         {"STORE", STORE, 2},
         {"LOAD_GLOBAL",  LOAD_GLOBAL, 2},
         {"STORE_GLOBAL", STORE_GLOBAL, 2},
-        {"NEW", NEW, 2},
-        {"FREE", FREE, 4},
-        {"LOAD_FIELD", LOAD_FIELD, 2},
-        {"STORE_FIELD", STORE_FIELD, 2},
-        {"IARRAY", IARRAY, 0},
-        {"FARRAY", FARRAY, 0},
-        {"PARRAY", PARRAY, 2},
+        {"VECTOR", VECTOR, 0},
         {"LOAD_INDEX", LOAD_INDEX, 0},
         {"STORE_INDEX", STORE_INDEX, 0},
         {"NIL", NIL, 0},
@@ -91,8 +89,9 @@ VM_INSTRUCTION vm_instructions[] = {
         {"RET", RET, 0},
         {"IPRINT", IPRINT, 0},
         {"FPRINT", FPRINT, 0},
-        {"PPRINT", PPRINT, 0},
-        {"CPRINT", CPRINT, 0},
+		{"BPRINT", BPRINT, 0},
+		{"SPRINT", SPRINT, 0},
+        {"VPRINT", VPRINT, 0},
         {"NOP", NOP, 0}
 };
 
@@ -169,7 +168,7 @@ static void inline validate_stack_address(int a) {
     validate_stack_address(sp+1);\
     stack[++sp] = (word)w; \
 
-void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
+void vm_exec(VM *vm, bool trace)
 {
     word a = 0;
     word b = 0;
@@ -177,7 +176,6 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
     float f,g;
     word address = 0;
 //    PVector_ptr arr;
-//    int t;
     int x, y;
     Activation_Record *frame;
 
@@ -275,8 +273,6 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
                 break;
             case I2F: validate_stack_address(sp); stack[sp] = (word)(float)((int)stack[sp]); break;
             case F2I: validate_stack_address(sp); stack[sp] = (word)(int)((float)stack[sp]); break;
-            case I2C: validate_stack_address(sp); stack[sp] = (word)(char)((int)stack[sp]); break;
-            case C2I: validate_stack_address(sp); stack[sp] = (word)((float)stack[sp]); break;
             case IEQ:
                 validate_stack_address(sp-1);
                 y = (int)stack[sp--];
@@ -386,10 +382,6 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
                 ip += 4;
                 push(a);
                 break;
-            case CCONST:
-                push(code[ip]);
-                ip++;
-                break;
             case SCONST :
                 i = int16(code,ip);
                 ip += 2;
@@ -397,8 +389,6 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
                 break;
             case ILOAD:
             case FLOAD:
-            case PLOAD:
-            case CLOAD:
                 i = int16(code,ip);
                 ip += 2;
                 push(vm->call_stack[vm->callsp].locals[i]);
@@ -422,7 +412,7 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
                 validate_stack_address(sp);
                 data[address] = stack[sp--];
                 break;
-            case FARRAY:
+            case VECTOR:
 //                validate_stack_address(sp);
 //                a = stack[sp--];
 //                push((word)Array_ctor(vm, a, vm->float_type));
@@ -468,16 +458,26 @@ void vm_exec(VM *vm, addr32 main_func_ip, bool trace)
                 a = stack[sp--];
                 printf("%d\n", (int)a);
                 break;
-            case FPRINT:
-                validate_stack_address(sp);
-                f = stack[sp--];
-                printf("%f\n", f);
-                break;
-            case CPRINT:
-                validate_stack_address(sp);
-                a = stack[sp--];
-                printf("%c\n", (char)a);
-                break;
+			case FPRINT:
+				validate_stack_address(sp);
+				f = stack[sp--];
+				printf("%f\n", f);
+				break;
+			case BPRINT:
+				validate_stack_address(sp);
+				x = stack[sp--];
+				printf("%s\n", x ? "true" : "false");
+				break;
+			case SPRINT:
+				validate_stack_address(sp);
+				printf("%s\n", (char *)stack[sp--]);
+				break;
+			case VPRINT:
+				validate_stack_address(sp);
+				PVector_ptr p = {0, (PVector *)stack[sp--]};
+				print_vector(p);
+				printf("%f\n", f);
+				break;
             case NOP : break;
             default:
                 printf("invalid opcode: %d at ip=%d\n", opcode, (ip - 1));

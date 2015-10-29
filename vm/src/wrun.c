@@ -31,8 +31,7 @@ int main(int argc, char *argv[])
     FILE *f = fopen(argv[1], "r");
     if ( f!=NULL ) {
         VM *vm = vm_load(f);
-        Function_metadata *main = vm_function(vm, "main");
-        vm_exec(vm, main->address, true);
+        vm_exec(vm, true);
     }
     return 0;
 }
