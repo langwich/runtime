@@ -1,0 +1,9 @@
+1 strings
+	0: 5/hello
+1 functions
+	0: addr=0 args=0 locals=0 type=1 4/main
+0 globals
+3 instr, 5 bytes
+	SCONST 0
+	PPRINT
+	HALT

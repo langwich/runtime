@@ -22,129 +22,201 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include "vm.h"
 
 #include <cunit.h>
-#include <vm.h>
-
-int hello[] = {
-	ICONST, 1234,
-	PRINT,
-	HALT
-};
-
-int loop[] = {
-// .GLOBALS 2; N, I
-// N = 10                 ADDRESS
-	ICONST, 10,            // 0
-	GSTORE, 0,             // 2
-// I = 0
-	ICONST, 0,             // 4
-	GSTORE, 1,             // 6
-// WHILE I<N:
-// START (8):
-	GLOAD, 1,              // 8
-	GLOAD, 0,              // 10
-	ILT,                   // 12
-	BRF, 24,               // 13
-//     I = I + 1
-	GLOAD, 1,              // 15
-	ICONST, 1,             // 17
-	IADD,                  // 19
-	GSTORE, 1,             // 20
-	BR, 8,                 // 22
-// DONE (24):
-// PRINT "LOOPED "+N+" TIMES."
-	HALT                   // 24
-};
-
-const int FACTORIAL_ADDRESS = 0;
-const int FACTORIAL_MAIN_ADDRESS = 23;
-int factorial[] = {
-	//						ADDRESS
-//.def factorial: ARGS=1, LOCALS=0
-//	IF N < 2 RETURN 1
-	LOAD, 0,                // 0
-	ICONST, 2,              // 2
-	ILT,                    // 4
-	BRF, 10,                // 5
-	ICONST, 1,              // 7
-	RET,                    // 9
-//CONT:
-//	RETURN N * FACT(N-1)
-	LOAD, 0,                // 10
-	LOAD, 0,                // 12
-	ICONST, 1,              // 14
-	ISUB,                   // 16
-	CALL, FACTORIAL_ADDRESS, 1, 0,    // 17
-	IMUL,                   // 21
-	RET,                    // 22
-//.DEF MAIN: ARGS=0, LOCALS=0
-// PRINT FACT(1)
-	ICONST, 5,              // 23    <-- MAIN METHOD!
-	CALL, FACTORIAL_ADDRESS, 1, 0,    // 25
-	GSTORE, 0,              // 29
-	HALT                    // 31
-};
-
-static int dub[] = {
-	//						ADDRESS
-	//.def main() { print f(10); }
-	ICONST, 10,             // 0
-	CALL, 9, 1, 1,          // 2
-	GSTORE, 0,              // 6
-	HALT,                   // 8
-	//.def f(x): ARGS=1, LOCALS=1
-	//  a = x;
-	LOAD, 0,                // 9	<-- start of f
-	STORE, 1,
-	// return 2*a
-	LOAD, 1,
-	ICONST, 2,
-	IMUL,
-	RET
-};
 
 static void setup()		{ }
 static void teardown()	{ }
 
-void helloworld() {
-	VM *vm = vm_create(hello, sizeof(hello), 0);
-	vm_exec(vm, 0, false);
-	vm_free(vm);
+void hello() {
+	printf("hello ----------------------\n");
+	// code memory is little-endian
+	byte hello[] = {
+	//#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+		ICONST, 34, 0, 0, 0,
+	    IPRINT,
+		SCONST, 0, 0,
+		PPRINT,
+	    HALT
+	};
+	int heap_size = 100;
+	int stack_size = 100;
+
+	int data_size = 0;
+	word *data = NULL;
+
+    VM *vm = vm_alloc();
+    vm_init(vm, hello, sizeof(hello), data, data_size, heap_size, stack_size);
+	vm->strings = (char **)calloc(1, sizeof(char *));
+	vm->num_strings = 1;
+	vm->strings[0] = "hello";
+    vm_exec(vm, 0, true);
 }
 
-void simple_loop() {
-	VM *vm = vm_create(loop, sizeof(loop), 2);
-	vm_exec(vm, 0, false);
-	assert_equal(vm->globals[0], 10);
-	assert_equal(vm->globals[1], 10);
-	vm_free(vm);
+void callme() {
+    printf("callme ----------------------\n");
+    byte code[] = {
+            CALL, 0, 0,				// 0
+            HALT,					// 3
+            SCONST, 0, 0,			// 4
+            PPRINT,
+            RET
+    };
+
+    int heap_size = 100;
+    int stack_size = 100;
+
+    int data_size = 0;
+    word *data = NULL;
+
+    VM *vm = vm_alloc();
+    vm_init(vm, code, sizeof(code), data, data_size, heap_size, stack_size);
+    vm->strings = (char **)calloc(1, sizeof(char *));
+    vm->num_strings = 1;
+    vm->strings[0] = "hello";
+    def_function(vm, "foo", vm->void_type, 4, 0, 0);
+    vm_exec(vm, 0, true);
 }
 
-void factorial_func() {
-	VM *vm = vm_create(factorial, sizeof(factorial), 0);
-	vm_exec(vm, FACTORIAL_MAIN_ADDRESS, false);
-	assert_equal(vm->globals[0], 120);
-	vm_free(vm);
+void callarg1() {
+    printf("callarg1 ----------------------\n");
+    byte code[] = {
+            // print f(34)
+            ICONST, 34, 0, 0, 0,		// 0
+            CALL, 0, 0, 				// 5
+            IPRINT,						// 8
+            HALT,						// 9
+            // def f(x)
+            // print x
+            ILOAD, 0, 0,				// 10
+            IPRINT,
+            // return 99
+            ICONST, 99, 0, 0, 0,
+            RETV
+    };
+    int heap_size = 100;
+    int stack_size = 100;
+
+    word *data = NULL;
+    int data_size = 0;
+
+    VM *vm = vm_alloc();
+    vm_init(vm, code, sizeof(code), data, data_size, heap_size, stack_size);
+    def_function(vm, "f", vm->void_type, 10, 1, 0);
+    vm_exec(vm, 0, true);
 }
 
-void dubme() {
-	VM *vm = vm_create(dub, sizeof(dub), 0);
-	vm_exec(vm, 0, false);
-	assert_equal(vm->globals[0], 20);
-	vm_free(vm);
+void array() {
+	printf("array ----------------------\n");
+	byte code[] = {
+	// a = new int[10]
+		ICONST, 10, 0, 0, 0,
+		IARRAY,
+		STORE_GLOBAL, 0, 0,
+	// a[2] = 99
+		LOAD_GLOBAL,  0, 0,
+		ICONST, 02, 0, 0, 0,
+		ICONST, 99, 0, 0, 0,
+		STORE_INDEX,
+	// print a[2]
+		LOAD_GLOBAL,  0, 0,
+		ICONST, 02, 0, 0, 0,
+		LOAD_INDEX,
+	    IPRINT,
+	    HALT
+	};
+	int heap_size = 100;
+	int stack_size = 100;
+    int data_size = 1 * sizeof(word); // save array ptr
+	word *data = (word *)malloc(data_size);
+
+    VM *vm = vm_alloc();
+	vm_init(vm, code, sizeof(code), data, data_size, heap_size, stack_size);
+    def_global(vm, "a", vm->array_type, 0);
+    vm_exec(vm, 0, true);
+}
+
+void locals() {
+    printf("locals ----------------------\n");
+    byte code[] = {
+            // leave a 33 on stack before call
+            ICONST, 33, 0, 0, 0,        // 0
+            CALL, 0, 0, 				// 5
+            HALT,                       // 8
+            // a = 99
+            ICONST, 99, 0, 0, 0,        // 9
+            STORE, 0, 0,
+            // b = 100
+            ICONST, 100, 0, 0, 0,       // 4
+            STORE, 1, 0,
+            // print a
+            ILOAD, 0, 0,
+            IPRINT,
+            // print b
+            ILOAD, 1, 0,
+            IPRINT,
+            RET
+    };
+    int heap_size = 100;
+    int stack_size = 100;
+    int data_size = 0;
+    word *data = NULL;
+
+    VM *vm = vm_alloc();
+    vm_init(vm, code, sizeof(code), data, data_size, heap_size, stack_size);
+    def_global(vm, "a", vm->array_type, 0);
+    def_function(vm, "foo", vm->void_type, 9, 0, 2);
+    vm_exec(vm, 0, true);
+}
+
+void locals_and_args() {
+    printf("locals_and_args ----------------------\n");
+    byte code[] = {
+            // call foo(33,34)
+            ICONST, 33, 0, 0, 0,        // 0
+            ICONST, 34, 0, 0, 0,        // 5
+            CALL, 0, 0, 				// 10
+            HALT,                       // 13
+            // def foo(x,y)
+            // a = x
+            ILOAD, 0, 0,                // 14
+            STORE, 2, 0,
+            // b = y
+            ILOAD, 1, 0,
+            STORE, 3, 0,
+            // print a
+            ILOAD, 0, 0,
+            IPRINT,
+            // print b
+            ILOAD, 1, 0,
+            IPRINT,
+            RET
+    };
+    int heap_size = 100;
+    int stack_size = 100;
+    int data_size = 0;
+    word *data = NULL;
+
+    VM *vm = vm_alloc();
+    vm_init(vm, code, sizeof(code), data, data_size, heap_size, stack_size);
+    def_function(vm, "foo", vm->void_type, 14, 2, 2);
+    vm_exec(vm, 0, true);
 }
 
 int main(int argc, char *argv[]) {
-	cunit_setup = setup;
-	cunit_teardown = teardown;
+    cunit_setup = setup;
+    cunit_teardown = teardown;
 
-	test(helloworld);
-	test(simple_loop);
-	test(factorial_func);
-	test(dubme);
+    test(hello);
+	test(locals_and_args);
+	test(locals);
+	test(callme);
+	test(callarg1);
+	test(array);
 
-	return 0;
+    return 0;
 }
+

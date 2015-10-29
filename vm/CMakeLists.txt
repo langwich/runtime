@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.2)
 project(runtime)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -DMARK_AND_COMPACT -Wall")
 
 set(MODULE_NAME vm)
-set(SOURCE src/vm.c)
+set(SOURCE src/vm.c src/wloader.c src/wrun.c)
 set(TEST_TARGETS test_vm)
 
 add_library(${MODULE_NAME} ${SOURCE})
