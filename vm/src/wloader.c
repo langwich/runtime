@@ -37,10 +37,6 @@ Create a VM from a Wich object/asm file, .wasm; files look like:
 	0: addr=0 locals=4 type=0 1/f
 	1: addr=25 locals=0 type=1 1/g
 	2: addr=32 locals=1 type=1 4/main
-3 globals
-	0: type=1 1/z
-	1: type=1 1/r
-	2: type=5 1/a
 40 instr, 112 bytes
 	ICONST 1
 	ICONST 0
@@ -76,19 +72,6 @@ VM *vm_load(FILE *f)
         printf("func %d %d %d %d %d %s\n", index, addr, args, locals, type, name);
         def_function(vm, name, type, addr, args, locals);
     }
-
-    int nglobals;
-    fscanf(f, "%d globals\n", &nglobals);
-    for (int i=1; i<=nglobals; i++) {
-        int index, type, name_size;
-        fscanf(f, "%d: type=%d %d/", &index, &type, &name_size);
-        char name[name_size+1];
-        fgets(name, name_size+1, f);
-        printf("global %d %d %s\n", index, type, name);
-        addr32 addr = (unsigned)index;
-        def_global(vm, name, type, addr);
-    }
-    word *global_data = calloc(nglobals, sizeof(word));
 
     int ninstr, nbytes;
     fscanf(f, "%d instr, %d bytes\n", &ninstr, &nbytes);
@@ -133,7 +116,7 @@ VM *vm_load(FILE *f)
 
     fclose(f);
 
-    vm_init(vm, code, nbytes, global_data, nglobals);
+    vm_init(vm, code, nbytes);
     return vm;
 }
 

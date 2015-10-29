@@ -77,8 +77,6 @@ VM_INSTRUCTION vm_instructions[] = {
         {"VLOAD", VLOAD, 2},
         {"SLOAD", SLOAD, 2},
         {"STORE", STORE, 2},
-        {"LOAD_GLOBAL",  LOAD_GLOBAL, 2},
-        {"STORE_GLOBAL", STORE_GLOBAL, 2},
         {"VECTOR", VECTOR, 0},
         {"LOAD_INDEX", LOAD_INDEX, 0},
         {"STORE_INDEX", STORE_INDEX, 0},
@@ -110,30 +108,14 @@ VM *vm_alloc()
     return vm;
 }
 
-void vm_init(VM *vm, byte *code, int code_size, word *global_data, int num_globals)
+void vm_init(VM *vm, byte *code, int code_size)
 {
 	// we are linking in mark-and-compact collector so allocations all occur outside of the VM
     vm->code = code;
     vm->code_size = code_size;
-    vm->data = global_data; // stores global vars
-    vm->data_size = num_globals;
     vm->sp = -1; // grow upwards, stack[sp] is top of stack and valid
     vm->fp = -1; // frame pointer is invalid initially
     vm->callsp = -1;
-}
-
-int def_global(VM *vm, char *name, int type, addr32 address)
-{
-    if ( vm->num_globals>=MAX_GLOBALS ) {
-        fprintf(stderr, "Exceeded max functions %d\n", MAX_GLOBALS);
-        return -1;
-    }
-    int i = vm->num_globals++;
-    Global_metadata *f = &vm->globals[i];
-    f->name = strdup(name);
-    f->type = type;
-    f->address = address;
-    return i;
 }
 
 int def_function(VM *vm, char *name, int return_type, addr32 address, int nargs, int nlocals)
@@ -190,7 +172,6 @@ void vm_exec(VM *vm, bool trace)
     register int sp = vm->sp;
     register int fp = vm->fp;
     const byte *code = vm->code;
-    word *data = vm->data;
     word *stack = vm->stack;
 
     int opcode = code[ip];
@@ -385,11 +366,11 @@ void vm_exec(VM *vm, bool trace)
             case SCONST :
                 i = int16(code,ip);
                 ip += 2;
-                push(1);
+                push(vm->strings[i]);
                 break;
             case ILOAD:
             case FLOAD:
-                i = int16(code,ip);
+                i = int16(code,ip); // get index into locals
                 ip += 2;
                 push(vm->call_stack[vm->callsp].locals[i]);
                 break;
@@ -397,20 +378,6 @@ void vm_exec(VM *vm, bool trace)
                 i = int16(code,ip);
                 ip += 2;
                 vm->call_stack[vm->callsp].locals[i] = stack[sp--];
-                break;
-            case LOAD_GLOBAL:
-                i = int16(code,ip);
-                ip += 2;
-                address = vm->globals[i].address;
-//                fprintf(stderr, "load %s @ %d = %lx   ", vm->globals[i].name, address, data[address]);
-                push(data[address]);
-                break;
-            case STORE_GLOBAL :
-                i = int16(code,ip);
-                ip += 2;
-                address = vm->globals[i].address;
-                validate_stack_address(sp);
-                data[address] = stack[sp--];
                 break;
             case VECTOR:
 //                validate_stack_address(sp);
@@ -577,12 +544,4 @@ void vm_print_stack_value(VM *vm, word p) {
 	else {
 		fprintf(stderr, " %ld", p); // assume negative value is correct (and not a huge unsigned)
 	}
-}
-
-static void vm_print_data(VM *vm, addr32 address, int length)
-{
-	printf("Data memory:\n");
-	for (int i = 0; i < vm->data_size; i++) {
-		printf("%04d: %d\n", i, (unsigned int)vm->data[i]);
-    }
 }

@@ -42,11 +42,8 @@ void hello() {
 	    HALT
 	};
 
-	int data_size = 0;
-	word *data = NULL;
-
     VM *vm = vm_alloc();
-	vm_init(vm, hello, sizeof(hello), data, data_size);
+	vm_init(vm, hello, sizeof(hello));
 	vm->strings = (char **)calloc(1, sizeof(char *));
 	vm->num_strings = 1;
 	vm->strings[0] = "hello";
@@ -57,22 +54,20 @@ void hello() {
 void callme() {
     printf("callme ----------------------\n");
     byte code[] = {
-            CALL, 0, 0,				// 0
+            CALL, 1, 0,				// 0
             HALT,					// 3
             SCONST, 0, 0,			// 4
             SPRINT,
             RET
     };
 
-    int data_size = 0;
-    word *data = NULL;
-
     VM *vm = vm_alloc();
-	vm_init(vm, code, sizeof(code), data, data_size);
+	vm_init(vm, code, sizeof(code));
     vm->strings = (char **)calloc(1, sizeof(char *));
     vm->num_strings = 1;
     vm->strings[0] = "hello";
-    def_function(vm, "foo", VOID_TYPE, 4, 0, 0);
+	def_function(vm, "main", VOID_TYPE, 0, 0, 0);
+	def_function(vm, "foo", VOID_TYPE, 4, 0, 0);
 	vm_exec(vm, true);
 }
 
@@ -81,7 +76,7 @@ void callarg1() {
     byte code[] = {
             // print f(34)
             ICONST, 34, 0, 0, 0,		// 0
-            CALL, 0, 0, 				// 5
+            CALL, 1, 0, 				// 5
             IPRINT,						// 8
             HALT,						// 9
             // def f(x)
@@ -93,49 +88,46 @@ void callarg1() {
             RETV
     };
 
-    word *data = NULL;
-    int data_size = 0;
-
     VM *vm = vm_alloc();
-	vm_init(vm, code, sizeof(code), data, data_size);
-    def_function(vm, "f", VOID_TYPE, 10, 1, 0);
+	vm_init(vm, code, sizeof(code));
+	def_function(vm, "main", VOID_TYPE, 0, 0, 0);
+	def_function(vm, "f", VOID_TYPE, 10, 1, 0);
 	vm_exec(vm, true);
 }
 
-void array() {
-	printf("array ----------------------\n");
-	byte code[] = {
-	// a = new int[10]
-		ICONST, 10, 0, 0, 0,
-		VECTOR,
-		STORE_GLOBAL, 0, 0,
-	// a[2] = 99
-		LOAD_GLOBAL,  0, 0,
-		ICONST, 02, 0, 0, 0,
-		ICONST, 99, 0, 0, 0,
-		STORE_INDEX,
-	// print a[2]
-		LOAD_GLOBAL,  0, 0,
-		ICONST, 02, 0, 0, 0,
-		LOAD_INDEX,
-	    IPRINT,
-	    HALT
-	};
-    int data_size = 1 * sizeof(word); // save array ptr
-	word *data = (word *)malloc(data_size);
-
-    VM *vm = vm_alloc();
-	vm_init(vm, code, sizeof(code), data, data_size);
-    def_global(vm, "a", VECTOR_TYPE, 0);
-	vm_exec(vm, true);
-}
+//void array() {
+//	printf("array ----------------------\n");
+//	byte code[] = {
+//	// a = new int[10]
+//		ICONST, 10, 0, 0, 0,
+//		VECTOR,
+//		STORE, 0, 0,
+//	// a[2] = 99
+//		VLOAD,  0, 0,
+//		ICONST, 02, 0, 0, 0,
+//		ICONST, 99, 0, 0, 0,
+//		STORE_INDEX,
+//	// print a[2]
+//		VLOAD,  0, 0,
+//		ICONST, 02, 0, 0, 0,
+//		LOAD_INDEX,
+//	    IPRINT,
+//	    HALT
+//	};
+//    int data_size = 1 * sizeof(word); // save array ptr
+//
+//    VM *vm = vm_alloc();
+//	vm_init(vm, code, sizeof(code));
+//	def_function(vm, "main", VOID_TYPE, 0, 0, 0);
+//	vm_exec(vm, true);
+//}
 
 void locals() {
     printf("locals ----------------------\n");
     byte code[] = {
             // leave a 33 on stack before call
             ICONST, 33, 0, 0, 0,        // 0
-            CALL, 0, 0, 				// 5
+            CALL, 1, 0, 				// 5
             HALT,                       // 8
             // a = 99
             ICONST, 99, 0, 0, 0,        // 9
@@ -155,8 +147,8 @@ void locals() {
     word *data = NULL;
 
     VM *vm = vm_alloc();
-	vm_init(vm, code, sizeof(code), data, data_size);
-    def_global(vm, "a", VECTOR_TYPE, 0);
+	vm_init(vm, code, sizeof(code));
+	def_function(vm, "main", VOID_TYPE, 0, 0, 0);
     def_function(vm, "foo", VOID_TYPE, 9, 0, 2);
 	vm_exec(vm, true);
 }
@@ -167,7 +159,7 @@ void locals_and_args() {
             // call foo(33,34)
             ICONST, 33, 0, 0, 0,        // 0
             ICONST, 34, 0, 0, 0,        // 5
-            CALL, 0, 0, 				// 10
+            CALL, 1, 0, 				// 10		call foo at function index 1
             HALT,                       // 13
             // def foo(x,y)
             // a = x
@@ -188,7 +180,8 @@ void locals_and_args() {
     word *data = NULL;
 
     VM *vm = vm_alloc();
-	vm_init(vm, code, sizeof(code), data, data_size);
+	vm_init(vm, code, sizeof(code));
+	def_function(vm, "main", VOID_TYPE, 0, 0, 0);
     def_function(vm, "foo", VOID_TYPE, 14, 2, 2);
 	vm_exec(vm, true);
 }
@@ -202,7 +195,6 @@ int main(int argc, char *argv[]) {
 	test(locals);
 	test(callme);
 	test(callarg1);
-	test(array);
 
     return 0;
 }

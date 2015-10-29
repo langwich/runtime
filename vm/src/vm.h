@@ -30,7 +30,6 @@ SOFTWARE.
 #define VM_H_
 
 static const int MAX_FUNCTIONS	= 1000;
-static const int MAX_GLOBALS	= 1000;
 static const int MAX_LOCALS		= 10;	// max locals/args in activation record
 static const int MAX_CALL_STACK = 1000;
 static const int MAX_OPND_STACK = 1000;
@@ -116,9 +115,6 @@ typedef enum {
 	SLOAD,              // load string from local context
 	STORE,              // store into local context
 
-	LOAD_GLOBAL,        // load ith global
-	STORE_GLOBAL,       // store value to ith global
-
 	VECTOR,             // create vector of size n with element type float
 	LOAD_INDEX,         // array index a[i]
 	STORE_INDEX,		// store into a[i]
@@ -156,12 +152,6 @@ typedef struct function {
 	int nlocals;
 } Function_metadata;
 
-typedef struct global_variable {
-	char *name;
-	int type;
-	addr32 address;
-} Global_metadata;
-
 typedef struct activation_record {
 	Function_metadata *func;
 	addr32 retaddr;
@@ -180,28 +170,24 @@ typedef struct {
 	word stack[MAX_OPND_STACK]; 	// operand stack, grows upwards; word addressable
 	Activation_Record call_stack[MAX_CALL_STACK];
 
-	word *data;  		// global variable space; word addressable
 	int data_size;
 
 	int num_strings;
-	int num_globals;
 	int num_functions;
 
 	char **strings;
 
-	Global_metadata globals[MAX_GLOBALS];		// array of global variables
 	Function_metadata functions[MAX_FUNCTIONS]; // array of function defs
 } VM;
 
 extern VM *vm_alloc();
-extern void vm_init(VM *vm, byte *code, int code_size, word *globals, int num_globals);
+extern void vm_init(VM *vm, byte *code, int code_size);
 
 extern void vm_exec(VM *vm, bool trace);
 
 extern byte *vm_malloc(VM *vm, int nbytes);
 extern void vm_free(VM *vm, byte *p);
 
-extern int def_global(VM *vm, char *name, int type, addr32 address);
 extern int def_function(VM *vm, char *name, int return_type, addr32 address, int nargs, int nlocals);
 
 extern VM_INSTRUCTION vm_instructions[];
