@@ -1,8 +1,8 @@
-1 strings
-	0: 5/hello
+0 strings
 1 functions
 	0: addr=0 args=0 locals=0 type=1 4/main
-3 instr, 5 bytes
-	SCONST 0
-	SPRINT
+4 instr, 8 bytes
+	ICONST 5
+	VECTOR
+	VPRINT
 	HALT

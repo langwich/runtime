@@ -11,6 +11,8 @@ set(INSTALL_NAME wich)
 set(INSTALL_DIR "/usr/local/${INSTALL_NAME}")
 set(CMAKE_INSTALL_PREFIX ${INSTALL_DIR})
 
+set(ENV{WICHRUNTIME} ${CMAKE_SOURCE_DIR})
+
 ################# I n c l u d e s #################
 
 # the INCLUDE_DIRECTORIES property needs to be
