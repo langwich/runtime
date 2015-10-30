@@ -328,11 +328,10 @@ int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
 
-//	gc_debug(true);
-/*
-	test(many_disconnected_nodes_free_all_at_once);
+	gc_debug(true);
+/*	test(many_disconnected_nodes_free_all_at_once);
 	test(many_disconnected_nodes_wack_random_roots);
-//
+
 	test(many_connected_nodes_free_all_at_once);*/
 	test(many_connected_nodes_wack_random_roots);
 

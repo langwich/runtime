@@ -210,5 +210,6 @@ int main(int argc, char *argv[]) {
 	test(gc_after_single_vector_two_roots);
 	test(gc_compacts_vectors);
 
+
 	return 0;
 }

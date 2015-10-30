@@ -78,15 +78,6 @@ void one_user_set_ptr_null() {
 	User *u = create_one_user("parrt");
 	gc_add_root((void **)&u);
 
-	Heap_Info info = get_heap_info();
-	size_t u_expected_size = align_to_word_boundary(sizeof(User));
-	size_t uname_expected_size = align_to_word_boundary(sizeof(String) + u->name->length * sizeof(char));
-/*	assert_addr_equal(u, info.start_of_heap);
-	assert_addr_equal(info.next_free, ((void *)u->name) + uname_expected_size);
-	assert_equal(info.busy_size, u_expected_size + uname_expected_size);
-	assert_equal(info.free_size, info.heap_size - (u_expected_size + uname_expected_size));
-
-	assert_equal(gc_num_live_objects(), 2);*/
 	gc();
 	assert_equal(gc_num_live_objects(), 2);
 
@@ -94,7 +85,7 @@ void one_user_set_ptr_null() {
 	gc();
 	assert_equal(gc_num_live_objects(), 0);
 
-	info = get_heap_info();
+	Heap_Info info = get_heap_info();
 	assert_equal(info.busy_size, 0);
 	assert_equal(info.free_size, info.heap_size);
 }
@@ -105,15 +96,6 @@ void one_user_ptr_out_of_scope() {
 	User *u = create_one_user("parrt");
 	gc_add_root((void **)&u);
 
-	Heap_Info info = get_heap_info();
-	size_t u_expected_size = align_to_word_boundary(sizeof(User));
-	size_t uname_expected_size = align_to_word_boundary(sizeof(String) + u->name->length * sizeof(char));
-/*	assert_addr_equal(u, info.start_of_heap);
-	assert_addr_equal(info.next_free, ((void *)u->name) + uname_expected_size);
-	assert_equal(info.busy_size, u_expected_size + uname_expected_size);
-	assert_equal(info.free_size, info.heap_size - (u_expected_size + uname_expected_size));
-
-	assert_equal(gc_num_live_objects(), 2);*/
 	gc();
 	assert_equal(gc_num_live_objects(), 2);
 
@@ -122,7 +104,7 @@ void one_user_ptr_out_of_scope() {
 	gc();
 	assert_equal(gc_num_live_objects(), 0);
 
-	info = get_heap_info();
+	Heap_Info info = get_heap_info();
 	assert_equal(info.busy_size, 0);
 	assert_equal(info.free_size, info.heap_size);
 }
@@ -130,36 +112,11 @@ void one_user_ptr_out_of_scope() {
 void two_employees_set_ptr_null() { // just one root pointing to parrt that points at tombu
 	Employee *e = create_one_employee("parrt");
 	gc_add_root((void **)&e);
-/*	assert_equal(gc_num_live_objects(), 2);*/
-	String *last_object = e->name;
-
-	Heap_Info info = get_heap_info();
-	size_t e_expected_size = align_to_word_boundary(sizeof(Employee));
-	size_t ename_expected_size = align_to_word_boundary(sizeof(String) + last_object->length * sizeof(char));
-/*
-	assert_addr_equal(e, info.start_of_heap);
-	assert_addr_equal(info.next_free, ((void *) last_object) + ename_expected_size);
-	assert_equal(info.busy_size, e_expected_size + ename_expected_size);
-	assert_equal(info.free_size, info.heap_size - (e_expected_size + ename_expected_size));
-*/
-
 	e->mgr = create_one_employee("tombu");
-	last_object = e->mgr->name;
-/*	assert_equal(gc_num_live_objects(), 4);*/
-
-	info = get_heap_info();
-/*
-	assert_addr_equal(e->mgr, ((void *)e->name) + ename_expected_size);
-	assert_addr_equal(info.next_free, ((void *) last_object) + ename_expected_size);
-	assert_equal(info.busy_size, 2 * (e_expected_size + ename_expected_size));
-	assert_equal(info.free_size, info.heap_size - 2 * (e_expected_size + ename_expected_size));
-
-*/
 	e = NULL; // should free employee and string
 	gc();
 	assert_equal(gc_num_live_objects(), 0);
-
-	info = get_heap_info();
+	Heap_Info info = get_heap_info();
 	assert_equal(info.busy_size, 0);
 	assert_equal(info.free_size, info.heap_size);
 }
@@ -167,35 +124,11 @@ void two_employees_set_ptr_null() { // just one root pointing to parrt that poin
 void one_employee_in_cycle_set_ptr_null() { // just one root pointing to parrt that points at itself
 	Employee *e = create_one_employee("parrt");
 	gc_add_root((void **)&e);
-//	assert_equal(gc_num_live_objects(), 2);
-	String *last_object = e->name;
-
-	Heap_Info info = get_heap_info();
-	size_t e_expected_size = align_to_word_boundary(sizeof(Employee));
-	size_t ename_expected_size = align_to_word_boundary(sizeof(String) + last_object->length * sizeof(char));
-/*
-	assert_addr_equal(e, info.start_of_heap);
-	assert_addr_equal(info.next_free, ((void *) last_object) + ename_expected_size);
-	assert_equal(info.busy_size, e_expected_size + ename_expected_size);
-	assert_equal(info.free_size, info.heap_size - (e_expected_size + ename_expected_size));
-*/
-
 	e->mgr = e; // parrt is mgr of himself
-	last_object = e->mgr->name;
-//	assert_equal(gc_num_live_objects(), 2);
-
-	info = get_heap_info();
-/*
-	assert_addr_equal(e, info.start_of_heap);
-	assert_addr_equal(info.next_free, ((void *) last_object) + ename_expected_size);
-	assert_equal(info.busy_size, e_expected_size + ename_expected_size);
-	assert_equal(info.free_size, info.heap_size - (e_expected_size + ename_expected_size));
-*/
-
 	e = NULL; // should free employee and string
 	gc();	  // should not get into infinite loop during trace
 	assert_equal(gc_num_live_objects(), 0);
-
+	Heap_Info info = get_heap_info();
 	info = get_heap_info();
 	assert_equal(info.busy_size, 0);
 	assert_equal(info.free_size, info.heap_size);

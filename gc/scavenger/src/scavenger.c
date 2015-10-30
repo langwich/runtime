@@ -31,14 +31,13 @@ SOFTWARE.
 
 static void *gc_raw_alloc(size_t size);
 static void update_root(heap_object *p, int i);
-//static void update_ptr_fields(heap_object *p);
 static void gc_scavenge();
 static void forward_object(heap_object *p);
 static void forward_ptr_fields(const heap_object *p);
 int gc_num_live_objects();
 size_t compute_busy_size();
 
-//static void mark_object(heap_object *p);
+
 
 // --------------------------------- D A T A ---------------------------------
 
@@ -144,7 +143,12 @@ static inline void realloc_object(heap_object *p) {
 	void *q = next_free_fowarding; // bump-ptr-allocation
 	next_free_fowarding += p->size;
 	p->forwarded = q; // p->forwarded records the new position in heap_1
+	if (DEBUG) printf("end of heap_0: %p\n", end_of_heap_0);
+	if (DEBUG) printf("end of heap_1: %p\n", end_of_heap_1);
+	if (DEBUG) printf("end of heap_0: %p\n", end_of_heap_0);
+	if (DEBUG) printf("end of heap_1: %p\n", end_of_heap_1);
 	if (DEBUG) if ( p->forwarded!=p ) printf("forward %p to %s@%p (0x%x bytes)\n", p, p->metadata->name, p->forwarded, p->size);
+
 }
 
 static inline void move_to_forwarding_addr(heap_object *p) {
@@ -258,10 +262,10 @@ static void update_ptr_fields(heap_object *p) {
 
 // ---------------------------------Scavenge and Forward Live Objects to Heap_1 ---------------------------------
 void gc_scavenge() {
-	if (DEBUG) printf("MARK\n");
+	if (DEBUG) printf("SCAVENGING...\n");
     for (int i = 0; i < num_roots; i++) {
         heap_object *p = *_roots[i];
-		printf("roots[%d] = %p, p->forwarded = %p\n", i, p, p->forwarded );
+		if (DEBUG) printf("roots[%d] = %p, p->forwarded = %p\n", i, p, p->forwarded );
 
 		if (p == NULL)
 			continue;
