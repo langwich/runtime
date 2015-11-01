@@ -33,6 +33,9 @@ SOFTWARE.
 #elif defined(MARK_AND_COMPACT)
 #include <mark_and_compact.h>
 #include <gc.h>
+#elif defined(SCAVENGER)
+#include <scavenger.h>
+#include <gc.h>
 #elif defined(REFCOUNTING)
 #include <refcounting.h>
 #else // PLAIN

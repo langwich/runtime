@@ -21,55 +21,29 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#ifndef RUNTIME_SCAVENGER_H_
+#define RUNTIME_SCAVENGER_H_
 
-#include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
-#if defined(MARK_AND_SWEEP)
-#include <mark_and_sweep.h>
-
-#elif defined(SCAVENGER)
-#include <scavenger.h>
-
-#elif defined(MARK_AND_COMPACT)
-#include <mark_and_compact.h>
-
-
+#ifdef __cplusplus
+extern "C" {
 #endif
 
+/* stuff that every instance in the heap must have at the beginning (unoptimized) */
+typedef struct heap_object {
+	struct _object_metadata *metadata;
+	uint32_t size;      // total size including header information used by each heap_object
+	struct heap_object *forwarded; 	// where we've moved this object into heap_1
+} heap_object;
 
-#include "gc.h"
-#include "wich.h"
+extern bool ptr_is_in_heap_0(heap_object *p);
+extern int gc_num_live_objects();
+extern int gc_count_roots();
 
-object_metadata PVector_metadata = {
-		"PVector",
-		0
-};
-
-object_metadata PVectorFatNodeElem_metadata = {
-		"PVectorFatNodeElem",
-		1,
-		{__offsetof(PVectorFatNodeElem,next)}
-};
-
-object_metadata String_metadata = {
-		"String",
-		0
-};
-
-PVector *PVector_alloc(size_t length) {
-	PVector *p = (PVector *)gc_alloc(&PVector_metadata, sizeof(PVector) + length * sizeof(PVectorFatNode));
-	p->length = length;
-	return p;
+#ifdef __cplusplus
 }
+#endif
 
-PVectorFatNodeElem *PVectorFatNodeElem_alloc() {
-	PVectorFatNodeElem *p = (PVectorFatNodeElem *)gc_alloc(&PVectorFatNodeElem_metadata, sizeof(PVectorFatNodeElem));
-	return p;
-}
-
-String *String_alloc(size_t length) {
-	String *p = (String *)gc_alloc(&String_metadata, sizeof(String) + (length+1) * sizeof(char));
-	p->length = length;
-	return p;
-}
+#endif  //RUNTIME_SCAVENGER_H

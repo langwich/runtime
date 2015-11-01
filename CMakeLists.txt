@@ -22,6 +22,7 @@ set(INCLUDE_DIRS
 		gc
 		gc/mark_and_compact/src
 		gc/mark_and_sweep/src
+		gc/scavenger/src
 		malloc
 		malloc/lib/src
 		malloc/freelist/src
