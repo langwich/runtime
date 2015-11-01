@@ -35,15 +35,10 @@ static void gc_scavenge();
 static void forward_object(heap_object *p);
 static void forward_ptr_fields(const heap_object *p);
 
-size_t compute_busy_size();
-
-
-
-// --------------------------------- D A T A ---------------------------------
 
 static bool DEBUG = false;
 
-static const int MAX_ROOTS = 100000; // obviously this is ok only for the educational purpose of this code
+static const int MAX_ROOTS = 100000;
 
 /* Track every pointer into the heap; includes globals, args, and locals */
 static heap_object **_roots[MAX_ROOTS];
@@ -165,13 +160,10 @@ static inline void realloc_object(heap_object *p) {
 	void *q = next_free_forwarding; // bump-ptr-allocation
 	next_free_forwarding += p->size;
 	p->forwarded = q; // p->forwarded records the new position in heap_1
-//	if (DEBUG) if ( p->forwarded!=p ) printf("forward %p to %s@%p (0x%x bytes)\n", p, p->metadata->name, p->forwarded, p->size);
-
 }
 
 //copy the object to forwarding address
 static inline void move_to_forwarding_addr(heap_object *p) {
-//	if (DEBUG) if ( p->forwarded!=p ) printf("    move %p to %p (0x%x bytes)\n", p, p->forwarded, p->size);
 	if ( ptr_is_in_heap_0(p) && ptr_is_in_heap_1(p->forwarded) ) {
 		memcpy(p->forwarded, p, p->size);
 	}
@@ -215,31 +207,32 @@ static void update_root(heap_object *p, int i) {
 // ---------------------------------Scavenge and Forward Live Objects to Heap_1 ---------------------------------
 void gc_scavenge() {
 	if (DEBUG) printf("SCAVENGING...\n");
-	if (DEBUG) printf("heap_0 : %p\nend of heap_0 : %p\nheap_1 : %p\nend of heap_1 : %p\n", heap_0, end_of_heap_0, heap_1, end_of_heap_1);
+	if (DEBUG) printf("heap_0 : %p\nend of heap_0 : %p\nheap_1 : %p\nend of heap_1 : %p\n",
+					  heap_0, end_of_heap_0, heap_1, end_of_heap_1);
     for (int i = 0; i < num_roots; i++) {
         heap_object *p = *_roots[i];
-	//	if (DEBUG) printf("roots[%d] = %p, p->forwarded = %p\n", i, p, p->forwarded );
+		if (DEBUG) printf("roots[%d] = %p, p->forwarded = %p\n", i, p, p->forwarded );
 
 		if (p == NULL){
 			if (DEBUG) printf("roots[%d] = NULL, pointer has been killed\n", i);
 			continue;
 		}
 
-
 		else if (ptr_is_in_heap_1(p))  { // in heap_1 and root has been updated
 			if (DEBUG) printf("roots[%d] = %p,  is already in heap_1, root has been updated\n", i, p);
 			continue;
 		}
-		else if ( ptr_is_in_heap_0(p) ) {
 
+		else if ( ptr_is_in_heap_0(p) ) {
 			if(ptr_is_in_heap_1(p->forwarded)) {// in heap_1 but root has not been updated
-				if (DEBUG) printf("roots[%d] = %p,  p->forwarded = %p, is already in heap_1, but root has not been updated\n", i, p, p->forwarded);
+				if (DEBUG) printf("roots[%d] = %p,  p->forwarded = %p, is already in heap_1, "
+										  "but root has not been updated\n", i, p, p->forwarded);
 				update_root(p, i);
 				continue;
 			}
+
 			if (DEBUG) printf("root[%d]=%p -> %s@%p (0x%x bytes)\n", i, *_roots[i], p->metadata->name, p, p->size);
 			if (DEBUG) printf("Start of %s@%p, end of %s@%p, size: (0x%x bytes)\n", p->metadata->name, p,p->metadata->name,((void *)p)+p->size, p->size);
-
 
 			forward_object(p);	  //recursively forward all pointed field objects
 			update_root(p, i);
@@ -253,14 +246,10 @@ void gc_scavenge() {
 /* recursively walk object graph starting from p. */
 static void forward_object(heap_object *p) {
 	if (DEBUG) printf("realloc_object @ %p\n", p);
-
 	realloc_object(p);
 	if (DEBUG) printf("move_object @ %p to %p\n", p, p->forwarded);
-
 	move_to_forwarding_addr(p);
-
 	if (DEBUG) printf("forward ptr fields @ %p\n", p->forwarded);
-
 	forward_ptr_fields(p->forwarded); // update ptr fields of the relocated object and forward them
 }
 
@@ -271,7 +260,7 @@ static void forward_ptr_fields(const heap_object *p) {// check for tracked heap 
 		heap_object **ptr_to_obj_ptr_field = (heap_object **) ptr_to_ptr_field;
 		heap_object *target_obj = *ptr_to_obj_ptr_field;
 		if (target_obj != NULL ) {
-			if (!ptr_is_in_heap_1(target_obj->forwarded))
+			if (!ptr_is_in_heap_1(target_obj->forwarded))  //field object hasn't been forwarded
 				forward_object(target_obj);
 			*ptr_to_obj_ptr_field = target_obj->forwarded; //update ptr field
 		}

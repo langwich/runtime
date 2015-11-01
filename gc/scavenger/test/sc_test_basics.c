@@ -27,12 +27,10 @@ SOFTWARE.
 
 const size_t HEAP_SIZE = 2000;
 
-//void check_magic(heap_object *p) { assert_equal(p->magic, MAGIC_NUMBER); }
 
 
 Heap_Info verify_heap() {
 	Heap_Info info = get_heap_info();
-//	foreach_object(check_magic);
 	assert_equal(info.heap_size, HEAP_SIZE);
 	assert_equal(info.busy_size, info.computed_busy_size);
 	assert_equal(info.heap_size, info.busy_size+info.free_size);

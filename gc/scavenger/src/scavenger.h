@@ -31,17 +31,13 @@ SOFTWARE.
 extern "C" {
 #endif
 
-//static const uint32_t MAGIC_NUMBER = 123456789;
-
 /* stuff that every instance in the heap must have at the beginning (unoptimized) */
 typedef struct heap_object {
 	struct _object_metadata *metadata;
 	uint32_t size;      // total size including header information used by each heap_object
-//	bool marked;	    // no mark phase for scavenger
-	struct heap_object *forwarded; 			// where we've moved this object into heap_1
+	struct heap_object *forwarded; 	// where we've moved this object into heap_1
 } heap_object;
 
-extern long gc_heap_highwater();
 extern bool ptr_is_in_heap_0(heap_object *p);
 extern int gc_num_live_objects();
 extern int gc_count_roots();
