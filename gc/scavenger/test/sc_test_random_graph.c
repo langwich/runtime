@@ -129,12 +129,12 @@ void _many_connected_nodes_wack_random_roots(bool edges) {
 	make_all_nodes_roots(nodes);
 
 	set allnodes = get_reachable_objects((heap_object **) nodes);
-//	assert_equal(set_deg(allnodes), NUM_NODES);
-//	printf("reachable = ");	set_print(allnodes);
+	assert_equal(set_deg(allnodes), NUM_NODES);
+	//printf("reachable = ");	set_print(allnodes);
 
 	gc(); // should do nothing
 
-/*	set after_gc = get_reachable_objects((heap_object **) nodes);
+	set after_gc = get_reachable_objects((heap_object **) nodes);
 	assert_true(set_equ(after_gc, allnodes));
 
 	assert_equal(gc_num_live_objects(), NUM_NODES);
@@ -150,10 +150,8 @@ void _many_connected_nodes_wack_random_roots(bool edges) {
 	assert_true(set_equ(after_gc, after_wacking));
 	assert_false(set_equ(after_gc, allnodes));
 
-	//foreach_live(check_not_marked);
-
 	// after compaction, should be no dead nodes
-	foreach_object(sniff_for_dead_nodes);*/
+	foreach_object(sniff_for_dead_nodes);
 }
 
 void many_connected_nodes_wack_random_roots() {
@@ -300,6 +298,7 @@ set get_reachable_objects(heap_object **roots) {
 	return which;
 }
 
+
 /* Recursive method to compute reachability; used to compare with GC algorithm of liveness.
  * USES THE MARKED BIT. destructive.
  */
@@ -328,11 +327,11 @@ int main(int argc, char *argv[]) {
 	cunit_setup = setup;
 	cunit_teardown = teardown;
 
-	gc_debug(true);
-/*	test(many_disconnected_nodes_free_all_at_once);
+	gc_debug(false);
+	test(many_disconnected_nodes_free_all_at_once);
 	test(many_disconnected_nodes_wack_random_roots);
 
-	test(many_connected_nodes_free_all_at_once);*/
+	test(many_connected_nodes_free_all_at_once);
 	test(many_connected_nodes_wack_random_roots);
 
 	return 0;

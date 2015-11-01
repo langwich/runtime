@@ -35,7 +35,6 @@ extern "C" {
 
 /* stuff that every instance in the heap must have at the beginning (unoptimized) */
 typedef struct heap_object {
-	uint32_t magic;     // used in debugging
 	struct _object_metadata *metadata;
 	uint32_t size;      // total size including header information used by each heap_object
 //	bool marked;	    // no mark phase for scavenger
@@ -44,6 +43,8 @@ typedef struct heap_object {
 
 extern long gc_heap_highwater();
 extern bool ptr_is_in_heap_0(heap_object *p);
+extern int gc_num_live_objects();
+extern int gc_count_roots();
 
 #ifdef __cplusplus
 }
