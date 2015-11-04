@@ -26,6 +26,7 @@ SOFTWARE.
 #include <stdbool.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <wich.h>
 #include "vm.h"
 
 #include <cunit.h>
