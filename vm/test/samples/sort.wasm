@@ -2,9 +2,6 @@
 2 functions
 	0: addr=0 args=2 locals=3 type=0 10/bubblesort
 	1: addr=137 args=0 locals=1 type=1 4/main
-2 globals
-	0: type=1 1/x
-	1: type=5 4/data
 93 instr, 271 bytes
 	ICONST 0
 	STORE 2

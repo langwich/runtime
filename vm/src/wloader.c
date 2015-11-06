@@ -76,6 +76,7 @@ VM *vm_load(FILE *f)
     }
 
     int ninstr, nbytes;
+    element e;
     fscanf(f, "%d instr, %d bytes\n", &ninstr, &nbytes);
     printf("%d instr, %d bytes\n", ninstr, nbytes);
     byte *code = calloc(nbytes, sizeof(byte));
@@ -87,7 +88,12 @@ VM *vm_load(FILE *f)
         int n = sscanf(instr, "\tFCONST %f", &fvalue);
         if ( n==1 ) {
             printf("FCONST %f\n", fvalue);
-            unsigned int as_int = *((unsigned int *)&fvalue);
+            VM_INSTRUCTION *I = vm_instr("FCONST");
+            code[ip] = I->opcode;
+            ip++;
+            //unsigned int as_int = *((unsigned int *)&fvalue);
+            e.f = fvalue;
+            unsigned int as_int = (unsigned int)e.f;
             vm_write32(&code[ip], as_int);
             ip += 4;
             continue;

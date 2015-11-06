@@ -33,7 +33,7 @@ static const int MAX_FUNCTIONS	= 1000;
 static const int MAX_LOCALS		= 10;	// max locals/args in activation record
 static const int MAX_CALL_STACK = 1000;
 static const int MAX_OPND_STACK = 1000;
-static const int NUM_INSTRS		= 64;
+static const int NUM_INSTRS		= 79;
 
 static const int VM_NIL         = ((uintptr_t)0);
 
@@ -69,6 +69,19 @@ typedef enum {
 	FSUB,
 	FMUL,
 	FDIV,
+	VADD,
+	VADDI,
+	VADDF,
+	VSUB,
+	VSUBI,
+	VSUBF,
+	VMUL,
+	VMULI,
+	VMULF,
+	VDIV,
+	VDIVI,
+	VDIVF,
+	SADD,
 
     OR,
     AND,
@@ -82,7 +95,7 @@ typedef enum {
 	I2S,                // int to str
 	F2S,                // float to str
 	V2S,                // vector to str
-	F2V,                // float to vector
+	//F2V,                // float to vector
 
 	IEQ,                // int equal
 	INEQ,
@@ -96,6 +109,14 @@ typedef enum {
 	FLE,
 	FGT,
 	FGE,
+	SEQ,//string equal
+	SNEQ, //string unequal
+	SGT,
+	SGE,
+	SLT,
+	SLE,
+	VEQ,
+	VNEQ,
 	ISNIL,
 
 	BR,                 // branch 16-bit relative in code memory; relative to addr of BR
@@ -113,9 +134,9 @@ typedef enum {
 	STORE,              // store into local context
 
 	VECTOR,             // create vector of size n with element type float
-	LOAD_INDEX,         // array index a[i]
+	VLOAD_INDEX,         // array index a[i]
 	STORE_INDEX,		// store into a[i]
-
+	SLOAD_INDEX,
 	NIL,                // push null pointer onto stack
 	POP,				// drop top of stack
 

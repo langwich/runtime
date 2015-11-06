@@ -26,6 +26,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdbool.h>
 #include <wich.h>
+#include "persistent_vector.h"
 
 #ifndef REFCOUNTING
 void REF(heap_object *x) { }
@@ -140,6 +141,32 @@ PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b)
 	DEREF((heap_object *)a.vector);
 	DEREF((heap_object *)b.vector);
 	return c;
+}
+
+bool Vector_eq(PVector_ptr a, PVector_ptr b) {
+	if (a.vector->length != b.vector->length) {
+		return false;
+	}
+	int i = (int)a.vector->length;
+	for (int j = 0; j < i; j++) {
+		if(a.vector->nodes[j].data != b.vector->nodes[j].data) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Vector_neq(PVector_ptr a, PVector_ptr b) {
+	if (a.vector->length != b.vector->length) {
+		return false;
+	}
+	int i = (int)a.vector->length;
+	for (int j = 0; j < i; j++) {
+		if(a.vector->nodes[j].data == b.vector->nodes[j].data) {
+			return false;
+		}
+	}
+	return true;
 }
 
 void print_vector(PVector_ptr a)
