@@ -119,7 +119,6 @@ VM_INSTRUCTION vm_instructions[] = {
 
 static void vm_print_instr(VM *vm, addr32 ip);
 static void vm_print_stack(VM *vm);
-static void vm_print_data(VM *vm, addr32 address, int length);
 static inline int int32(const byte *data, addr32 ip);
 static inline int int16(const byte *data, addr32 ip);
 static inline float float32(const byte *data, addr32 ip);
@@ -167,24 +166,14 @@ static void inline validate_stack_address(int a) {
 	}
 }
 
-#define valid_array_index(arr,i) \
-	if ( i<0 || i>=arr->length ) {fprintf(stderr, "index %d out of bounds 0..%d\n", i, arr->length);}
-
-#define push(w) \
-	validate_stack_address(sp+1);\
-	stack[++sp] = (word)w; \
-
 void vm_exec(VM *vm, bool trace)
 {
 	int a = 0;
-	word aver = 0;
-	word avec = 0;
-	word b = 0;
 	int i = 0;
 	bool b1, b2;
 	double f,g;
 	word address = 0;
-	PVector_ptr vptr;
+	PVector_ptr vptr,r,l;
 	int x, y;
 	Activation_Record *frame;
 
@@ -253,77 +242,94 @@ void vm_exec(VM *vm, bool trace)
 				stack[sp].f = f / g;
 				break;
             case VADD:
-                validate_stack_address(sp-1);
-                vptr = Vector_add(stack[sp--].vptr,stack[sp].vptr);
-                stack[sp].vptr = vptr;
+				validate_stack_address(sp-1);
+				r = stack[sp--].vptr;
+				l = stack[sp].vptr;
+				vptr = Vector_div(l,r);
+				stack[sp].vptr = vptr;
                 break;
 			case VADDI:
 				validate_stack_address(sp-1);
-				vptr = stack[sp--].vptr;
-				vptr = Vector_add(vptr,Vector_from_int(stack[sp].i,vptr.vector->length));
+				i = stack[sp--].i;
+				vptr = stack[sp].vptr;
+				vptr = Vector_add(vptr,Vector_from_int(i,vptr.vector->length));
 				stack[sp].vptr = vptr;
 				break;
 			case VADDF:
 				validate_stack_address(sp-1);
-				vptr = stack[sp--].vptr;
-				vptr = Vector_add(vptr,Vector_from_float(stack[sp].f,vptr.vector->length));
+				f = stack[sp--].f;
+				vptr = stack[sp].vptr;
+				vptr = Vector_add(vptr,Vector_from_float(f,vptr.vector->length));
 				stack[sp].vptr = vptr;
 				break;
             case VSUB:
-                validate_stack_address(sp-1);
-                vptr = Vector_sub(stack[sp--].vptr,stack[sp].vptr);
-                stack[sp].vptr = vptr;
+				validate_stack_address(sp-1);
+				r = stack[sp--].vptr;
+				l = stack[sp].vptr;
+				vptr = Vector_sub(l,r);
+				stack[sp].vptr = vptr;
                 break;
 			case VSUBI:
 				validate_stack_address(sp-1);
-				vptr = stack[sp--].vptr;
-				vptr = Vector_sub(vptr,Vector_from_int(stack[sp].i,vptr.vector->length));
+				i = stack[sp--].i;
+				vptr = stack[sp].vptr;
+				vptr = Vector_sub(vptr,Vector_from_int(i,vptr.vector->length));
 				stack[sp].vptr = vptr;
 				break;
 			case VSUBF:
 				validate_stack_address(sp-1);
-				vptr = stack[sp--].vptr;
-				vptr = Vector_sub(vptr,Vector_from_float(stack[sp].f,vptr.vector->length));
+				f = stack[sp--].f;
+				vptr = stack[sp].vptr;
+				vptr = Vector_sub(vptr,Vector_from_float(f,vptr.vector->length));
 				stack[sp].vptr = vptr;
 				break;
             case VMUL:
-                validate_stack_address(sp-1);
-                vptr = Vector_mul(stack[sp--].vptr,stack[sp].vptr);
-                stack[sp].vptr = vptr;
+				validate_stack_address(sp-1);
+				r = stack[sp--].vptr;
+				l = stack[sp].vptr;
+				vptr = Vector_mul(l,r);
+				stack[sp].vptr = vptr;
                 break;
 			case VMULI:
 				validate_stack_address(sp-1);
-				vptr = stack[sp--].vptr;
-				vptr = Vector_mul(vptr,Vector_from_int(stack[sp].i,vptr.vector->length));
+				i = stack[sp--].i;
+				vptr = stack[sp].vptr;
+				vptr = Vector_mul(vptr,Vector_from_int(i,vptr.vector->length));
 				stack[sp].vptr = vptr;
 				break;
 			case VMULF:
 				validate_stack_address(sp-1);
-				vptr = stack[sp--].vptr;
-				vptr = Vector_mul(vptr,Vector_from_float(stack[sp].f,vptr.vector->length));
+				f = stack[sp--].f;
+				vptr = stack[sp].vptr;
+				vptr = Vector_mul(vptr,Vector_from_float(f,vptr.vector->length));
 				stack[sp].vptr = vptr;
 				break;
             case VDIV:
                 validate_stack_address(sp-1);
-                vptr = Vector_div(stack[sp--].vptr,stack[sp].vptr);
+				r = stack[sp--].vptr;
+				l = stack[sp].vptr;
+                vptr = Vector_div(l,r);
                 stack[sp].vptr = vptr;
                 break;
 			case VDIVI:
 				validate_stack_address(sp-1);
-				vptr = stack[sp--].vptr;
-				vptr = Vector_div(vptr,Vector_from_int(stack[sp].i,vptr.vector->length));
+				i = stack[sp--].i;
+				vptr = stack[sp].vptr;
+				vptr = Vector_div(vptr,Vector_from_int(i,vptr.vector->length));
 				stack[sp].vptr = vptr;
+				print_pvector(vptr);
 				break;
 			case VDIVF:
 				validate_stack_address(sp-1);
-				vptr = stack[sp--].vptr;
-				vptr = Vector_div(vptr,Vector_from_float(stack[sp].f,vptr.vector->length));
+				f = stack[sp--].f;
+				vptr = stack[sp].vptr;
+				vptr = Vector_div(vptr,Vector_from_float(f,vptr.vector->length));
 				stack[sp].vptr = vptr;
 				break;
             case SADD:
 				validate_stack_address(sp-1);
-				char * s = String_add(String_new(stack[sp--].s),String_new(stack[sp].s))->str;
-				stack[sp].s = s;
+				char * right = stack[sp--].s;
+				stack[sp].s = String_add(String_new(stack[sp].s),String_new(right))->str;
                 break;
 			case OR :
 				validate_stack_address(sp-1);
@@ -554,6 +560,7 @@ void vm_exec(VM *vm, bool trace)
 					set_ith(pvec,j,stack[sp--].f);
 				}
 				stack[++sp].vptr = pvec;
+				print_vector(pvec);
 				break;
 			case VLOAD_INDEX:
 				validate_stack_address(sp-1);
@@ -587,8 +594,9 @@ void vm_exec(VM *vm, bool trace)
 				LOAD_REGISTERS(vm);
 				break;
 			case RETV:
-				//element retv = stack[sp--];  // pop return value
-				// TODO: can't we just leave on opnd stack and return?
+				frame = &vm->call_stack[vm->callsp--];
+				ip = frame->retaddr;
+				fprintf(stderr, "returning from %s to %d\n", frame->func->name, ip);
 				break;
 			case RET:
 				frame = &vm->call_stack[vm->callsp--];
@@ -626,13 +634,6 @@ void vm_exec(VM *vm, bool trace)
 	}
 	if (trace) vm_print_instr(vm, ip);
 	if (trace) vm_print_stack(vm);
-//    if (trace) vm_print_data(vm, 0, vm->data_size+vm->heap_size);
-}
-
-void vm_push(VM *vm, element value)
-{
-	if (vm->sp >= -1) vm->stack[++vm->sp] = value; \
-	else fprintf(stderr, "whoa. sp < -1");
 }
 
 void vm_call(VM *vm, Function_metadata *func)

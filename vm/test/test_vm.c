@@ -41,7 +41,9 @@ static void run(char *code) {
 	vm_exec(vm, true);
 }
 
-
+/*
+ * print ("hello")
+ */
 void hello() {
 	char *code =
 		"1 strings\n"
@@ -56,6 +58,9 @@ void hello() {
 	run(code);
 }
 
+/*
+ * print ("hello"+"world")
+ */
 void string_add() {
     char *code =
         "2 strings\n"
@@ -72,6 +77,9 @@ void string_add() {
     run(code);
 }
 
+/*
+ * var x = 1
+ */
 void int_var_def() {
     char *code =
             "0 strings\n"
@@ -83,6 +91,10 @@ void int_var_def() {
             "\tHALT\n";
     run(code);
 }
+
+/*
+ * var x = "hello"
+ */
 void string_var_def() {
     char *code =
             "1 strings\n"
@@ -96,15 +108,19 @@ void string_var_def() {
     run(code);
 }
 
+/*
+ * var x = [1.0,2.0,3.0]
+ * print (x)
+ */
 void vector() {
     char *code =
             "0 strings\n"
             "1 functions\n"
             "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
             "9 instr, 28 bytes\n"
-            "\tFCONST 1.00\n"
-            "\tFCONST 2.00\n"
-            "\tFCONST 3.00\n"
+            "\tFCONST 1.0\n"
+            "\tFCONST 2.0\n"
+            "\tFCONST 3.0\n"
             "\tICONST 3\n"
             "\tVECTOR\n"
             "\tSTORE 0\n"
@@ -114,32 +130,40 @@ void vector() {
     run(code);
 }
 
+/*
+ * func f(){ g(3) }
+ * func g(x:int) { return x }
+ */
 void func_call() {
     char *code =
             "0 strings\n"
             "3 functions\n"
             "\t0: addr=0 args=0 locals=0 type=0 1/f\n"
             "\t1: addr=9 args=1 locals=0 type=1 1/g\n"
-            "\t2: addr=14 args=0 locals=0 type=0 4/main\n"
-            "7 instr, 15 bytes\n"
+            "\t2: addr=13 args=0 locals=0 type=0 4/main\n"
+            "6 instr, 14 bytes\n"
             "\tICONST 3\n"
             "\tCALL 1\n"
             "\tRET\n"
             "\tILOAD 0\n"
             "\tRETV\n"
-            "\tRET\n"
             "\tHALT\n";
     run(code);
 }
 
+/*
+ * func f(q:int){var i = g(q,true) print (i)}
+ *func g(z:int,b:boolean):int{ print(b) return z }
+ *f(1)
+ */
 void func_call_with_args() {
     char *code =
             "0 strings\n"
             "3 functions\n"
             "\t0: addr=0 args=1 locals=1 type=0 1/f\n"
             "\t1: addr=19 args=2 locals=0 type=1 1/g\n"
-            "\t2: addr=28 args=0 locals=0 type=0 4/main\n"
-            "15 instr, 37 bytes\n"
+            "\t2: addr=27 args=0 locals=0 type=0 4/main\n"
+            "14 instr, 36 bytes\n"
             "\tILOAD 0\n"
             "\tICONST 1\n"
             "\tCALL 1\n"
@@ -151,13 +175,78 @@ void func_call_with_args() {
             "\tIPRINT\n"
             "\tILOAD 0\n"
             "\tRETV\n"
-            "\tRET\n"
             "\tICONST 1\n"
             "\tCALL 0\n"
             "\tHALT";
     run(code);
 }
 
+/*
+ * func f(){var y = g(3,1) print (y)}
+ * func g(z:int,y:int):boolean { if(z>y){return true} else {return false} }
+ * f()
+ */
+void func_call_two_args() {
+    char *code =
+    "0 strings\n"
+    "3 functions\n"
+    "\t0: addr=0 args=0 locals=1 type=0 1/f\n"
+    "\t1: addr=21 args=2 locals=0 type=3 1/g\n"
+    "\t2: addr=46 args=0 locals=0 type=0 4/main\n"
+    "18 instr, 50 bytes\n"
+    "\tICONST 3\n"
+    "\tICONST 1\n"
+    "\tCALL 1\n"
+    "\tSTORE 0\n"
+    "\tILOAD 0\n"
+    "\tIPRINT\n"
+    "\tRET\n"
+    "\tILOAD 0\n"
+    "\tILOAD 1\n"
+    "\tIGT\n"
+    "\tBRF 18\n"
+    "\tICONST 1\n"
+    "\tRETV\n"
+    "\tBR 9\n"
+    "\tICONST 0\n"
+    "\tRETV\n"
+    "\tCALL 0\n"
+    "\tHALT\n";
+    run(code);
+}
+
+void fun_call_with_return() {
+    char *code =
+    "0 strings\n"
+    "3 functions\n"
+    "\t0: addr=0 args=0 locals=1 type=0 1/f\n"
+    "\t1: addr=16 args=1 locals=0 type=3 1/g\n"
+    "\t2: addr=43 args=0 locals=0 type=0 4/main\n"
+    "17 instr, 47 bytes\n"
+    "\tICONST 3\n"
+    "\tCALL 1\n"
+    "\tSTORE 0\n"
+    "\tILOAD 0\n"
+    "\tIPRINT\n"
+    "\tRET\n"
+    "\tILOAD 0\n"
+    "\tICONST 0\n"
+    "\tIGT\n"
+    "\tBRF 18\n"
+    "\tICONST 1\n"
+    "\tRETV\n"
+    "\tBR 9\n"
+    "\tICONST 0\n"
+    "\tRETV\n"
+    "\tCALL 0\n"
+    "\tHALT\n";
+    run(code);
+}
+
+/*
+ * var i = 3
+ * if ( i>0 ) print (i)
+ */
 void if_stat() {
     char *code =
         "0 strings\n"
@@ -175,11 +264,14 @@ void if_stat() {
         "\tHALT\n";
     run(code);
 }
-
+/*
+ * var i = 3
+ * if ( i>0 ) print (i)
+ * else print (1);
+ */
 void if_else() {
     char *code =
-        "1 strings\n"
-        "\t0: 2/hi\n"
+        "0 strings\n"
         "1 functions\n"
         "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
         "12 instr, 32 bytes\n"
@@ -192,12 +284,16 @@ void if_else() {
         "\tILOAD 0\n"
         "\tIPRINT\n"
         "\tBR 7\n"
-        "\tSCONST 0\n"
-        "\tSPRINT\n"
+        "\tICONST 1\n"
+        "\tIPRINT\n"
         "\tHALT\n";
     run(code);
 }
-
+/*
+ * var i = 0
+ * while ( i<10 ) {i = i + 1 }
+ * print(i)
+ */
 void while_stat() {
     char *code =
         "0 strings\n"
@@ -221,15 +317,20 @@ void while_stat() {
     run(code);
 }
 
+/*
+ * var x = [1.0,2.0,3.0]
+ * x[1] = 4.0
+ * print (x)
+ */
 void vector_element_assign() {
     char *code =
         "0 strings\n"
         "1 functions\n"
         "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
         "13 instr, 42 bytes\n"
-        "\tFCONST 1.00\n"
-        "\tFCONST 2.00\n"
-        "\tFCONST 3.00\n"
+        "\tFCONST 1.0\n"
+        "\tFCONST 2.0\n"
+        "\tFCONST 3.0\n"
         "\tICONST 3\n"
         "\tVECTOR\n"
         "\tSTORE 0\n"
@@ -259,44 +360,15 @@ void test_int_to_string() {
     run(code);
 }
 
-void fun_call_with_return() {
-    char *code =
-        "0 strings\n"
-        "3 functions\n"
-        "\t0: addr=0 args=0 locals=1 type=0 1/f\n"
-        "\t1: addr=16 args=1 locals=0 type=3 1/g\n"
-        "\t2: addr=44 args=0 locals=0 type=0 4/main\n"
-        "18 instr, 48 bytes\n"
-        "\tICONST 3\n"
-        "\tCALL 1\n"
-        "\tSTORE 0\n"
-        "\tILOAD 0\n"
-        "\tIPRINT\n"
-        "\tRET\n"
-        "\tILOAD 0\n"
-        "\tICONST 0\n"
-        "\tIGT\n"
-        "\tBRF 18\n"
-        "\tICONST 1\n"
-        "\tRETV\n"
-        "\tBR 9\n"
-        "\tICONST 0\n"
-        "\tRETV\n"
-        "\tRET\n"
-        "\tCALL 0\n"
-        "\tHALT\n";
-    run(code);
-}
-
 void vector_add_int() {
     char *code =
         "0 strings\n"
         "1 functions\n"
         "\t0: addr=0 args=0 locals=2 type=0 4/main\n"
         "13 instr, 41 bytes\n"
-        "\tFCONST 1.00\n"
-        "\tFCONST 2.00\n"
-        "\tFCONST 3.00\n"
+        "\tFCONST 1.0\n"
+        "\tFCONST 2.0\n"
+        "\tFCONST 3.0\n"
         "\tICONST 3\n"
         "\tVECTOR\n"
         "\tSTORE 0\n"
@@ -309,59 +381,111 @@ void vector_add_int() {
         "\tHALT\n";
     run(code);
 }
-
+/*
+ * var x = "car"
+ * var y = "cat"
+ * var z = x[1] + y[2]
+ * print (z)
+ *
+ */
 void string_index() {
     char *code =
-    "2 strings\n"
-    "\t0: 3/car\n"
-    "\t1: 3/cat\n"
-    "1 functions\n"
-    "\t0: addr=0 args=0 locals=3 type=0 4/main\n"
-    "15 instr, 39 bytes\n"
-    "\tSCONST 0\n"
-    "\tSTORE 0\n"
-    "\tSCONST 1\n"
-    "\tSTORE 1\n"
-    "\tSLOAD 1\n"
-    "\tICONST 2\n"
-    "\tSLOAD_INDEX \n"
-    "\tSLOAD 0\n"
-    "\tICONST 1\n"
-    "\tSLOAD_INDEX\n"
-    "\tSADD\n"
-    "\tSTORE 2\n"
-    "\tSLOAD 2\n"
-    "\tSPRINT\n"
-    "\tHALT\n";
+        "2 strings\n"
+        "\t0: 3/car\n"
+        "\t1: 3/cat\n"
+        "1 functions\n"
+        "\t0: addr=0 args=0 locals=3 type=0 4/main\n"
+        "15 instr, 39 bytes\n"
+        "\tSCONST 0\n"
+        "\tSTORE 0\n"
+        "\tSCONST 1\n"
+        "\tSTORE 1\n"
+        "\tSLOAD 0\n"
+        "\tICONST 1\n"
+        "\tSLOAD_INDEX \n"
+        "\tSLOAD 1\n"
+        "\tICONST 2\n"
+        "\tSLOAD_INDEX\n"
+        "\tSADD\n"
+        "\tSTORE 2\n"
+        "\tSLOAD 2\n"
+        "\tSPRINT\n"
+        "\tHALT\n";
+    run(code);
+}
+/*
+ * func fib(x:int) : int {
+ *      if (x <= 1) { return 1 }
+ *      return fib(x-1) + fib(x-2)
+ *  }
+ * print(fib(5))
+ */
+
+void fib() {
+    char *code =
+        "0 strings\n"
+        "2 functions\n"
+        "\t0: addr=0 args=1 locals=0 type=1 3/fib\n"
+        "\t1: addr=44 args=0 locals=0 type=0 4/main\n"
+        "20 instr, 53 bytes\n"
+        "\tILOAD 0\n"
+        "\tICONST 1\n"
+        "\tILE\n"
+        "\tBRF 9\n"
+        "\tICONST 1\n"
+        "\tRETV\n"
+        "\tILOAD 0\n"
+        "\tICONST 1\n"
+        "\tISUB\n"
+        "\tCALL 0\n"
+        "\tILOAD 0\n"
+        "\tICONST 2\n"
+        "\tISUB\n"
+        "\tCALL 0\n"
+        "\tIADD\n"
+        "\tRETV\n"
+        "\tICONST 5\n"
+        "\tCALL 0\n"
+        "\tIPRINT\n"
+        "\tHALT\n";
     run(code);
 }
 
-void func_call_two_args() {
+/*
+    *func f(x:[]):[]{return x*2}
+    *var v = [1,2,3]
+    *var v2 = f(v)
+    *print ((v2/v)+1)
+    */
+void vector_op() {
     char *code =
         "0 strings\n"
-        "3 functions\n"
-        "\t0: addr=0 args=0 locals=1 type=0 1/f\n"
-        "\t1: addr=21 args=2 locals=0 type=3 1/g\n"
-        "\t2: addr=47 args=0 locals=0 type=0 4/main\n"
-        "19 instr, 51 bytes\n"
+        "2 functions\n"
+        "\t0: addr=0 args=1 locals=0 type=5 1/f\n"
+        "\t1: addr=10 args=0 locals=2 type=0 4/main\n"
+        "23 instr, 61 bytes\n"
+        "\tVLOAD 0\n"
+        "\tICONST 2\n"
+        "\tVMULI\n"
+        "\tRETV\n"
+        "\tICONST 1\n"
+        "\tI2F\n"
+        "\tICONST 2\n"
+        "\tI2F\n"
         "\tICONST 3\n"
-        "\tICONST 1\n"
-        "\tCALL 1\n"
+        "\tI2F\n"
+        "\tICONST 3\n"
+        "\tVECTOR\n"
         "\tSTORE 0\n"
-        "\tILOAD 0\n"
-        "\tIPRINT\n"
-        "\tRET\n"
-        "\tILOAD 0\n"
-        "\tILOAD 1\n"
-        "\tIGT\n"
-        "\tBRF 18\n"
-        "\tICONST 1\n"
-        "\tRETV\n"
-        "\tBR 9\n"
-        "\tICONST 0\n"
-        "\tRETV\n"
-        "\tRET\n"
+        "\tVLOAD 0\n"
         "\tCALL 0\n"
+        "\tSTORE 1\n"
+        "\tVLOAD 1\n"
+        "\tVLOAD 0\n"
+        "\tVDIV\n"
+        "\tICONST 1\n"
+        "\tVADDI\n"
+        "\tVPRINT\n"
         "\tHALT\n";
     run(code);
 }
@@ -387,6 +511,8 @@ int main(int argc, char *argv[]) {
     test(vector_add_int);
     test(string_index);
     test(func_call_two_args);
+    test(fib);
+    test(vector_op);
     return 0;
 }
 
