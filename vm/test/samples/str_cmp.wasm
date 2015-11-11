@@ -1,0 +1,32 @@
+3 strings
+0: 3/cat
+1: 0/
+2: 5/miaow
+2 functions
+0: addr=0 args=1 locals=0 type=3 1/f
+1: addr=23 args=0 locals=2 type=0 4/main
+24 instr, 60 bytes
+SLOAD 0
+SCONST 0
+SLE
+BRF 9
+ICONST 1
+RETV
+ICONST 0
+RETV
+RET
+SCONST 1
+STORE 0
+SCONST 0
+STORE 1
+SLOAD 0
+SLOAD 1
+SGT
+BRF 6
+BR 7
+SCONST 2
+SPRINT
+SLOAD 1
+CALL 0
+BPRINT
+HALT

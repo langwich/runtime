@@ -33,82 +33,82 @@ SOFTWARE.
 VM_INSTRUCTION vm_instructions[] = {
 		{"HALT", HALT, 0},
 
-		{"IADD", IADD, 0},
-		{"ISUB", ISUB, 0},
-		{"IMUL", IMUL, 0},
-		{"IDIV", IDIV, 0},
-		{"FADD", FADD, 0},
-		{"FSUB", FSUB, 0},
-		{"FMUL", FMUL, 0},
-		{"FDIV", FDIV, 0},
-		{"VADD", VADD, 0},
-		{"VADDI",VADDI,0},
-		{"VADDF",VADDF,0},
-		{"VSUB", VSUB, 0},
+		{"IADD",  IADD,  0},
+		{"ISUB",  ISUB,  0},
+		{"IMUL",  IMUL,  0},
+		{"IDIV",  IDIV,  0},
+		{"FADD",  FADD,  0},
+		{"FSUB",  FSUB,  0},
+		{"FMUL",  FMUL,  0},
+		{"FDIV",  FDIV,  0},
+		{"VADD",  VADD,  0},
+		{"VADDI", VADDI, 0},
+		{"VADDF", VADDF, 0},
+		{"VSUB",  VSUB,  0},
 		{"VSUBI", VSUBI, 0},
 		{"VSUBF", VSUBF, 0},
-		{"VMUL", VMUL, 0},
+		{"VMUL",  VMUL,  0},
 		{"VMULI", VMULI, 0},
 		{"VMULF", VMULF, 0},
-		{"VDIV", VDIV, 0},
+		{"VDIV",  VDIV,  0},
 		{"VDIVI", VDIVI, 0},
 		{"VDIVF", VDIVF, 0},
-		{"SADD", SADD, 0},
+		{"SADD",  SADD,  0},
 
-		{"OR", OR, 0},
-		{"AND", AND, 0},
-		{"INEG", INEG, 0},
-		{"FNEG", FNEG, 0},
-		{"NOT", NOT, 0},
+		{"OR",    OR,    0},
+		{"AND",   AND,   0},
+		{"INEG",  INEG,  0},
+		{"FNEG",  FNEG,  0},
+		{"NOT",   NOT,   0},
 
-		{"I2F", I2F, 0},
-		{"F2I", F2I, 0},
-		{"I2S", I2S, 0},
-		{"F2S", F2S, 0},
-		{"V2S", V2S, 0},
+		{"I2F",   I2F,   0},
+		{"F2I",   F2I,   0},
+		{"I2S",   I2S,   0},
+		{"F2S",   F2S,   0},
+		{"V2S",   V2S,   0},
 
-		{"IEQ", IEQ, 0},
-		{"INEQ", INEQ, 0},
-		{"ILT", ILT, 0},
-		{"ILE", ILE, 0},
-		{"IGT", IGT, 0},
-		{"IGE", IGE, 0},
-		{"FEQ", FEQ, 0},
-		{"FNEQ", FNEQ, 0},
-		{"FLT", FLT, 0},
-		{"FLE", FLE, 0},
-		{"FGT", FGT, 0},
-		{"FGE", FGE, 0},
-		{"SEQ", SEQ, 0},
-		{"SNEQ", SNEQ, 0},
-		{"SGT", SGT, 0},
-		{"SGE", SGE, 0},
-		{"SLT", SGT, 0},
-		{"SLE", SGE, 0},
-		{"VEQ", VEQ, 0},
-		{"VNEQ",VNEQ, 0},
+		{"IEQ",   IEQ,   0},
+		{"INEQ",  INEQ,  0},
+		{"ILT",   ILT,   0},
+		{"ILE",   ILE,   0},
+		{"IGT",   IGT,   0},
+		{"IGE",   IGE,   0},
+		{"FEQ",   FEQ,   0},
+		{"FNEQ",  FNEQ,  0},
+		{"FLT",   FLT,   0},
+		{"FLE",   FLE,   0},
+		{"FGT",   FGT,   0},
+		{"FGE",   FGE,   0},
+		{"SEQ",   SEQ,   0},
+		{"SNEQ",  SNEQ,  0},
+		{"SGT",   SGT,   0},
+		{"SGE",   SGE,   0},
+		{"SLT",   SGT,   0},
+		{"SLE",   SGE,   0},
+		{"VEQ",   VEQ,   0},
+		{"VNEQ",  VNEQ,  0},
 		{"ISNIL", ISNIL, 0},
 
-		{"BR",  BR, 2},
-		{"BRT", BRT, 2},
-		{"BRF", BRF, 2},
-		{"ICONST", ICONST, 4},
-		{"FCONST", FCONST, 4},
-		{"SCONST", SCONST, 2},
+		{"BR",    BR,    2},
+		{"BRT",   BRT,   2},
+		{"BRF",   BRF,   2},
+		{"ICONST",ICONST,4},
+		{"FCONST",FCONST,4},
+		{"SCONST",SCONST,2},
 		{"ILOAD", ILOAD, 2},
 		{"FLOAD", FLOAD, 2},
 		{"VLOAD", VLOAD, 2},
 		{"SLOAD", SLOAD, 2},
 		{"STORE", STORE, 2},
-		{"VECTOR", VECTOR, 0},
-		{"LOAD_INDEX", VLOAD_INDEX, 0},
+		{"VECTOR",VECTOR, 0},
+		{"LOAD_INDEX",  VLOAD_INDEX, 0},
 		{"STORE_INDEX", STORE_INDEX, 0},
 		{"SLOAD_INDEX", SLOAD_INDEX, 0},
-		{"NIL", NIL, 0},
-		{"POP", POP, 1},
+		{"NIL",  NIL,  0},
+		{"POP",  POP,  1},
 		{"CALL", CALL, 2},
 		{"RETV", RETV, 0},
-		{"RET", RET, 0},
+		{"RET",  RET,  0},
 		{"IPRINT", IPRINT, 0},
 		{"FPRINT", FPRINT, 0},
 		{"BPRINT", BPRINT, 0},
@@ -166,13 +166,12 @@ static void inline validate_stack_address(int a) {
 	}
 }
 
-void vm_exec(VM *vm, bool trace)
-{
+void vm_exec(VM *vm, bool trace) {
 	int a = 0;
 	int i = 0;
 	bool b1, b2;
 	double f,g;
-	word address = 0;
+	char* c;
 	PVector_ptr vptr,r,l;
 	int x, y;
 	Activation_Record *frame;
@@ -245,7 +244,7 @@ void vm_exec(VM *vm, bool trace)
 				validate_stack_address(sp-1);
 				r = stack[sp--].vptr;
 				l = stack[sp].vptr;
-				vptr = Vector_div(l,r);
+				vptr = Vector_add(l,r);
 				stack[sp].vptr = vptr;
                 break;
 			case VADDI:
@@ -450,43 +449,49 @@ void vm_exec(VM *vm, bool trace)
 				break;
             case SEQ:
 				validate_stack_address(sp-1);
-				b1 = String_eq(String_new(stack[sp--].s),String_new(stack[sp].s));
-				stack[sp].b = b1;
+				c = stack[sp--].s;
+				b1 = String_eq(String_new(stack[sp--].s),String_new(c));
+				stack[++sp].b = b1;
                 break;
             case SNEQ:
 				validate_stack_address(sp-1);
-				b1 = String_neq(String_new(stack[sp--].s),String_new(stack[sp].s));
-				stack[sp].b = b1;
+				c = stack[sp--].s;
+				b1 = String_neq(String_new(stack[sp--].s),String_new(c));
+				stack[++sp].b = b1;
                 break;
             case SGT:
 				validate_stack_address(sp-1);
-				b1 = String_gt(String_new(stack[sp--].s),String_new(stack[sp].s));
-				stack[sp].b = b1;
+				c = stack[sp--].s;
+				b1 = String_gt(String_new(stack[sp--].s),String_new(c));
+				stack[++sp].b = b1;
                 break;
             case SGE:
 				validate_stack_address(sp-1);
-				b1 = String_ge(String_new(stack[sp--].s),String_new(stack[sp].s));
-				stack[sp].b = b1;
+				c = stack[sp--].s;
+				b1 = String_ge(String_new(stack[sp--].s),String_new(c));
+				stack[++sp].b = b1;
                 break;
             case SLT:
 				validate_stack_address(sp-1);
-				b1 = String_lt(String_new(stack[sp--].s),String_new(stack[sp].s));
-				stack[sp].b = b1;
+				c = stack[sp--].s;
+				b1 = String_lt(String_new(stack[sp--].s),String_new(c));
+				stack[++sp].b = b1;
                 break;
             case SLE:
 				validate_stack_address(sp-1);
-				b1 = String_le(String_new(stack[sp--].s),String_new(stack[sp].s));
-				stack[sp].b = b1;
+				c = stack[sp--].s;
+				b1 = String_le(String_new(stack[sp--].s),String_new(c));
+				stack[++sp].b = b1;
                 break;
 			case VEQ:
 				validate_stack_address(sp-1);
-				b1 = Vector_eq(stack[sp--].vptr,stack[sp].vptr);
-				stack[sp].b = b1;
+				b1 = Vector_eq(stack[sp--].vptr,stack[sp--].vptr);
+				stack[++sp].b = b1;
 				break;
 			case VNEQ:
 				validate_stack_address(sp-1);
-				b1 = Vector_neq(stack[sp--].vptr,stack[sp].vptr);
-				stack[sp].b = b1;
+				b1 = Vector_neq(stack[sp--].vptr,stack[sp--].vptr);
+				stack[++sp].b = b1;
 				break;
 			case ISNIL:
 				validate_stack_address(sp);
@@ -555,12 +560,13 @@ void vm_exec(VM *vm, bool trace)
 				break;
 			case VECTOR:
 				i = stack[sp--].i;
+				validate_stack_address(sp-i+1);
 				PVector_ptr pvec = PVector_init(0, i);
 				for (int j = i-1; j >= 0;j--) {
 					set_ith(pvec,j,stack[sp--].f);
 				}
 				stack[++sp].vptr = pvec;
-				print_vector(pvec);
+				//print_vector(pvec);
 				break;
 			case VLOAD_INDEX:
 				validate_stack_address(sp-1);
@@ -579,7 +585,7 @@ void vm_exec(VM *vm, bool trace)
 			case SLOAD_INDEX:
 				validate_stack_address(sp-1);
 				i = stack[sp--].i;
-				char* c = String_from_char(stack[sp--].s[i])->str;
+				char* c = String_from_char(stack[sp--].s[i-1])->str;
 				stack[++sp].s = c;
 				break;
 			case NIL:
@@ -596,12 +602,12 @@ void vm_exec(VM *vm, bool trace)
 			case RETV:
 				frame = &vm->call_stack[vm->callsp--];
 				ip = frame->retaddr;
-				fprintf(stderr, "returning from %s to %d\n", frame->func->name, ip);
+				//fprintf(stderr, "returning from %s to %d\n", frame->func->name, ip);
 				break;
 			case RET:
 				frame = &vm->call_stack[vm->callsp--];
 				ip = frame->retaddr;
-				fprintf(stderr, "returning from %s to %d\n", frame->func->name, ip);
+				//fprintf(stderr, "returning from %s to %d\n", frame->func->name, ip);
 				break;
 			case IPRINT:
 				validate_stack_address(sp);
@@ -638,7 +644,7 @@ void vm_exec(VM *vm, bool trace)
 
 void vm_call(VM *vm, Function_metadata *func)
 {
-	fprintf(stderr, "call %s\n", func->name);
+	//fprintf(stderr, "call %s\n", func->name);
 	Activation_Record *r = &vm->call_stack[++vm->callsp];
 	r->func = func;
 	r->retaddr = vm->ip + 2; // save return address (assume ip is 1st byte of operand)

@@ -1,0 +1,32 @@
+0 strings
+3 functions
+0: addr=0 args=1 locals=0 type=3 3/foo
+1: addr=11 args=1 locals=0 type=3 3/bar
+2: addr=39 args=0 locals=2 type=0 4/main
+26 instr, 70 bytes
+ILOAD 0
+ICONST 10
+ILT
+RETV
+RET
+ILOAD 0
+ICONST 1
+ILT
+BRF 12
+ICONST 1
+RETV
+BR 9
+ICONST 0
+RETV
+RET
+ICONST 5
+CALL 1
+STORE 0
+ICONST 1
+CALL 0
+STORE 1
+ILOAD 0
+ILOAD 1
+OR
+BPRINT
+HALT

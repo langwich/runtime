@@ -1,0 +1,31 @@
+0 strings
+2 functions
+0: addr=0 args=1 locals=2 type=5 3/foo
+1: addr=42 args=0 locals=2 type=0 4/main
+26 instr, 70 bytes
+ICONST 2
+I2F
+ICONST 4
+I2F
+ICONST 6
+I2F
+ICONST 3
+VECTOR
+STORE 1
+VLOAD 1
+ILOAD 0
+VDIVI
+STORE 2
+VLOAD 2
+RETV
+RET
+FCONST 5.0
+STORE 0
+ICONST 2
+CALL 0
+FLOAD 0
+VMULF
+STORE 1
+VLOAD 1
+VPRINT
+HALT

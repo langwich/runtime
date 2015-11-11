@@ -1,0 +1,16 @@
+0 strings
+2 functions
+0: addr=0 args=1 locals=0 type=3 3/bar
+1: addr=11 args=0 locals=1 type=0 4/main
+11 instr, 27 bytes
+ILOAD 0
+ICONST 10
+ILT
+RETV
+RET
+ICONST 5
+STORE 0
+ILOAD 0
+CALL 0
+BPRINT
+HALT

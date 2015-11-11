@@ -1,0 +1,26 @@
+0 strings
+2 functions
+0: addr=0 args=1 locals=0 type=1 3/fib
+1: addr=45 args=0 locals=0 type=0 4/main
+21 instr, 55 bytes
+ILOAD 0
+ICONST 1
+ILE
+BRF 9
+ICONST 1
+RETV
+ILOAD 0
+ICONST 1
+ISUB
+CALL 0
+ILOAD 0
+ICONST 2
+ISUB
+CALL 0
+IADD
+RETV
+RET
+ICONST 5
+CALL 0
+IPRINT
+HALT

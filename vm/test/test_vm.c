@@ -426,8 +426,8 @@ void fib() {
         "0 strings\n"
         "2 functions\n"
         "\t0: addr=0 args=1 locals=0 type=1 3/fib\n"
-        "\t1: addr=44 args=0 locals=0 type=0 4/main\n"
-        "20 instr, 53 bytes\n"
+        "\t1: addr=45 args=0 locals=0 type=0 4/main\n"
+        "21 instr, 55 bytes\n"
         "\tILOAD 0\n"
         "\tICONST 1\n"
         "\tILE\n"
@@ -444,6 +444,7 @@ void fib() {
         "\tCALL 0\n"
         "\tIADD\n"
         "\tRETV\n"
+        "\tRET\n"
         "\tICONST 5\n"
         "\tCALL 0\n"
         "\tIPRINT\n"
@@ -490,29 +491,105 @@ void vector_op() {
     run(code);
 }
 
+void op_bollean_vars() {
+    char *code = "0 strings\n"
+    "3 functions\n"
+    "0: addr=0 args=1 locals=0 type=3 3/foo\n"
+    "1: addr=11 args=1 locals=0 type=3 3/bar\n"
+    "2: addr=39 args=0 locals=2 type=0 4/main\n"
+    "26 instr, 70 bytes\n"
+    "ILOAD 0\n"
+    "ICONST 10\n"
+    "ILT\n"
+    "RETV\n"
+    "RET\n"
+    "ILOAD 0\n"
+    "ICONST 1\n"
+    "ILT\n"
+    "BRF 12\n"
+    "ICONST 1\n"
+    "RETV\n"
+    "BR 9\n"
+    "ICONST 0\n"
+    "RETV\n"
+    "RET\n"
+    "ICONST 5\n"
+    "CALL 1\n"
+    "STORE 0\n"
+    "ICONST 1\n"
+    "CALL 0\n"
+    "STORE 1\n"
+    "ILOAD 0\n"
+    "ILOAD 1\n"
+    "OR\n"
+    "BPRINT\n"
+    "HALT\n";
+    run(code);
+}
+
+void testNestedBlock() {
+    char *code = "4 strings\n"
+    "0: 3/cat\n"
+    "1: 3/dog\n"
+    "2: 3/moo\n"
+    "3: 3/boo\n"
+    "2 functions\n"
+    "0: addr=0 args=1 locals=5 type=1 1/f\n"
+    "1: addr=52 args=0 locals=0 type=0 4/main\n"
+    "25 instr, 69 bytes\n"
+    "ICONST 32\n"
+    "STORE 1\n"
+    "SCONST 0\n"
+    "STORE 2\n"
+    "SCONST 1\n"
+    "STORE 4\n"
+    "SCONST 2\n"
+    "STORE 5\n"
+    "ILOAD 1\n"
+    "RETV\n"
+    "SCONST 3\n"
+    "STORE 4\n"
+    "ICONST 7\n"
+    "I2F\n"
+    "ICONST 1\n"
+    "VECTOR\n"
+    "STORE 3\n"
+    "RET\n"
+    "ICONST 1\n"
+    "I2F\n"
+    "ICONST 1\n"
+    "VECTOR\n"
+    "CALL 0\n"
+    "IPRINT\n"
+    "HALT\n";
+    run(code);
+}
+
 
 int main(int argc, char *argv[]) {
     cunit_setup = setup;
     cunit_teardown = teardown;
 
-    test(string_add);
-    test(hello);
-    test(int_var_def);
-    test(string_var_def);
-    test(vector);
-    test(func_call);
-    test(func_call_with_args);
-    test(if_stat);
-    test(if_else);
-    test(while_stat);
-    test(vector_element_assign);
-    test(test_int_to_string);
-    test(fun_call_with_return);
-    test(vector_add_int);
-    test(string_index);
-    test(func_call_two_args);
+//    test(string_add);
+//    test(hello);
+//    test(int_var_def);
+//    test(string_var_def);
+//    test(vector);
+//    test(func_call);
+//    test(func_call_with_args);
+//    test(if_stat);
+//    test(if_else);
+//    test(while_stat);
+//    test(vector_element_assign);
+//    test(test_int_to_string);
+//    test(fun_call_with_return);
+//    test(vector_add_int);
+//    test(string_index);
+//    test(func_call_two_args);
     test(fib);
-    test(vector_op);
+//    test(vector_op);
+//    test(op_bollean_vars);
+//    test(testNestedBlock);
     return 0;
 }
 
