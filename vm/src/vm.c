@@ -599,7 +599,7 @@ void vm_exec(VM *vm, bool trace) {
 				vm_call(vm, &vm->functions[a]);
 				LOAD_REGISTERS(vm);
 				break;
-			case RETV:
+			case RETV: //if we have the return stat in if, we must exit function , like "func fib(x:int) : int { if (x <= 1) { return 1 } return fib(x-1) + fib(x-2) }"
 				frame = &vm->call_stack[vm->callsp--];
 				ip = frame->retaddr;
 				//fprintf(stderr, "returning from %s to %d\n", frame->func->name, ip);
