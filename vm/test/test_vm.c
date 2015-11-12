@@ -69,8 +69,8 @@ void string_add() {
         "1 functions\n"
         "\t0: addr=0 args=0 locals=0 type=1 4/main\n"
         "5 instr, 9 bytes\n"
-        "\tSCONST 1\n"
         "\tSCONST 0\n"
+        "\tSCONST 1\n"
         "\tSADD\n"
         "\tSPRINT\n"
         "\tHALT";
@@ -140,13 +140,14 @@ void func_call() {
             "3 functions\n"
             "\t0: addr=0 args=0 locals=0 type=0 1/f\n"
             "\t1: addr=9 args=1 locals=0 type=1 1/g\n"
-            "\t2: addr=13 args=0 locals=0 type=0 4/main\n"
-            "6 instr, 14 bytes\n"
+            "\t2: addr=14 args=0 locals=0 type=0 4/main\n"
+            "7 instr, 15 bytes\n"
             "\tICONST 3\n"
             "\tCALL 1\n"
             "\tRET\n"
             "\tILOAD 0\n"
             "\tRETV\n"
+            "\tRET\n"
             "\tHALT\n";
     run(code);
 }
@@ -162,8 +163,8 @@ void func_call_with_args() {
             "3 functions\n"
             "\t0: addr=0 args=1 locals=1 type=0 1/f\n"
             "\t1: addr=19 args=2 locals=0 type=1 1/g\n"
-            "\t2: addr=27 args=0 locals=0 type=0 4/main\n"
-            "14 instr, 36 bytes\n"
+            "\t2: addr=28 args=0 locals=0 type=0 4/main\n"
+            "15 instr, 37 bytes\n"
             "\tILOAD 0\n"
             "\tICONST 1\n"
             "\tCALL 1\n"
@@ -175,6 +176,7 @@ void func_call_with_args() {
             "\tIPRINT\n"
             "\tILOAD 0\n"
             "\tRETV\n"
+            "\tRET\n"
             "\tICONST 1\n"
             "\tCALL 0\n"
             "\tHALT";
@@ -192,8 +194,8 @@ void func_call_two_args() {
     "3 functions\n"
     "\t0: addr=0 args=0 locals=1 type=0 1/f\n"
     "\t1: addr=21 args=2 locals=0 type=3 1/g\n"
-    "\t2: addr=46 args=0 locals=0 type=0 4/main\n"
-    "18 instr, 50 bytes\n"
+    "\t2: addr=47 args=0 locals=0 type=0 4/main\n"
+    "19 instr, 51 bytes\n"
     "\tICONST 3\n"
     "\tICONST 1\n"
     "\tCALL 1\n"
@@ -210,6 +212,7 @@ void func_call_two_args() {
     "\tBR 9\n"
     "\tICONST 0\n"
     "\tRETV\n"
+    "\tRET\n"
     "\tCALL 0\n"
     "\tHALT\n";
     run(code);
@@ -221,8 +224,8 @@ void fun_call_with_return() {
     "3 functions\n"
     "\t0: addr=0 args=0 locals=1 type=0 1/f\n"
     "\t1: addr=16 args=1 locals=0 type=3 1/g\n"
-    "\t2: addr=43 args=0 locals=0 type=0 4/main\n"
-    "17 instr, 47 bytes\n"
+    "\t2: addr=44 args=0 locals=0 type=0 4/main\n"
+    "18 instr, 48 bytes\n"
     "\tICONST 3\n"
     "\tCALL 1\n"
     "\tSTORE 0\n"
@@ -238,6 +241,7 @@ void fun_call_with_return() {
     "\tBR 9\n"
     "\tICONST 0\n"
     "\tRETV\n"
+    "\tRET\n"
     "\tCALL 0\n"
     "\tHALT\n";
     run(code);
@@ -570,26 +574,28 @@ int main(int argc, char *argv[]) {
     cunit_setup = setup;
     cunit_teardown = teardown;
 
-//    test(string_add);
-//    test(hello);
-//    test(int_var_def);
-//    test(string_var_def);
-//    test(vector);
-//    test(func_call);
-//    test(func_call_with_args);
-//    test(if_stat);
-//    test(if_else);
-//    test(while_stat);
-//    test(vector_element_assign);
-//    test(test_int_to_string);
-//    test(fun_call_with_return);
-//    test(vector_add_int);
-//    test(string_index);
-//    test(func_call_two_args);
+    test(string_add);
+    test(hello);
+    test(int_var_def);
+    test(string_var_def);
+    test(vector);
+    test(func_call);
+    test(func_call_with_args);
+    test(func_call_two_args);
+    test(fun_call_with_return);
+    test(if_stat);
+    test(if_else);
+    test(while_stat);
+    test(vector_element_assign);
+    test(test_int_to_string);
+
+    test(vector_add_int);
+    test(string_index);
+
     test(fib);
-//    test(vector_op);
-//    test(op_bollean_vars);
-//    test(testNestedBlock);
+    test(vector_op);
+    test(op_bollean_vars);
+    test(testNestedBlock);
     return 0;
 }
 
