@@ -33,9 +33,7 @@ static const int MAX_FUNCTIONS	= 1000;
 static const int MAX_LOCALS		= 10;	// max locals/args in activation record
 static const int MAX_CALL_STACK = 1000;
 static const int MAX_OPND_STACK = 1000;
-static const int NUM_INSTRS		= 79;
-
-static const int VM_NIL         = ((uintptr_t)0);
+static const int NUM_INSTRS		= 78;
 
 typedef unsigned char byte;
 typedef uintptr_t word; // has to be big enough to hold a native machine pointer
@@ -117,7 +115,6 @@ typedef enum {
 	SLE,
 	VEQ,
 	VNEQ,
-	ISNIL,
 
 	BR,                 // branch 16-bit relative in code memory; relative to addr of BR
 	BRT,                // branch if true
@@ -137,7 +134,7 @@ typedef enum {
 	VLOAD_INDEX,         // array index a[i]
 	STORE_INDEX,		// store into a[i]
 	SLOAD_INDEX,
-	NIL,                // push null pointer onto stack
+	PUSH,                // push null pointer onto stack
 	POP,				// drop top of stack
 
 	CALL,               // call a function using index

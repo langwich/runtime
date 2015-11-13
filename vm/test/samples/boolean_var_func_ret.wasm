@@ -3,20 +3,21 @@
 1: 3/sad
 2 functions
 0: addr=0 args=1 locals=0 type=3 3/foo
-1: addr=11 args=0 locals=2 type=0 4/main
-18 instr, 46 bytes
+1: addr=14 args=0 locals=2 type=0 4/main
+19 instr, 49 bytes
 ILOAD 0
 ICONST 10
 ILT
 RETV
-RET
+PUSH 3
+RETV
 ICONST 5
 STORE 0
 ILOAD 0
 CALL 0
 STORE 1
 ILOAD 1
-BRF 14
+BRF 10
 SCONST 0
 SPRINT
 BR 7

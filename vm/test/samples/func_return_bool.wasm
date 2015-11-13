@@ -1,13 +1,14 @@
 0 strings
 2 functions
 0: addr=0 args=1 locals=0 type=3 3/bar
-1: addr=11 args=0 locals=1 type=0 4/main
-11 instr, 27 bytes
+1: addr=14 args=0 locals=1 type=0 4/main
+12 instr, 30 bytes
 ILOAD 0
 ICONST 10
 ILT
 RETV
-RET
+PUSH 3
+RETV
 ICONST 5
 STORE 0
 ILOAD 0

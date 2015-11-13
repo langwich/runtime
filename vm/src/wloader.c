@@ -91,7 +91,6 @@ VM *vm_load(FILE *f)
             VM_INSTRUCTION *I = vm_instr("FCONST");
             code[ip] = I->opcode;
             ip++;
-            //unsigned int as_int = *((unsigned int *)&fvalue);
             e.f = fvalue;
             unsigned int as_int = (unsigned int)e.f;
             vm_write32(&code[ip], as_int);
@@ -115,7 +114,6 @@ VM *vm_load(FILE *f)
             ip += I->opnd_size;
         }
         else if ( n==1 ) {
-//            printf("%s\n", name);
         }
     }
 

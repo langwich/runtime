@@ -1,8 +1,8 @@
 0 strings
 2 functions
 0: addr=0 args=0 locals=1 type=5 1/f
-1: addr=32 args=0 locals=0 type=0 4/main
-17 instr, 41 bytes
+1: addr=35 args=0 locals=0 type=0 4/main
+18 instr, 44 bytes
 ICONST 1
 I2F
 ICONST 2
@@ -14,7 +14,8 @@ VECTOR
 STORE 0
 VLOAD 0
 RETV
-RET
+PUSH 5
+RETV
 CALL 0
 CALL 0
 VADD

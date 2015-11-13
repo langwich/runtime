@@ -4,13 +4,14 @@
 2: 5/duper
 2 functions
 0: addr=0 args=1 locals=0 type=4 11/becomeSuper
-1: addr=9 args=0 locals=0 type=0 4/main
-12 instr, 24 bytes
+1: addr=12 args=0 locals=0 type=0 4/main
+13 instr, 27 bytes
 SCONST 0
 SLOAD 0
 SADD
 RETV
-RET
+PUSH 4
+RETV
 SCONST 1
 CALL 0
 SPRINT

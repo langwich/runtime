@@ -87,7 +87,6 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"SLE",   SGE,   0},
 		{"VEQ",   VEQ,   0},
 		{"VNEQ",  VNEQ,  0},
-		{"ISNIL", ISNIL, 0},
 
 		{"BR",    BR,    2},
 		{"BRT",   BRT,   2},
@@ -104,8 +103,8 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"LOAD_INDEX",  VLOAD_INDEX, 0},
 		{"STORE_INDEX", STORE_INDEX, 0},
 		{"SLOAD_INDEX", SLOAD_INDEX, 0},
-		{"NIL",  NIL,  0},
-		{"POP",  POP,  1},
+		{"PUSH",  PUSH,  2},
+		{"POP",  POP,  0},
 		{"CALL", CALL, 2},
 		{"RETV", RETV, 0},
 		{"RET",  RET,  0},
@@ -208,16 +207,19 @@ void vm_exec(VM *vm, bool trace) {
 				stack[sp].i = x - y;
 				break;
 			case IMUL:
+				validate_stack_address(sp-1);
 				y = stack[sp--].i;
 				x = stack[sp].i;
 				stack[sp].i = x * y;
 				break;
 			case IDIV:
+				validate_stack_address(sp-1);
 				y = stack[sp--].i;
 				x = stack[sp].i;
 				stack[sp].i = x / y;
 				break;
 			case FADD:
+				validate_stack_address(sp-1);
 				f = stack[sp--].f;
 				g = stack[sp].f;
 				stack[sp].f = f + g;
@@ -493,10 +495,6 @@ void vm_exec(VM *vm, bool trace) {
 				b1 = Vector_neq(stack[sp--].vptr,stack[sp--].vptr);
 				stack[++sp].b = b1;
 				break;
-			case ISNIL:
-				validate_stack_address(sp);
-				stack[sp].b = false; // = stack[sp]== VM_NIL ? VM_FALSE : VM_TRUE;
-				break;
 			case BR:
 				ip += int16(code,ip) - 1;
 				break;
@@ -566,16 +564,13 @@ void vm_exec(VM *vm, bool trace) {
 					set_ith(pvec,j,stack[sp--].f);
 				}
 				stack[++sp].vptr = pvec;
-				//print_vector(pvec);
 				break;
 			case VLOAD_INDEX:
-				validate_stack_address(sp-1);
 				i = stack[sp--].i;
 				vptr = stack[sp--].vptr;
 				vm->stack[++sp].f = ith(vptr, i);
 				break;
 			case STORE_INDEX:
-				validate_stack_address(sp-2);
 				f = stack[sp--].f;
 				i = stack[sp--].i;
 				vptr = stack[sp--].vptr;
@@ -583,12 +578,32 @@ void vm_exec(VM *vm, bool trace) {
 				print_vector(vptr);
 				break;
 			case SLOAD_INDEX:
-				validate_stack_address(sp-1);
 				i = stack[sp--].i;
 				char* c = String_from_char(stack[sp--].s[i-1])->str;
 				stack[++sp].s = c;
 				break;
-			case NIL:
+			case PUSH:
+				i = int16(code,ip);
+				ip += 2;
+				switch (i) {
+					case INT_TYPE:
+						stack[++sp].i = 0;
+						break;
+					case FLOAT_TYPE:
+						stack[++sp].f = 0.0;
+						break;
+					case BOOLEAN_TYPE:
+						stack[++sp].b = true;
+						break;
+					case STRING_TYPE:
+						stack[++sp].s = "";
+						break;
+					case VECTOR_TYPE:
+						stack[++sp].vptr = PVector_init(0, 0);
+						break;
+					default:
+						break;
+				}
 				break;
 			case POP:
 				sp--;
@@ -599,15 +614,13 @@ void vm_exec(VM *vm, bool trace) {
 				vm_call(vm, &vm->functions[a]);
 				LOAD_REGISTERS(vm);
 				break;
-			case RETV: //if we have the return stat in if, we must exit function , like "func fib(x:int) : int { if (x <= 1) { return 1 } return fib(x-1) + fib(x-2) }"
+			case RETV:
 				frame = &vm->call_stack[vm->callsp--];
 				ip = frame->retaddr;
-				//fprintf(stderr, "returning from %s to %d\n", frame->func->name, ip);
 				break;
 			case RET:
 				frame = &vm->call_stack[vm->callsp--];
 				ip = frame->retaddr;
-				//fprintf(stderr, "returning from %s to %d\n", frame->func->name, ip);
 				break;
 			case IPRINT:
 				validate_stack_address(sp);
@@ -644,7 +657,6 @@ void vm_exec(VM *vm, bool trace) {
 
 void vm_call(VM *vm, Function_metadata *func)
 {
-	//fprintf(stderr, "call %s\n", func->name);
 	Activation_Record *r = &vm->call_stack[++vm->callsp];
 	r->func = func;
 	r->retaddr = vm->ip + 2; // save return address (assume ip is 1st byte of operand)

@@ -82,13 +82,13 @@ void string_add() {
  */
 void int_var_def() {
     char *code =
-            "0 strings\n"
-            "1 functions\n"
-            "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
-            "3 instr, 9 bytes\n"
-            "\tICONST 1\n"
-            "\tSTORE 0\n"
-            "\tHALT\n";
+        "0 strings\n"
+        "1 functions\n"
+        "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "3 instr, 9 bytes\n"
+        "\tICONST 1\n"
+        "\tSTORE 0\n"
+        "\tHALT\n";
     run(code);
 }
 
@@ -97,14 +97,14 @@ void int_var_def() {
  */
 void string_var_def() {
     char *code =
-            "1 strings\n"
-            "\t0: 5/hello\n"
-            "1 functions\n"
-            "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
-            "3 instr, 7 bytes\n"
-            "\tSCONST 0\n"
-            "\tSTORE 0\n"
-            "\tHALT\n";
+        "1 strings\n"
+        "\t0: 5/hello\n"
+        "1 functions\n"
+        "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "3 instr, 7 bytes\n"
+        "\tSCONST 0\n"
+        "\tSTORE 0\n"
+        "\tHALT\n";
     run(code);
 }
 
@@ -114,72 +114,77 @@ void string_var_def() {
  */
 void vector() {
     char *code =
-            "0 strings\n"
-            "1 functions\n"
-            "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
-            "9 instr, 28 bytes\n"
-            "\tFCONST 1.0\n"
-            "\tFCONST 2.0\n"
-            "\tFCONST 3.0\n"
-            "\tICONST 3\n"
-            "\tVECTOR\n"
-            "\tSTORE 0\n"
-            "\tVLOAD 0\n"
-            "\tVPRINT\n"
-            "\tHALT\n";
+        "0 strings\n"
+        "1 functions\n"
+        "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "9 instr, 28 bytes\n"
+        "\tFCONST 1.0\n"
+        "\tFCONST 2.0\n"
+        "\tFCONST 3.0\n"
+        "\tICONST 3\n"
+        "\tVECTOR\n"
+        "\tSTORE 0\n"
+        "\tVLOAD 0\n"
+        "\tVPRINT\n"
+        "\tHALT\n";
     run(code);
 }
 
 /*
  * func f(){ g(3) }
- * func g(x:int) { return x }
+ * func g(x:int):int { return x }
+ * f()
  */
 void func_call() {
     char *code =
-            "0 strings\n"
-            "3 functions\n"
-            "\t0: addr=0 args=0 locals=0 type=0 1/f\n"
-            "\t1: addr=9 args=1 locals=0 type=1 1/g\n"
-            "\t2: addr=14 args=0 locals=0 type=0 4/main\n"
-            "7 instr, 15 bytes\n"
-            "\tICONST 3\n"
-            "\tCALL 1\n"
-            "\tRET\n"
-            "\tILOAD 0\n"
-            "\tRETV\n"
-            "\tRET\n"
-            "\tHALT\n";
+        "0 strings\n"
+        "3 functions\n"
+        "\t0: addr=0 args=0 locals=0 type=0 1/f\n"
+        "\t1: addr=10 args=1 locals=0 type=1 1/g\n"
+        "\t2: addr=18 args=0 locals=0 type=0 4/main\n"
+        "10 instr, 22 bytes\n"
+        "\tICONST 3\n"
+        "\tCALL 1\n"
+        "\tPOP\n"
+        "\tRET\n"
+        "\tILOAD 0\n"
+        "\tRETV\n"
+        "\tPUSH 1\n"
+        "\tRETV\n"
+        "\tCALL 0\n"
+        "\tHALT";
     run(code);
 }
 
 /*
  * func f(q:int){var i = g(q,true) print (i)}
- *func g(z:int,b:boolean):int{ print(b) return z }
- *f(1)
+ * func g(z:int,b:boolean):int{ print(b) return z }
+ * f(1)
  */
 void func_call_with_args() {
     char *code =
-            "0 strings\n"
-            "3 functions\n"
-            "\t0: addr=0 args=1 locals=1 type=0 1/f\n"
-            "\t1: addr=19 args=2 locals=0 type=1 1/g\n"
-            "\t2: addr=28 args=0 locals=0 type=0 4/main\n"
-            "15 instr, 37 bytes\n"
-            "\tILOAD 0\n"
-            "\tICONST 1\n"
-            "\tCALL 1\n"
-            "\tSTORE 1\n"
-            "\tILOAD 1\n"
-            "\tIPRINT\n"
-            "\tRET\n"
-            "\tILOAD 1\n"
-            "\tIPRINT\n"
-            "\tILOAD 0\n"
-            "\tRETV\n"
-            "\tRET\n"
-            "\tICONST 1\n"
-            "\tCALL 0\n"
-            "\tHALT";
+        "0 strings\n"
+        "3 functions\n"
+        "0: addr=0 args=1 locals=1 type=0 1/f\n"
+        "1: addr=19 args=2 locals=0 type=1 1/g\n"
+        "2: addr=31 args=0 locals=0 type=0 4/main\n"
+        "16 instr, 40 bytes\n"
+        "ILOAD 0\n"
+        "ICONST 1\n"
+        "CALL 1\n"
+        "STORE 1\n"
+        "ILOAD 1\n"
+        "IPRINT\n"
+        "RET\n"
+        "ILOAD 1\n"
+        "BPRINT\n"
+        "ILOAD 0\n"
+        "RETV\n"
+        "PUSH 1\n"
+        "RETV\n"
+        "ICONST 1\n"
+        "CALL 0\n"
+        "HALT\n";
     run(code);
 }
 
@@ -190,60 +195,32 @@ void func_call_with_args() {
  */
 void func_call_two_args() {
     char *code =
-    "0 strings\n"
-    "3 functions\n"
-    "\t0: addr=0 args=0 locals=1 type=0 1/f\n"
-    "\t1: addr=21 args=2 locals=0 type=3 1/g\n"
-    "\t2: addr=47 args=0 locals=0 type=0 4/main\n"
-    "19 instr, 51 bytes\n"
-    "\tICONST 3\n"
-    "\tICONST 1\n"
-    "\tCALL 1\n"
-    "\tSTORE 0\n"
-    "\tILOAD 0\n"
-    "\tIPRINT\n"
-    "\tRET\n"
-    "\tILOAD 0\n"
-    "\tILOAD 1\n"
-    "\tIGT\n"
-    "\tBRF 18\n"
-    "\tICONST 1\n"
-    "\tRETV\n"
-    "\tBR 9\n"
-    "\tICONST 0\n"
-    "\tRETV\n"
-    "\tRET\n"
-    "\tCALL 0\n"
-    "\tHALT\n";
-    run(code);
-}
-
-void fun_call_with_return() {
-    char *code =
-    "0 strings\n"
-    "3 functions\n"
-    "\t0: addr=0 args=0 locals=1 type=0 1/f\n"
-    "\t1: addr=16 args=1 locals=0 type=3 1/g\n"
-    "\t2: addr=44 args=0 locals=0 type=0 4/main\n"
-    "18 instr, 48 bytes\n"
-    "\tICONST 3\n"
-    "\tCALL 1\n"
-    "\tSTORE 0\n"
-    "\tILOAD 0\n"
-    "\tIPRINT\n"
-    "\tRET\n"
-    "\tILOAD 0\n"
-    "\tICONST 0\n"
-    "\tIGT\n"
-    "\tBRF 18\n"
-    "\tICONST 1\n"
-    "\tRETV\n"
-    "\tBR 9\n"
-    "\tICONST 0\n"
-    "\tRETV\n"
-    "\tRET\n"
-    "\tCALL 0\n"
-    "\tHALT\n";
+        "0 strings\n"
+        "3 functions\n"
+        "0: addr=0 args=0 locals=1 type=0 1/f\n"
+        "1: addr=21 args=2 locals=0 type=3 1/g\n"
+        "2: addr=50 args=0 locals=0 type=0 4/main\n"
+        "20 instr, 54 bytes\n"
+        "ICONST 3\n"
+        "ICONST 1\n"
+        "CALL 1\n"
+        "STORE 0\n"
+        "ILOAD 0\n"
+        "BPRINT\n"
+        "RET\n"
+        "ILOAD 0\n"
+        "ILOAD 1\n"
+        "IGT\n"
+        "BRF 12\n"
+        "ICONST 1\n"
+        "RETV\n"
+        "BR 9\n"
+        "ICONST 0\n"
+        "RETV\n"
+        "PUSH 3\n"
+        "RETV\n"
+        "CALL 0\n"
+        "HALT";
     run(code);
 }
 
@@ -268,6 +245,7 @@ void if_stat() {
         "\tHALT\n";
     run(code);
 }
+
 /*
  * var i = 3
  * if ( i>0 ) print (i)
@@ -385,6 +363,7 @@ void vector_add_int() {
         "\tHALT\n";
     run(code);
 }
+
 /*
  * var x = "car"
  * var y = "cat"
@@ -429,143 +408,206 @@ void fib() {
     char *code =
         "0 strings\n"
         "2 functions\n"
-        "\t0: addr=0 args=1 locals=0 type=1 3/fib\n"
-        "\t1: addr=45 args=0 locals=0 type=0 4/main\n"
-        "21 instr, 55 bytes\n"
-        "\tILOAD 0\n"
-        "\tICONST 1\n"
-        "\tILE\n"
-        "\tBRF 9\n"
-        "\tICONST 1\n"
-        "\tRETV\n"
-        "\tILOAD 0\n"
-        "\tICONST 1\n"
-        "\tISUB\n"
-        "\tCALL 0\n"
-        "\tILOAD 0\n"
-        "\tICONST 2\n"
-        "\tISUB\n"
-        "\tCALL 0\n"
-        "\tIADD\n"
-        "\tRETV\n"
-        "\tRET\n"
-        "\tICONST 5\n"
-        "\tCALL 0\n"
-        "\tIPRINT\n"
-        "\tHALT\n";
+        "0: addr=0 args=1 locals=0 type=1 3/fib\n"
+        "1: addr=48 args=0 locals=0 type=0 4/main\n"
+        "22 instr, 58 bytes\n"
+        "ILOAD 0\n"
+        "ICONST 1\n"
+        "ILE\n"
+        "BRF 9\n"
+        "ICONST 1\n"
+        "RETV\n"
+        "ILOAD 0\n"
+        "ICONST 1\n"
+        "ISUB\n"
+        "CALL 0\n"
+        "ILOAD 0\n"
+        "ICONST 2\n"
+        "ISUB\n"
+        "CALL 0\n"
+        "IADD\n"
+        "RETV\n"
+        "PUSH 1\n"
+        "RETV\n"
+        "ICONST 5\n"
+        "CALL 0\n"
+        "IPRINT\n"
+        "HALT";
     run(code);
 }
 
 /*
-    *func f(x:[]):[]{return x*2}
-    *var v = [1,2,3]
-    *var v2 = f(v)
-    *print ((v2/v)+1)
-    */
+ * func f(x:[]):[]{return x*2}
+ * var v = [1,2,3]
+ * var v2 = f(v)
+ * print ((v2/v)+1)
+*/
 void vector_op() {
     char *code =
         "0 strings\n"
         "2 functions\n"
-        "\t0: addr=0 args=1 locals=0 type=5 1/f\n"
-        "\t1: addr=10 args=0 locals=2 type=0 4/main\n"
-        "23 instr, 61 bytes\n"
-        "\tVLOAD 0\n"
-        "\tICONST 2\n"
-        "\tVMULI\n"
-        "\tRETV\n"
-        "\tICONST 1\n"
-        "\tI2F\n"
-        "\tICONST 2\n"
-        "\tI2F\n"
-        "\tICONST 3\n"
-        "\tI2F\n"
-        "\tICONST 3\n"
-        "\tVECTOR\n"
-        "\tSTORE 0\n"
-        "\tVLOAD 0\n"
-        "\tCALL 0\n"
-        "\tSTORE 1\n"
-        "\tVLOAD 1\n"
-        "\tVLOAD 0\n"
-        "\tVDIV\n"
-        "\tICONST 1\n"
-        "\tVADDI\n"
-        "\tVPRINT\n"
-        "\tHALT\n";
+        "0: addr=0 args=1 locals=0 type=5 1/f\n"
+        "1: addr=14 args=0 locals=2 type=0 4/main\n"
+        "25 instr, 65 bytes\n"
+        "VLOAD 0\n"
+        "ICONST 2\n"
+        "VMULI\n"
+        "RETV\n"
+        "PUSH 5\n"
+        "RETV\n"
+        "ICONST 1\n"
+        "I2F\n"
+        "ICONST 2\n"
+        "I2F\n"
+        "ICONST 3\n"
+        "I2F\n"
+        "ICONST 3\n"
+        "VECTOR\n"
+        "STORE 0\n"
+        "VLOAD 0\n"
+        "CALL 0\n"
+        "STORE 1\n"
+        "VLOAD 1\n"
+        "VLOAD 0\n"
+        "VDIV\n"
+        "ICONST 1\n"
+        "VADDI\n"
+        "VPRINT\n"
+        "HALT";
     run(code);
 }
 
-void op_bollean_vars() {
+void op_boolean_vars() {
     char *code = "0 strings\n"
-    "3 functions\n"
-    "0: addr=0 args=1 locals=0 type=3 3/foo\n"
-    "1: addr=11 args=1 locals=0 type=3 3/bar\n"
-    "2: addr=39 args=0 locals=2 type=0 4/main\n"
-    "26 instr, 70 bytes\n"
-    "ILOAD 0\n"
-    "ICONST 10\n"
-    "ILT\n"
-    "RETV\n"
-    "RET\n"
-    "ILOAD 0\n"
-    "ICONST 1\n"
-    "ILT\n"
-    "BRF 12\n"
-    "ICONST 1\n"
-    "RETV\n"
-    "BR 9\n"
-    "ICONST 0\n"
-    "RETV\n"
-    "RET\n"
-    "ICONST 5\n"
-    "CALL 1\n"
-    "STORE 0\n"
-    "ICONST 1\n"
-    "CALL 0\n"
-    "STORE 1\n"
-    "ILOAD 0\n"
-    "ILOAD 1\n"
-    "OR\n"
-    "BPRINT\n"
-    "HALT\n";
+        "3 functions\n"
+        "0: addr=0 args=1 locals=0 type=3 3/foo\n"
+        "1: addr=14 args=1 locals=0 type=3 3/bar\n"
+        "2: addr=45 args=0 locals=2 type=0 4/main\n"
+        "28 instr, 76 bytes\n"
+        "ILOAD 0\n"
+        "ICONST 10\n"
+        "ILT\n"
+        "RETV\n"
+        "PUSH 3\n"
+        "RETV\n"
+        "ILOAD 0\n"
+        "ICONST 1\n"
+        "ILT\n"
+        "BRF 12\n"
+        "ICONST 1\n"
+        "RETV\n"
+        "BR 9\n"
+        "ICONST 0\n"
+        "RETV\n"
+        "PUSH 3\n"
+        "RETV\n"
+        "ICONST 5\n"
+        "CALL 1\n"
+        "STORE 0\n"
+        "ICONST 1\n"
+        "CALL 0\n"
+        "STORE 1\n"
+        "ILOAD 0\n"
+        "ILOAD 1\n"
+        "OR\n"
+        "BPRINT\n"
+        "HALT\n";
     run(code);
 }
 
 void testNestedBlock() {
-    char *code = "4 strings\n"
-    "0: 3/cat\n"
-    "1: 3/dog\n"
-    "2: 3/moo\n"
-    "3: 3/boo\n"
-    "2 functions\n"
-    "0: addr=0 args=1 locals=5 type=1 1/f\n"
-    "1: addr=52 args=0 locals=0 type=0 4/main\n"
-    "25 instr, 69 bytes\n"
-    "ICONST 32\n"
-    "STORE 1\n"
-    "SCONST 0\n"
-    "STORE 2\n"
-    "SCONST 1\n"
-    "STORE 4\n"
-    "SCONST 2\n"
-    "STORE 5\n"
-    "ILOAD 1\n"
-    "RETV\n"
-    "SCONST 3\n"
-    "STORE 4\n"
-    "ICONST 7\n"
-    "I2F\n"
-    "ICONST 1\n"
-    "VECTOR\n"
-    "STORE 3\n"
-    "RET\n"
-    "ICONST 1\n"
-    "I2F\n"
-    "ICONST 1\n"
-    "VECTOR\n"
-    "CALL 0\n"
-    "IPRINT\n"
-    "HALT\n";
+    char *code =
+        "4 strings\n"
+        "0: 3/cat\n"
+        "1: 3/dog\n"
+        "2: 3/moo\n"
+        "3: 3/boo\n"
+        "2 functions\n"
+        "0: addr=0 args=1 locals=5 type=1 1/f\n"
+        "1: addr=55 args=0 locals=0 type=0 4/main\n"
+        "26 instr, 72 bytes\n"
+        "ICONST 32\n"
+        "STORE 1\n"
+        "SCONST 0\n"
+        "STORE 2\n"
+        "SCONST 1\n"
+        "STORE 4\n"
+        "SCONST 2\n"
+        "STORE 5\n"
+        "ILOAD 1\n"
+        "RETV\n"
+        "SCONST 3\n"
+        "STORE 4\n"
+        "ICONST 7\n"
+        "I2F\n"
+        "ICONST 1\n"
+        "VECTOR\n"
+        "STORE 3\n"
+        "PUSH 1\n"
+        "RETV\n"
+        "ICONST 1\n"
+        "I2F\n"
+        "ICONST 1\n"
+        "VECTOR\n"
+        "CALL 0\n"
+        "IPRINT\n"
+        "HALT\n";
+    run(code);
+}
+
+void testNop() {
+    char *code =
+        "1 strings\n"
+        "0: 2/hi\n"
+        "1 functions\n"
+        "0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "11 instr, 29 bytes\n"
+        "ICONST 3\n"
+        "STORE 0\n"
+        "ILOAD 0\n"
+        "ICONST 0\n"
+        "IGT\n"
+        "BRF 7\n"
+        "NOP\n"
+        "BR 7\n"
+        "SCONST 0\n"
+        "SPRINT\n"
+        "HALT\n";
+    run(code);
+}
+
+void testFuncMissReturnValue() {
+    char *code =
+        "0 strings\n"
+        "2 functions\n"
+        "0: addr=0 args=1 locals=0 type=5 1/f\n"
+        "1: addr=55 args=0 locals=0 type=0 4/main\n"
+        "25 instr, 65 bytes\n"
+        "ILOAD 0\n"
+        "ICONST 0\n"
+        "ILT\n"
+        "BRF 23\n"
+        "ICONST 0\n"
+        "I2F\n"
+        "ICONST 1\n"
+        "VECTOR\n"
+        "ILOAD 0\n"
+        "VADDI\n"
+        "RETV\n"
+        "BR 22\n"
+        "ICONST 1\n"
+        "I2F\n"
+        "ICONST 1\n"
+        "VECTOR\n"
+        "ILOAD 0\n"
+        "VADDI\n"
+        "STORE 0\n"
+        "PUSH 5\n"
+        "RETV\n"
+        "ICONST 3\n"
+        "CALL 0\n"
+        "VPRINT\n"
+        "HALT";
     run(code);
 }
 
@@ -582,20 +624,19 @@ int main(int argc, char *argv[]) {
     test(func_call);
     test(func_call_with_args);
     test(func_call_two_args);
-    test(fun_call_with_return);
     test(if_stat);
     test(if_else);
     test(while_stat);
     test(vector_element_assign);
     test(test_int_to_string);
-
     test(vector_add_int);
     test(string_index);
-
     test(fib);
     test(vector_op);
-    test(op_bollean_vars);
+    test(op_boolean_vars);
     test(testNestedBlock);
+    test(testNop);
+    test(testFuncMissReturnValue);
     return 0;
 }
 
