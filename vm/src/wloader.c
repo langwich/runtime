@@ -57,7 +57,6 @@ VM *vm_load(FILE *f)
         fscanf(f, "%d: %d/", &index, &name_size);
         char *str = calloc(name_size+1, sizeof(char));
         fgets(str, name_size+1, f);
-        //printf("str %d %s\n", index, str);
         vm->strings[index] = str;
     }
     vm->num_strings = nstrings;
@@ -71,23 +70,20 @@ VM *vm_load(FILE *f)
                 &index, &addr, &args, &locals, &type, &name_size);
         char name[name_size+1];
         fgets(name, name_size+1, f);
-        //printf("func %d %d %d %d %d %s\n", index, addr, args, locals, type, name);
         def_function(vm, name, type, addr, args, locals);
     }
 
     int ninstr, nbytes;
     element e;
     fscanf(f, "%d instr, %d bytes\n", &ninstr, &nbytes);
-    //printf("%d instr, %d bytes\n", ninstr, nbytes);
     byte *code = calloc(nbytes, sizeof(byte));
-    addr32 ip = 0; // start loading bytecode at address 0
+    addr32 ip = 0;
     for (int i=1; i<=ninstr; i++) {
         char instr[80+1];
-        fgets(instr, 80+1, f); // get instruction
+        fgets(instr, 80+1, f);
         float fvalue;
         int n = sscanf(instr, "\tFCONST %f", &fvalue);
         if ( n==1 ) {
-            //printf("FCONST %f\n", fvalue);
             VM_INSTRUCTION *I = vm_instr("FCONST");
             code[ip] = I->opcode;
             ip++;
@@ -116,9 +112,7 @@ VM *vm_load(FILE *f)
         else if ( n==1 ) {
         }
     }
-
     fclose(f);
-
     vm_init(vm, code, nbytes);
     return vm;
 }

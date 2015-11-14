@@ -33,7 +33,7 @@ static const int MAX_FUNCTIONS	= 1000;
 static const int MAX_LOCALS		= 10;	// max locals/args in activation record
 static const int MAX_CALL_STACK = 1000;
 static const int MAX_OPND_STACK = 1000;
-static const int NUM_INSTRS		= 78;
+static const int NUM_INSTRS		= 77;
 
 typedef unsigned char byte;
 typedef uintptr_t word; // has to be big enough to hold a native machine pointer
@@ -57,13 +57,13 @@ static const int VECTOR_TYPE = 5;
 // Explicitly type the operations, even the loads/stores
 // for both safety, efficiency, and possible JIT from bytecodes later.
 typedef enum {
-	HALT=0,             // stop the program
+	HALT=0,
 
-	IADD,               // int add
+	IADD,
 	ISUB,
 	IMUL,
 	IDIV,
-	FADD,               // int add
+	FADD,
 	FSUB,
 	FMUL,
 	FDIV,
@@ -83,32 +83,30 @@ typedef enum {
 
     OR,
     AND,
+    INEG,
+	FNEG,
+	NOT,
 
-    INEG,               // negate integer
-	FNEG,               // negate float
-	NOT,                // boolean not 0->1, 1->0
+	I2F,
+	F2I,
+	I2S,
+	F2S,
+	V2S,
 
-	I2F,                // int to float
-	F2I,                // float to int
-	I2S,                // int to str
-	F2S,                // float to str
-	V2S,                // vector to str
-	//F2V,                // float to vector
-
-	IEQ,                // int equal
+	IEQ,
 	INEQ,
-	ILT,                // int less than
+	ILT,
 	ILE,
 	IGT,
 	IGE,
-	FEQ,                // float equal
+	FEQ,
 	FNEQ,
-	FLT,                // float less than
+	FLT,
 	FLE,
 	FGT,
 	FGE,
-	SEQ,//string equal
-	SNEQ, //string unequal
+	SEQ,
+	SNEQ,
 	SGT,
 	SGE,
 	SLT,
@@ -116,38 +114,37 @@ typedef enum {
 	VEQ,
 	VNEQ,
 
-	BR,                 // branch 16-bit relative in code memory; relative to addr of BR
-	BRT,                // branch if true
-	BRF,                // branch if false
+	BR,
+	BRF,
 
-	ICONST,             // push 32-bit constant integer
-	FCONST,             // floating point constant
-	SCONST,				// string const from from literal in vm via index
+	ICONST,
+	FCONST,
+	SCONST,
 
-	ILOAD,              // load int from local context using arg or local index
-	FLOAD,              // load float from local context
-	VLOAD,				// load vector
-	SLOAD,              // load string from local context
-	STORE,              // store into local context
+	ILOAD,
+	FLOAD,
+	VLOAD,
+	SLOAD,
+	STORE,
 
-	VECTOR,             // create vector of size n with element type float
-	VLOAD_INDEX,         // array index a[i]
-	STORE_INDEX,		// store into a[i]
+	VECTOR,
+	VLOAD_INDEX,
+	STORE_INDEX,
 	SLOAD_INDEX,
-	PUSH,                // push null pointer onto stack
-	POP,				// drop top of stack
+	PUSH,
+	POP,
 
-	CALL,               // call a function using index
-	RETV,               // return a value from function
-	RET,                // return from function
+	CALL,
+	RETV,
+	RET,
 
-	IPRINT,             // print stack top (mostly debugging)
+	IPRINT,
 	FPRINT,
 	BPRINT,
 	SPRINT,
 	VPRINT,
 
-	NOP                 // no-op, no operation
+	NOP
 } BYTECODE;
 
 typedef struct {
@@ -163,8 +160,6 @@ typedef union {
 	char *s;
 	PVector_ptr vptr;
 } element;
-
-// meta-data
 
 // to call a func, we use index into table of Function descriptors
 typedef struct function {

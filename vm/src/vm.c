@@ -89,7 +89,6 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"VNEQ",  VNEQ,  0},
 
 		{"BR",    BR,    2},
-		{"BRT",   BRT,   2},
 		{"BRF",   BRF,   2},
 		{"ICONST",ICONST,4},
 		{"FCONST",FCONST,4},
@@ -498,16 +497,6 @@ void vm_exec(VM *vm, bool trace) {
 			case BR:
 				ip += int16(code,ip) - 1;
 				break;
-			case BRT:
-				validate_stack_address(sp);
-				if ( stack[sp--].b ) {
-					int offset = int16(code,ip);
-					ip += offset - 1;
-				}
-				else {
-					ip += 2;
-				}
-				break;
 			case BRF:
 				validate_stack_address(sp);
 				if ( !stack[sp--].b ) {
@@ -583,7 +572,7 @@ void vm_exec(VM *vm, bool trace) {
 				stack[++sp].s = c;
 				break;
 			case PUSH:
-				i = int16(code,ip);
+				i = int16(code,ip); // index of function's return type
 				ip += 2;
 				switch (i) {
 					case INT_TYPE:
