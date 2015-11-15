@@ -46,6 +46,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <string.h>
 #include <cunit.h>
 #include <wich.h>
 
@@ -66,6 +67,26 @@ void test_strings() {
 	assert_equal(false, String_gt(s1,s2));
 	assert_equal(true, String_neq(s1,s2));
 	assert_equal(false, String_eq(s1,s2));
+
+	String *s3 = String_new("hello"), *s4 = String_new("hellaz");
+	assert_equal(false, String_le(s3, s4));
+	assert_equal(false, String_lt(s3, s4));
+	assert_equal(true, String_ge(s3, s4));
+	assert_equal(true, String_gt(s3, s4));
+	assert_equal(true, String_neq(s3,s4));
+	assert_equal(false, String_eq(s3,s4));
+
+	String *s5 = String_new("hello"), *s6 = String_new("helloa");
+	assert_equal(true, String_le(s5, s6));
+	assert_equal(true, String_lt(s5, s6));
+	assert_equal(false, String_ge(s5, s6));
+	assert_equal(false, String_gt(s5, s6));
+	assert_equal(true, String_neq(s5,s6));
+	assert_equal(false, String_eq(s5,s6));
+
+	String *s7 = String_new("hello"), *s8 = String_new("hello");
+	assert_equal(false, String_neq(s7,s8));
+	assert_equal(true, String_eq(s7,s8));
 }
 
 
