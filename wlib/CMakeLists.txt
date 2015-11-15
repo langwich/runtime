@@ -4,7 +4,7 @@ project(runtime)
 set(MODULE_NAME wlib)
 set(SOURCE src/wich.c src/persistent_vector.c)
 
-set(TEST_TARGETS persistent_vec)
+set(TEST_TARGETS persistent_vec runtime_tests)
 
 add_library(${MODULE_NAME} ${SOURCE})
 set_target_properties(${MODULE_NAME} PROPERTIES COMPILE_FLAGS "-DPLAIN")
