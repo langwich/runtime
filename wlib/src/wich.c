@@ -26,6 +26,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdbool.h>
 #include <wich.h>
+#include <assert.h>
 
 #ifndef REFCOUNTING
 void REF(heap_object *x) { }
@@ -214,19 +215,9 @@ String *String_add(String *s, String *t)
 }
 
 bool String_eq(String *s, String *t) {
-	if (strlen(s->str) != strlen(t->str)) {
-		return false;
-	}
-	else {
-		size_t n = strlen(s->str);
-		int i;
-		for (i = 0; i < n; i++) {
-			if(s->str[i] != t->str[i]) {
-				return false;
-			}
-		}
-	}
-	return true;
+	assert(s);
+	assert(t);
+	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) == 0;
 }
 
 bool String_neq(String *s, String *t) {
@@ -234,65 +225,26 @@ bool String_neq(String *s, String *t) {
 }
 
 bool String_gt(String *s, String *t) {
-	size_t len_s = strlen(s->str);
-	size_t len_t = strlen(t->str);
-	if (len_s > len_t) { return true;}
-	else if (len_s < len_t) {return false;}
-	else {
-		int i;
-		for (i = 0; i < len_s; i++) {
-			if(s->str[i] <= t->str[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+	assert(s);
+	assert(t);
+	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) > 0;
 }
 
 bool String_ge(String *s, String *t) {
-	size_t len_s = strlen(s->str);
-	size_t len_t = strlen(t->str);
-	if (len_s > len_t) { return true;}
-	else if (len_s < len_t) {return false;}
-	else {
-		int i;
-		for (i = 0; i < len_s; i++) {
-			if(s->str[i] < t->str[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+	assert(s);
+	assert(t);
+	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) >= 0;
 }
 bool String_lt(String *s, String *t) {
-	size_t len_s = strlen(s->str);
-	size_t len_t = strlen(t->str);
-	if (len_s < len_t) { return true;}
-	else if (len_s > len_t) {return false;}
-	else {
-		int i;
-		for (i = 0; i < len_s; i++) {
-			if(s->str[i] >= t->str[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+	assert(s);
+	assert(t);
+	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) < 0;
+
 }
 bool String_le(String *s, String *t) {
-	size_t len_s = strlen(s->str);
-	size_t len_t = strlen(t->str);
-	if (len_s < len_t) { return true;}
-	else if (len_s > len_t) {return false;}
-	else {
-		int i;
-		for (i = 0; i < len_s; i++) {
-			if(s->str[i] > t->str[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+	assert(s);
+	assert(t);
+	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) <= 0;
 }
 
 void print_alloc_strategy() {
