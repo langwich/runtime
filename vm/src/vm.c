@@ -25,7 +25,6 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <wich.h>
-
 #include "vm.h"
 
 #include "wloader.h"
@@ -99,7 +98,7 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"SLOAD", SLOAD, 2},
 		{"STORE", STORE, 2},
 		{"VECTOR",VECTOR, 0},
-		{"LOAD_INDEX",  VLOAD_INDEX, 0},
+		{"VLOAD_INDEX",  VLOAD_INDEX, 0},
 		{"STORE_INDEX", STORE_INDEX, 0},
 		{"SLOAD_INDEX", SLOAD_INDEX, 0},
 		{"PUSH",  PUSH,  2},
@@ -112,7 +111,9 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"BPRINT", BPRINT, 0},
 		{"SPRINT", SPRINT, 0},
 		{"VPRINT", VPRINT, 0},
-		{"NOP", NOP, 0}
+		{"NOP", NOP, 0},
+		{"VLEN", VLEN, 0},
+		{"SLEN", SLEN, 0}
 };
 
 static void vm_print_instr(VM *vm, addr32 ip);
@@ -317,7 +318,6 @@ void vm_exec(VM *vm, bool trace) {
 				vptr = stack[sp].vptr;
 				vptr = Vector_div(vptr,Vector_from_int(i,vptr.vector->length));
 				stack[sp].vptr = vptr;
-				print_pvector(vptr);
 				break;
 			case VDIVF:
 				validate_stack_address(sp-1);
@@ -548,7 +548,7 @@ void vm_exec(VM *vm, bool trace) {
 			case VECTOR:
 				i = stack[sp--].i;
 				validate_stack_address(sp-i+1);
-				PVector_ptr pvec = PVector_init(0, i);
+				PVector_ptr pvec = PVector_init(0, (size_t )i);
 				for (int j = i-1; j >= 0;j--) {
 					set_ith(pvec,j,stack[sp--].f);
 				}
@@ -564,7 +564,6 @@ void vm_exec(VM *vm, bool trace) {
 				i = stack[sp--].i;
 				vptr = stack[sp--].vptr;
 				set_ith(vptr, i, f);
-				print_vector(vptr);
 				break;
 			case SLOAD_INDEX:
 				i = stack[sp--].i;
@@ -630,6 +629,16 @@ void vm_exec(VM *vm, bool trace) {
 			case VPRINT:
 				validate_stack_address(sp);
 				print_vector(stack[sp--].vptr);
+				break;
+			case VLEN:
+				vptr = stack[sp--].vptr;
+				i = Vector_len(vptr);
+				stack[++sp].i = i;
+				break;
+			case SLEN:
+				c = stack[sp--].s;
+				i = String_len(String_new(c));
+				stack[++sp].i = i;
 				break;
 			case NOP : break;
 			default:

@@ -169,6 +169,12 @@ bool Vector_neq(PVector_ptr a, PVector_ptr b) {
 	return true;
 }
 
+int Vector_len(PVector_ptr v) {
+	REF((heap_object *)v.vector);
+	int len = (int)v.vector->length;
+	DEREF((heap_object *)v.vector);
+	return len;
+}
 void print_vector(PVector_ptr a)
 {
 	REF((heap_object *)a.vector);
@@ -218,6 +224,9 @@ String *String_from_float(float value) {
 	return String_new(s);
 }
 
+int String_len(String *s) {
+	return s->length;
+}
 void print_string(String *a)
 {
 	REF((heap_object *)a);

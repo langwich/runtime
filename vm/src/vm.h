@@ -33,7 +33,7 @@ static const int MAX_FUNCTIONS	= 1000;
 static const int MAX_LOCALS		= 10;	// max locals/args in activation record
 static const int MAX_CALL_STACK = 1000;
 static const int MAX_OPND_STACK = 1000;
-static const int NUM_INSTRS		= 77;
+static const int NUM_INSTRS		= 79;
 
 typedef unsigned char byte;
 typedef uintptr_t word; // has to be big enough to hold a native machine pointer
@@ -144,7 +144,9 @@ typedef enum {
 	SPRINT,
 	VPRINT,
 
-	NOP
+	NOP,
+	VLEN,
+	SLEN
 } BYTECODE;
 
 typedef struct {

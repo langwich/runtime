@@ -116,7 +116,7 @@ void vector() {
     char *code =
         "0 strings\n"
         "1 functions\n"
-        "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "0: addr=0 args=0 locals=1 type=0 4/main\n"
         "9 instr, 28 bytes\n"
         "\tFCONST 1.0\n"
         "\tFCONST 2.0\n"
@@ -611,6 +611,41 @@ void testFuncMissReturnValue() {
     run(code);
 }
 
+void test_len() {
+    char *code =
+    "1 strings\n"
+    "0: 2/hi\n"
+    "1 functions\n"
+    "0: addr=0 args=0 locals=4 type=0 4/main\n"
+    "24 instr, 62 bytes\n"
+    "ICONST 1\n"
+    "I2F\n"
+    "ICONST 4\n"
+    "I2F\n"
+    "ICONST 2\n"
+    "I2F\n"
+    "ICONST 3\n"
+    "I2F\n"
+    "ICONST 4\n"
+    "VECTOR\n"
+    "STORE 0\n"
+    "SCONST 0\n"
+    "STORE 1\n"
+    "VLOAD 0\n"
+    "VLEN\n"
+    "STORE 2\n"
+    "SLOAD 1\n"
+    "SLEN\n"
+    "STORE 3\n"
+    "ILOAD 2\n"
+    "IPRINT\n"
+    "ILOAD 3\n"
+    "IPRINT\n"
+    "HALT\n";
+    run(code);
+
+}
+
 
 int main(int argc, char *argv[]) {
     cunit_setup = setup;
@@ -637,6 +672,7 @@ int main(int argc, char *argv[]) {
     test(testNestedBlock);
     test(testNop);
     test(testFuncMissReturnValue);
+    test(test_len);
     return 0;
 }
 
