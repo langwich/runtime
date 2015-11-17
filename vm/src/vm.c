@@ -25,6 +25,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <wich.h>
+#include <gc.h>
 #include "vm.h"
 
 #include "wloader.h"
@@ -178,7 +179,7 @@ void vm_exec(VM *vm, bool trace) {
 	// simulate a call to main()
 	Function_metadata *const main = vm_function(vm, "main");
 	vm_call(vm, main);
-
+	gc_begin_func();
 	// Define VM registers (C compiler probably ignores 'register' nowadays
 	// but it's good documentation in this case. Keep as locals for
 	// convenience but write them back to the vm object after each decode/execute.
@@ -543,16 +544,18 @@ void vm_exec(VM *vm, bool trace) {
 			case STORE:
 				i = int16(code,ip);
 				ip += 2;
+				gc_add_root((void **)&stack[sp].s);
+				gc_add_root((void **)&stack[sp].vptr);
 				vm->call_stack[vm->callsp].locals[i] = stack[sp--]; // untyped store; it'll just copy all bits
 				break;
 			case VECTOR:
 				i = stack[sp--].i;
 				validate_stack_address(sp-i+1);
-				PVector_ptr pvec = PVector_init(0, (size_t )i);
+				vptr = PVector_init(0, (size_t )i);
 				for (int j = i-1; j >= 0;j--) {
-					set_ith(pvec,j,stack[sp--].f);
+					set_ith(vptr,j,stack[sp--].f);
 				}
-				stack[++sp].vptr = pvec;
+				stack[++sp].vptr = vptr;
 				break;
 			case VLOAD_INDEX:
 				i = stack[sp--].i;
@@ -601,14 +604,17 @@ void vm_exec(VM *vm, bool trace) {
 				WRITE_BACK_REGISTERS(vm); // (ip has been updated)
 				vm_call(vm, &vm->functions[a]);
 				LOAD_REGISTERS(vm);
+				gc_begin_func();
 				break;
 			case RETV:
 				frame = &vm->call_stack[vm->callsp--];
 				ip = frame->retaddr;
+				gc_end_func();
 				break;
 			case RET:
 				frame = &vm->call_stack[vm->callsp--];
 				ip = frame->retaddr;
+				gc_end_func();
 				break;
 			case IPRINT:
 				validate_stack_address(sp);
@@ -651,6 +657,12 @@ void vm_exec(VM *vm, bool trace) {
 	}
 	if (trace) vm_print_instr(vm, ip);
 	if (trace) vm_print_stack(vm);
+
+	gc_end_func();
+	//gc();
+	Heap_Info info = get_heap_info();
+	if ( info.live!=0 ) fprintf(stderr, "%d objects remain after collection\n", info.live);
+	gc_shutdown();
 }
 
 void vm_call(VM *vm, Function_metadata *func)
@@ -718,7 +730,7 @@ static void vm_print_stack(VM *vm) {
 	fprintf(stderr, " ]  ");
 	fprintf(stderr, "opnds=[");
 	for (int i = 0; i <= vm->sp; i++) {
-		word p = vm->stack[i].i;
+		int p = vm->stack[i].i;
 		vm_print_stack_value(vm, p);
 	}
 	fprintf(stderr, " ] fp=%d sp=%d\n", vm->fp, vm->sp);

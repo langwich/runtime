@@ -613,39 +613,70 @@ void testFuncMissReturnValue() {
 
 void test_len() {
     char *code =
-    "1 strings\n"
-    "0: 2/hi\n"
-    "1 functions\n"
-    "0: addr=0 args=0 locals=4 type=0 4/main\n"
-    "24 instr, 62 bytes\n"
-    "ICONST 1\n"
-    "I2F\n"
-    "ICONST 4\n"
-    "I2F\n"
-    "ICONST 2\n"
-    "I2F\n"
-    "ICONST 3\n"
-    "I2F\n"
-    "ICONST 4\n"
-    "VECTOR\n"
-    "STORE 0\n"
-    "SCONST 0\n"
-    "STORE 1\n"
-    "VLOAD 0\n"
-    "VLEN\n"
-    "STORE 2\n"
-    "SLOAD 1\n"
-    "SLEN\n"
-    "STORE 3\n"
-    "ILOAD 2\n"
-    "IPRINT\n"
-    "ILOAD 3\n"
-    "IPRINT\n"
-    "HALT\n";
+        "1 strings\n"
+        "0: 2/hi\n"
+        "1 functions\n"
+        "0: addr=0 args=0 locals=4 type=0 4/main\n"
+        "24 instr, 62 bytes\n"
+        "ICONST 1\n"
+        "I2F\n"
+        "ICONST 4\n"
+        "I2F\n"
+        "ICONST 2\n"
+        "I2F\n"
+        "ICONST 3\n"
+        "I2F\n"
+        "ICONST 4\n"
+        "VECTOR\n"
+        "STORE 0\n"
+        "SCONST 0\n"
+        "STORE 1\n"
+        "VLOAD 0\n"
+        "VLEN\n"
+        "STORE 2\n"
+        "SLOAD 1\n"
+        "SLEN\n"
+        "STORE 3\n"
+        "ILOAD 2\n"
+        "IPRINT\n"
+        "ILOAD 3\n"
+        "IPRINT\n"
+        "HALT\n";
+    run(code);
+}
+
+void test_len2() {
+    char *code =
+        "2 strings\n"
+        "0: 5/hello\n"
+        "1: 5/world\n"
+        "1 functions\n"
+        "0: addr=0 args=0 locals=2 type=0 4/main\n"
+        "21 instr, 49 bytes\n"
+        "SCONST 0\n"
+        "STORE 0\n"
+        "ICONST 1\n"
+        "I2F\n"
+        "ICONST 2\n"
+        "I2F\n"
+        "ICONST 3\n"
+        "I2F\n"
+        "ICONST 3\n"
+        "VECTOR\n"
+        "VLEN\n"
+        "STORE 1\n"
+        "SLOAD 0\n"
+        "SLEN\n"
+        "SCONST 1\n"
+        "SLEN\n"
+        "IADD\n"
+        "ILOAD 1\n"
+        "IADD\n"
+        "IPRINT\n"
+        "HALT\n";
     run(code);
 
 }
-
 
 int main(int argc, char *argv[]) {
     cunit_setup = setup;
@@ -656,23 +687,24 @@ int main(int argc, char *argv[]) {
     test(int_var_def);
     test(string_var_def);
     test(vector);
-    test(func_call);
-    test(func_call_with_args);
-    test(func_call_two_args);
-    test(if_stat);
-    test(if_else);
-    test(while_stat);
-    test(vector_element_assign);
-    test(test_int_to_string);
-    test(vector_add_int);
-    test(string_index);
-    test(fib);
-    test(vector_op);
-    test(op_boolean_vars);
-    test(testNestedBlock);
-    test(testNop);
-    test(testFuncMissReturnValue);
-    test(test_len);
+//    test(func_call);
+//    test(func_call_with_args);
+//    test(func_call_two_args);
+//    test(if_stat);
+//    test(if_else);
+//    test(while_stat);
+//    test(vector_element_assign);
+//    test(test_int_to_string);
+//    test(vector_add_int);
+//    test(string_index);
+//    test(fib);
+//    test(vector_op);
+//    test(op_boolean_vars);
+//    test(testNestedBlock);
+//    test(testNop);
+//    test(testFuncMissReturnValue);
+//    test(test_len);
+//    test(test_len2);
     return 0;
 }
 

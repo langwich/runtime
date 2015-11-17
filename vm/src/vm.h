@@ -207,7 +207,6 @@ extern void vm_exec(VM *vm, bool trace);
 
 extern byte *vm_malloc(VM *vm, int nbytes);
 extern void vm_free(VM *vm, byte *p);
-
 extern int def_function(VM *vm, char *name, int return_type, addr32 address, int nargs, int nlocals);
 
 extern VM_INSTRUCTION vm_instructions[];
