@@ -193,7 +193,7 @@ void vm_exec(VM *vm, bool trace) {
 
 	while (opcode != HALT && ip < vm->code_size ) {
 		if (trace) vm_print_instr(vm, ip);
-		ip++; //jump to next instruction or to operand
+		ip++;
 		switch (opcode) {
 			case IADD:
 				validate_stack_address(sp-1);
@@ -659,10 +659,9 @@ void vm_exec(VM *vm, bool trace) {
 	if (trace) vm_print_stack(vm);
 
 	gc_end_func();
-	//gc();
+	gc();
 	Heap_Info info = get_heap_info();
 	if ( info.live!=0 ) fprintf(stderr, "%d objects remain after collection\n", info.live);
-	gc_shutdown();
 }
 
 void vm_call(VM *vm, Function_metadata *func)
