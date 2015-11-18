@@ -90,9 +90,11 @@ VM_INSTRUCTION vm_instructions[] = {
 
 		{"BR",    BR,    2},
 		{"BRF",   BRF,   2},
+
 		{"ICONST",ICONST,4},
 		{"FCONST",FCONST,4},
 		{"SCONST",SCONST,2},
+
 		{"ILOAD", ILOAD, 2},
 		{"FLOAD", FLOAD, 2},
 		{"VLOAD", VLOAD, 2},
@@ -100,21 +102,28 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"STORE", STORE, 2},
 		{"VECTOR",VECTOR, 0},
 		{"VLOAD_INDEX",  VLOAD_INDEX, 0},
-		{"STORE_INDEX", STORE_INDEX, 0},
-		{"SLOAD_INDEX", SLOAD_INDEX, 0},
-		{"PUSH",  PUSH,  2},
+		{"STORE_INDEX", STORE_INDEX,  0},
+		{"SLOAD_INDEX", SLOAD_INDEX,  0},
+
+		{"PUSH", PUSH, 2},
 		{"POP",  POP,  0},
 		{"CALL", CALL, 2},
 		{"RETV", RETV, 0},
 		{"RET",  RET,  0},
+
 		{"IPRINT", IPRINT, 0},
 		{"FPRINT", FPRINT, 0},
 		{"BPRINT", BPRINT, 0},
 		{"SPRINT", SPRINT, 0},
 		{"VPRINT", VPRINT, 0},
-		{"NOP", NOP, 0},
-		{"VLEN", VLEN, 0},
-		{"SLEN", SLEN, 0}
+
+		{"NOP",   NOP,  0},
+		{"VLEN",  VLEN, 0},
+		{"SLEN",  SLEN, 0},
+		{"ENTER", ENTER,0},
+		{"EXIT",  EXIT, 0},
+		{"SROOT", SROOT,0},
+		{"VROOT", VROOT,0}
 };
 
 static void vm_print_instr(VM *vm, addr32 ip);
@@ -124,6 +133,8 @@ static inline int int16(const byte *data, addr32 ip);
 static inline float float32(const byte *data, addr32 ip);
 static void vm_call(VM *vm, Function_metadata *func);
 static void vm_print_stack_value(VM *vm, word p);
+
+void gc_check();
 
 VM *vm_alloc()
 {
@@ -175,11 +186,11 @@ void vm_exec(VM *vm, bool trace) {
 	PVector_ptr vptr,r,l;
 	int x, y;
 	Activation_Record *frame;
-
+	int num_root = 0;
 	// simulate a call to main()
 	Function_metadata *const main = vm_function(vm, "main");
 	vm_call(vm, main);
-	gc_begin_func();
+
 	// Define VM registers (C compiler probably ignores 'register' nowadays
 	// but it's good documentation in this case. Keep as locals for
 	// convenience but write them back to the vm object after each decode/execute.
@@ -508,7 +519,7 @@ void vm_exec(VM *vm, bool trace) {
 					ip += 2;
 				}
 				break;
-			case ICONST: // code4[ip]
+			case ICONST:
 				stack[++sp].i = int32(code,ip);
 				ip += 4;
 				break;
@@ -522,12 +533,12 @@ void vm_exec(VM *vm, bool trace) {
 				stack[++sp].s = vm->strings[i];
 				break;
 			case ILOAD:
-				i = int16(code,ip); // get index into locals
+				i = int16(code,ip);
 				ip += 2;
 				stack[++sp].i = vm->call_stack[vm->callsp].locals[i].i;
 				break;
 			case FLOAD:
-				i = int16(code,ip); // get index into locals
+				i = int16(code,ip);
 				ip += 2;
 				stack[++sp].f = vm->call_stack[vm->callsp].locals[i].f;
 				break;
@@ -544,8 +555,6 @@ void vm_exec(VM *vm, bool trace) {
 			case STORE:
 				i = int16(code,ip);
 				ip += 2;
-				gc_add_root((void **)&stack[sp].s);
-				gc_add_root((void **)&stack[sp].vptr);
 				vm->call_stack[vm->callsp].locals[i] = stack[sp--]; // untyped store; it'll just copy all bits
 				break;
 			case VECTOR:
@@ -560,13 +569,13 @@ void vm_exec(VM *vm, bool trace) {
 			case VLOAD_INDEX:
 				i = stack[sp--].i;
 				vptr = stack[sp--].vptr;
-				vm->stack[++sp].f = ith(vptr, i);
+				vm->stack[++sp].f = ith(vptr, i-1);
 				break;
 			case STORE_INDEX:
 				f = stack[sp--].f;
 				i = stack[sp--].i;
 				vptr = stack[sp--].vptr;
-				set_ith(vptr, i, f);
+				set_ith(vptr, i-1, f);
 				break;
 			case SLOAD_INDEX:
 				i = stack[sp--].i;
@@ -604,17 +613,14 @@ void vm_exec(VM *vm, bool trace) {
 				WRITE_BACK_REGISTERS(vm); // (ip has been updated)
 				vm_call(vm, &vm->functions[a]);
 				LOAD_REGISTERS(vm);
-				gc_begin_func();
 				break;
 			case RETV:
 				frame = &vm->call_stack[vm->callsp--];
 				ip = frame->retaddr;
-				gc_end_func();
 				break;
 			case RET:
 				frame = &vm->call_stack[vm->callsp--];
 				ip = frame->retaddr;
-				gc_end_func();
 				break;
 			case IPRINT:
 				validate_stack_address(sp);
@@ -646,6 +652,23 @@ void vm_exec(VM *vm, bool trace) {
 				i = String_len(String_new(c));
 				stack[++sp].i = i;
 				break;
+			case ENTER:
+				num_root = gc_num_roots();
+				break;
+			case EXIT:
+				if (strcmp(*&vm->call_stack[vm->callsp].func->name,"main")==0 ) {
+					gc_set_num_roots(0);
+				}
+				else {
+					gc_set_num_roots(num_root);
+				}
+				break;
+			case SROOT:
+				gc_add_root((void **)&stack[sp].s);
+				break;
+			case VROOT:
+				gc_add_root((void **)&stack[sp].vptr);
+				break;
 			case NOP : break;
 			default:
 				printf("invalid opcode: %d at ip=%d\n", opcode, (ip - 1));
@@ -658,7 +681,11 @@ void vm_exec(VM *vm, bool trace) {
 	if (trace) vm_print_instr(vm, ip);
 	if (trace) vm_print_stack(vm);
 
-	gc_end_func();
+	//gc_set_num_roots(0);
+	gc_check();
+}
+
+void gc_check() {
 	gc();
 	Heap_Info info = get_heap_info();
 	if ( info.live!=0 ) fprintf(stderr, "%d objects remain after collection\n", info.live);

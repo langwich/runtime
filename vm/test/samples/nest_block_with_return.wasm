@@ -5,30 +5,41 @@
 3: 3/boo
 2 functions
 0: addr=0 args=1 locals=5 type=1 1/f
-1: addr=52 args=0 locals=0 type=0 4/main
-25 instr, 69 bytes
+1: addr=63 args=0 locals=0 type=0 4/main
+36 instr, 82 bytes
+ENTER
 ICONST 32
 STORE 1
 SCONST 0
 STORE 2
+SROOT
 SCONST 1
 STORE 4
+SROOT
 SCONST 2
 STORE 5
+SROOT
 ILOAD 1
+EXIT
 RETV
 SCONST 3
 STORE 4
+SROOT
 ICONST 7
 I2F
 ICONST 1
 VECTOR
 STORE 3
-RET
+VROOT
+PUSH 1
+RETV
+EXIT
+ENTER
 ICONST 1
 I2F
 ICONST 1
 VECTOR
 CALL 0
 IPRINT
+EXIT
 HALT

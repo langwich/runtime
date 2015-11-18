@@ -3,12 +3,14 @@
 1: 3/dog
 2 functions
 0: addr=0 args=0 locals=1 type=0 1/f
-1: addr=35 args=0 locals=0 type=0 4/main
-17 instr, 39 bytes
+1: addr=38 args=0 locals=0 type=0 4/main
+22 instr, 44 bytes
+ENTER
 SCONST 0
 SCONST 1
 SADD
 STORE 0
+SROOT
 SLOAD 0
 SPRINT
 SLOAD 0
@@ -20,5 +22,8 @@ SLOAD_INDEX
 SADD
 SPRINT
 RET
+EXIT
+ENTER
 CALL 0
+EXIT
 HALT

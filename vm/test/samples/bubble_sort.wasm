@@ -1,13 +1,15 @@
 0 strings
 2 functions
 0: addr=0 args=1 locals=4 type=5 10/bubbleSort
-1: addr=161 args=0 locals=1 type=0 4/main
-76 instr, 202 bytes
+1: addr=165 args=0 locals=1 type=0 4/main
+83 instr, 209 bytes
+ENTER
 VLOAD 0
 VLEN
 STORE 1
 VLOAD 0
 STORE 2
+VROOT
 ICONST 0
 STORE 3
 ICONST 0
@@ -61,9 +63,12 @@ IADD
 STORE 3
 BR -121
 VLOAD 2
+EXIT
 RETV
 PUSH 5
 RETV
+EXIT
+ENTER
 ICONST 1
 I2F
 ICONST 4
@@ -75,7 +80,9 @@ I2F
 ICONST 4
 VECTOR
 STORE 0
+VROOT
 VLOAD 0
 CALL 0
 VPRINT
+EXIT
 HALT

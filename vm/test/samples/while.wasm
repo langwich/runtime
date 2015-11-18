@@ -1,7 +1,8 @@
 0 strings
 1 functions
 0: addr=0 args=0 locals=1 type=0 4/main
-17 instr, 47 bytes
+19 instr, 49 bytes
+ENTER
 ICONST 10
 STORE 0
 ILOAD 0
@@ -18,4 +19,5 @@ ICONST 1
 ISUB
 STORE 0
 BR -35
+EXIT
 HALT

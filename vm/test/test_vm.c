@@ -38,7 +38,7 @@ static void run(char *code) {
 	FILE *f = fopen("/tmp/t.wasm", "r");
 	VM *vm = vm_load(f);
 	fclose(f);
-	vm_exec(vm, true);
+	vm_exec(vm, false);
 }
 
 /*
@@ -333,9 +333,9 @@ void test_int_to_string() {
         "1 functions\n"
         "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
         "6 instr, 12 bytes\n"
+        "\tSCONST 0\n"
         "\tICONST 101\n"
         "\tI2S\n"
-        "\tSCONST 0\n"
         "\tSADD\n"
         "\tSPRINT\n"
         "\tHALT\n";
@@ -354,8 +354,8 @@ void vector_add_int() {
         "\tICONST 3\n"
         "\tVECTOR\n"
         "\tSTORE 0\n"
-        "\tICONST 1\n"
         "\tVLOAD 0\n"
+        "\tICONST 1\n"
         "\tVADDI\n"
         "\tSTORE 1\n"
         "\tVLOAD 1\n"
