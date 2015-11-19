@@ -25,7 +25,6 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <wich.h>
-#include <gc.h>
 #include "vm.h"
 
 #include "wloader.h"
@@ -105,7 +104,7 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"STORE_INDEX", STORE_INDEX,  0},
 		{"SLOAD_INDEX", SLOAD_INDEX,  0},
 
-		{"PUSH", PUSH, 2},
+		{"PUSH", PUSH, 0},
 		{"POP",  POP,  0},
 		{"CALL", CALL, 2},
 		{"RETV", RETV, 0},
@@ -120,8 +119,8 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"NOP",   NOP,  0},
 		{"VLEN",  VLEN, 0},
 		{"SLEN",  SLEN, 0},
-		{"ENTER", ENTER,0},
-		{"EXIT",  EXIT, 0},
+		{"GC_S",  GC_S, 0},
+		{"GC_E",  GC_E, 0},
 		{"SROOT", SROOT,0},
 		{"VROOT", VROOT,0}
 };
@@ -133,8 +132,6 @@ static inline int int16(const byte *data, addr32 ip);
 static inline float float32(const byte *data, addr32 ip);
 static void vm_call(VM *vm, Function_metadata *func);
 static void vm_print_stack_value(VM *vm, word p);
-
-void gc_check();
 
 VM *vm_alloc()
 {
@@ -171,10 +168,18 @@ int def_function(VM *vm, char *name, int return_type, addr32 address, int nargs,
 #define WRITE_BACK_REGISTERS(vm) vm->ip = ip; vm->sp = sp; vm->fp = fp;
 #define LOAD_REGISTERS(vm) ip = vm->ip; sp = vm->sp; fp = vm->fp;
 
-static void inline validate_stack_address(int a) {
+static void inline validate_stack_address(int a)
+{
 	if ((a) < 0 || (a) >= MAX_OPND_STACK) {
 		fprintf(stderr, "%d stack ptr out of range 0..%d\n", a, MAX_OPND_STACK - 1);
 	}
+}
+
+static void gc_check()
+{
+	gc();
+	Heap_Info info = get_heap_info();
+	if ( info.live!=0 ) fprintf(stderr, "%d objects remain after collection\n", info.live);
 }
 
 void vm_exec(VM *vm, bool trace) {
@@ -187,7 +192,7 @@ void vm_exec(VM *vm, bool trace) {
 	int x, y;
 	Activation_Record *frame;
 	int num_root = 0;
-	// simulate a call to main()
+
 	Function_metadata *const main = vm_function(vm, "main");
 	vm_call(vm, main);
 
@@ -234,25 +239,25 @@ void vm_exec(VM *vm, bool trace) {
 				validate_stack_address(sp-1);
 				f = stack[sp--].f;
 				g = stack[sp].f;
-				stack[sp].f = f + g;
+				stack[sp].f = g + f;
 				break;
 			case FSUB:
 				validate_stack_address(sp-1);
 				f = stack[sp--].f;
 				g = stack[sp].f;
-				stack[sp].f = f - g;
+				stack[sp].f = g - f;
 				break;
 			case FMUL:
 				validate_stack_address(sp-1);
 				f = stack[sp--].f;
 				g = stack[sp].f;
-				stack[sp].f = f * g;
+				stack[sp].f = g * f;
 				break;
 			case FDIV:
 				validate_stack_address(sp-1);
 				f = stack[sp--].f;
 				g = stack[sp].f;
-				stack[sp].f = f / g;
+				stack[sp].f = g / f;
 				break;
             case VADD:
 				validate_stack_address(sp-1);
@@ -579,24 +584,23 @@ void vm_exec(VM *vm, bool trace) {
 				break;
 			case SLOAD_INDEX:
 				i = stack[sp--].i;
-				char* c = String_from_char(stack[sp--].s[i-1])->str;
+				c = String_from_char(stack[sp--].s[i-1])->str;
 				stack[++sp].s = c;
 				break;
 			case PUSH:
-				i = int16(code,ip); // index of function's return type
-				ip += 2;
+				i = *&vm->call_stack[vm->callsp].func->return_type;
 				switch (i) {
 					case INT_TYPE:
-						stack[++sp].i = 0;
+						stack[++sp].i = DEFAULT_INT_VALUE;
 						break;
 					case FLOAT_TYPE:
-						stack[++sp].f = 0.0;
+						stack[++sp].f = DEFAULT_FLOAT_VALUE;
 						break;
 					case BOOLEAN_TYPE:
-						stack[++sp].b = true;
+						stack[++sp].b = DEFAULT_BOOLEAN_VALUE;
 						break;
 					case STRING_TYPE:
-						stack[++sp].s = "";
+						stack[++sp].s = DEFAULT_STRING_VALUE;
 						break;
 					case VECTOR_TYPE:
 						stack[++sp].vptr = PVector_init(0, 0);
@@ -652,10 +656,10 @@ void vm_exec(VM *vm, bool trace) {
 				i = String_len(String_new(c));
 				stack[++sp].i = i;
 				break;
-			case ENTER:
+			case GC_S:
 				num_root = gc_num_roots();
 				break;
-			case EXIT:
+			case GC_E:
 				if (strcmp(*&vm->call_stack[vm->callsp].func->name,"main")==0 ) {
 					gc_set_num_roots(0);
 				}
@@ -681,14 +685,7 @@ void vm_exec(VM *vm, bool trace) {
 	if (trace) vm_print_instr(vm, ip);
 	if (trace) vm_print_stack(vm);
 
-	//gc_set_num_roots(0);
 	gc_check();
-}
-
-void gc_check() {
-	gc();
-	Heap_Info info = get_heap_info();
-	if ( info.live!=0 ) fprintf(stderr, "%d objects remain after collection\n", info.live);
 }
 
 void vm_call(VM *vm, Function_metadata *func)
@@ -738,6 +735,8 @@ static void vm_print_instr(VM *vm, addr32 ip)
 		case 4:
 			fprintf(stderr, "%04d:  %-15s%-10d", ip, inst->name, int32(vm->code, ip + 1));
 			break;
+		default:
+			break;
 	}
 }
 
@@ -749,7 +748,7 @@ static void vm_print_stack(VM *vm) {
 		Function_metadata *func = frame->func;
 		fprintf(stderr, " %s=[", func->name);
 		for (int j = 0; j < func->nlocals+func->nargs; ++j) {
-			vm_print_stack_value(vm, frame->locals[j].i);
+			vm_print_stack_value(vm, (word)frame->locals[j].i);
 		}
 		fprintf(stderr, " ]");
 	}
@@ -757,7 +756,7 @@ static void vm_print_stack(VM *vm) {
 	fprintf(stderr, "opnds=[");
 	for (int i = 0; i <= vm->sp; i++) {
 		int p = vm->stack[i].i;
-		vm_print_stack_value(vm, p);
+		vm_print_stack_value(vm, (word)p);
 	}
 	fprintf(stderr, " ] fp=%d sp=%d\n", vm->fp, vm->sp);
 }

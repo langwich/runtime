@@ -3,18 +3,18 @@
 1: 3/sad
 2 functions
 0: addr=0 args=1 locals=0 type=3 3/foo
-1: addr=17 args=0 locals=2 type=0 4/main
-24 instr, 54 bytes
-ENTER
+1: addr=15 args=0 locals=2 type=0 4/main
+24 instr, 52 bytes
+GC_S
 ILOAD 0
 ICONST 10
 ILT
-EXIT
+GC_E
 RETV
-PUSH 3
+PUSH
 RETV
-EXIT
-ENTER
+GC_E
+GC_S
 ICONST 5
 STORE 0
 ILOAD 0
@@ -27,5 +27,5 @@ SPRINT
 BR 7
 SCONST 1
 SPRINT
-EXIT
+GC_E
 HALT

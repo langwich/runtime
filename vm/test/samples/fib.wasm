@@ -1,9 +1,9 @@
 0 strings
 2 functions
 0: addr=0 args=1 locals=0 type=1 3/fib
-1: addr=60 args=0 locals=0 type=0 4/main
-32 instr, 72 bytes
-ENTER
+1: addr=58 args=0 locals=0 type=0 4/main
+32 instr, 70 bytes
+GC_S
 ILOAD 0
 ICONST 0
 IEQ
@@ -13,7 +13,7 @@ IEQ
 OR
 BRF 8
 ILOAD 0
-EXIT
+GC_E
 RETV
 ILOAD 0
 ICONST 1
@@ -24,14 +24,14 @@ ICONST 2
 ISUB
 CALL 0
 IADD
-EXIT
+GC_E
 RETV
-PUSH 1
+PUSH
 RETV
-EXIT
-ENTER
+GC_E
+GC_S
 ICONST 5
 CALL 0
 IPRINT
-EXIT
+GC_E
 HALT

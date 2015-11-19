@@ -34,13 +34,16 @@ static const int MAX_LOCALS		= 10;	// max locals/args in activation record
 static const int MAX_CALL_STACK = 1000;
 static const int MAX_OPND_STACK = 1000;
 static const int NUM_INSTRS		= 83;
+static const int    DEFAULT_INT_VALUE = 0;
+static const float  DEFAULT_FLOAT_VALUE = 0.0;
+static const bool   DEFAULT_BOOLEAN_VALUE = true;
+static char*        DEFAULT_STRING_VALUE = "";
 
 typedef unsigned char byte;
 typedef uintptr_t word; // has to be big enough to hold a native machine pointer
 typedef void *ptr;
 typedef unsigned int addr32;
 typedef unsigned int word32;
-typedef unsigned short word16;
 
 // predefined type numbers; needed by VM and any compilers that target the VM.
 // for example, to define the metadata for a global variable of type int, we need to specify
@@ -147,8 +150,8 @@ typedef enum {
 	NOP,
 	VLEN,
 	SLEN,
-	ENTER,
-	EXIT,
+	GC_S,
+	GC_E,
 	SROOT,
 	VROOT
 } BYTECODE;
@@ -206,13 +209,8 @@ typedef struct {
 
 extern VM *vm_alloc();
 extern void vm_init(VM *vm, byte *code, int code_size);
-
 extern void vm_exec(VM *vm, bool trace);
-
-extern byte *vm_malloc(VM *vm, int nbytes);
-extern void vm_free(VM *vm, byte *p);
 extern int def_function(VM *vm, char *name, int return_type, addr32 address, int nargs, int nlocals);
-
 extern VM_INSTRUCTION vm_instructions[];
 
 #endif

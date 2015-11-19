@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 				strcat(samplesfile, filename);
 				FILE *f = fopen(samplesfile, "r");
 				VM *vm = vm_load(f);
-				vm_exec(vm, true);
+				vm_exec(vm, false);
 				fclose(f);
 			}
 			dp = readdir(dir);

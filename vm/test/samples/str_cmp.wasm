@@ -4,23 +4,23 @@
 2: 5/miaow
 2 functions
 0: addr=0 args=1 locals=0 type=3 1/f
-1: addr=30 args=0 locals=2 type=0 4/main
-34 instr, 72 bytes
-ENTER
+1: addr=28 args=0 locals=2 type=0 4/main
+34 instr, 70 bytes
+GC_S
 SLOAD 0
 SCONST 0
 SLE
 BRF 10
 ICONST 1
-EXIT
+GC_E
 RETV
 ICONST 0
-EXIT
+GC_E
 RETV
-PUSH 3
+PUSH
 RETV
-EXIT
-ENTER
+GC_E
+GC_S
 SCONST 1
 STORE 0
 SROOT
@@ -38,5 +38,5 @@ SPRINT
 SLOAD 1
 CALL 0
 BPRINT
-EXIT
+GC_E
 HALT

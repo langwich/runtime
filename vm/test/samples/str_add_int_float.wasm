@@ -4,7 +4,7 @@
 1 functions
 0: addr=0 args=0 locals=4 type=0 4/main
 23 instr, 51 bytes
-ENTER
+GC_S
 SCONST 0
 STORE 0
 SROOT
@@ -25,5 +25,5 @@ SADD
 SPRINT
 SLOAD 3
 SPRINT
-EXIT
+GC_E
 HALT

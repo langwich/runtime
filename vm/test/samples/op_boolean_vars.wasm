@@ -1,34 +1,34 @@
 0 strings
 3 functions
 0: addr=0 args=1 locals=0 type=3 3/foo
-1: addr=17 args=1 locals=0 type=3 3/bar
-2: addr=52 args=0 locals=2 type=0 4/main
-37 instr, 85 bytes
-ENTER
+1: addr=15 args=1 locals=0 type=3 3/bar
+2: addr=48 args=0 locals=2 type=0 4/main
+37 instr, 81 bytes
+GC_S
 ILOAD 0
 ICONST 10
 ILT
-EXIT
+GC_E
 RETV
-PUSH 3
+PUSH
 RETV
-EXIT
-ENTER
+GC_E
+GC_S
 ILOAD 0
 ICONST 1
 ILT
 BRF 13
 ICONST 1
-EXIT
+GC_E
 RETV
 BR 10
 ICONST 0
-EXIT
+GC_E
 RETV
-PUSH 3
+PUSH
 RETV
-EXIT
-ENTER
+GC_E
+GC_S
 ICONST 5
 CALL 1
 STORE 0
@@ -39,5 +39,5 @@ ILOAD 0
 ILOAD 1
 OR
 BPRINT
-EXIT
+GC_E
 HALT

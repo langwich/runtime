@@ -3,9 +3,9 @@
 1: 4/z!=0
 2 functions
 0: addr=0 args=1 locals=1 type=2 1/f
-1: addr=25 args=0 locals=1 type=0 4/main
-28 instr, 62 bytes
-ENTER
+1: addr=23 args=0 locals=1 type=0 4/main
+28 instr, 60 bytes
+GC_S
 FCONST 1.0
 STORE 1
 ILOAD 0
@@ -13,12 +13,12 @@ I2F
 FLOAD 1
 FNEG
 FADD
-EXIT
+GC_E
 RETV
-PUSH 2
+PUSH
 RETV
-EXIT
-ENTER
+GC_E
+GC_S
 ICONST 2
 CALL 0
 STORE 0
@@ -31,5 +31,5 @@ SPRINT
 BR 7
 SCONST 1
 SPRINT
-EXIT
+GC_E
 HALT

@@ -1,22 +1,22 @@
 0 strings
 2 functions
 0: addr=0 args=1 locals=0 type=3 3/bar
-1: addr=17 args=0 locals=1 type=0 4/main
-17 instr, 35 bytes
-ENTER
+1: addr=15 args=0 locals=1 type=0 4/main
+17 instr, 33 bytes
+GC_S
 ILOAD 0
 ICONST 10
 ILT
-EXIT
+GC_E
 RETV
-PUSH 3
+PUSH
 RETV
-EXIT
-ENTER
+GC_E
+GC_S
 ICONST 5
 STORE 0
 ILOAD 0
 CALL 0
 BPRINT
-EXIT
+GC_E
 HALT

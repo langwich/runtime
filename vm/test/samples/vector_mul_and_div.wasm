@@ -1,9 +1,9 @@
 0 strings
 2 functions
 0: addr=0 args=1 locals=2 type=5 3/foo
-1: addr=50 args=0 locals=2 type=0 4/main
-35 instr, 81 bytes
-ENTER
+1: addr=48 args=0 locals=2 type=0 4/main
+35 instr, 79 bytes
+GC_S
 ICONST 2
 I2F
 ICONST 4
@@ -20,12 +20,12 @@ VDIVI
 STORE 2
 VROOT
 VLOAD 2
-EXIT
+GC_E
 RETV
-PUSH 5
+PUSH
 RETV
-EXIT
-ENTER
+GC_E
+GC_S
 FCONST 5.0
 STORE 0
 ICONST 2
@@ -36,5 +36,5 @@ STORE 1
 VROOT
 VLOAD 1
 VPRINT
-EXIT
+GC_E
 HALT
