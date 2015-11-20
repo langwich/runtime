@@ -65,7 +65,7 @@ String *String_add(String *s, String *t);
 String *String_copy(String *s);
 String *String_from_vector(PVector_ptr vector);
 String *String_from_int(int value);
-String *String_from_float(float value);
+String *String_from_float(double value);
 
 bool String_eq(String *s, String *t);
 bool String_neq(String *s, String *t);

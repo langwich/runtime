@@ -27,6 +27,7 @@ SOFTWARE.
 #include <stdbool.h>
 #include <wich.h>
 #include "persistent_vector.h"
+#include <assert.h>
 
 #ifndef REFCOUNTING
 void REF(heap_object *x) { }
@@ -143,38 +144,6 @@ PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b)
 	return c;
 }
 
-bool Vector_eq(PVector_ptr a, PVector_ptr b) {
-	if (a.vector->length != b.vector->length) {
-		return false;
-	}
-	int i = (int)a.vector->length;
-	for (int j = 0; j < i; j++) {
-		if(a.vector->nodes[j].data != b.vector->nodes[j].data) {
-			return false;
-		}
-	}
-	return true;
-}
-
-bool Vector_neq(PVector_ptr a, PVector_ptr b) {
-	if (a.vector->length != b.vector->length) {
-		return false;
-	}
-	int i = (int)a.vector->length;
-	for (int j = 0; j < i; j++) {
-		if(a.vector->nodes[j].data == b.vector->nodes[j].data) {
-			return false;
-		}
-	}
-	return true;
-}
-
-int Vector_len(PVector_ptr v) {
-	REF((heap_object *)v.vector);
-	int len = (int)v.vector->length;
-	DEREF((heap_object *)v.vector);
-	return len;
-}
 void print_vector(PVector_ptr a)
 {
 	REF((heap_object *)a.vector);
@@ -224,9 +193,6 @@ String *String_from_float(float value) {
 	return String_new(s);
 }
 
-int String_len(String *s) {
-	return s->length;
-}
 void print_string(String *a)
 {
 	REF((heap_object *)a);
@@ -250,19 +216,9 @@ String *String_add(String *s, String *t)
 }
 
 bool String_eq(String *s, String *t) {
-	if (strlen(s->str) != strlen(t->str)) {
-		return false;
-	}
-	else {
-		size_t n = strlen(s->str);
-		int i;
-		for (i = 0; i < n; i++) {
-			if(s->str[i] != t->str[i]) {
-				return false;
-			}
-		}
-	}
-	return true;
+	assert(s);
+	assert(t);
+	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) == 0;
 }
 
 bool String_neq(String *s, String *t) {
@@ -270,65 +226,26 @@ bool String_neq(String *s, String *t) {
 }
 
 bool String_gt(String *s, String *t) {
-	size_t len_s = strlen(s->str);
-	size_t len_t = strlen(t->str);
-	if (len_s > len_t) { return true;}
-	else if (len_s < len_t) {return false;}
-	else {
-		int i;
-		for (i = 0; i < len_s; i++) {
-			if(s->str[i] <= t->str[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+	assert(s);
+	assert(t);
+	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) > 0;
 }
 
 bool String_ge(String *s, String *t) {
-	size_t len_s = strlen(s->str);
-	size_t len_t = strlen(t->str);
-	if (len_s > len_t) { return true;}
-	else if (len_s < len_t) {return false;}
-	else {
-		int i;
-		for (i = 0; i < len_s; i++) {
-			if(s->str[i] < t->str[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+	assert(s);
+	assert(t);
+	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) >= 0;
 }
 bool String_lt(String *s, String *t) {
-	size_t len_s = strlen(s->str);
-	size_t len_t = strlen(t->str);
-	if (len_s < len_t) { return true;}
-	else if (len_s > len_t) {return false;}
-	else {
-		int i;
-		for (i = 0; i < len_s; i++) {
-			if(s->str[i] >= t->str[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+	assert(s);
+	assert(t);
+	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) < 0;
+
 }
 bool String_le(String *s, String *t) {
-	size_t len_s = strlen(s->str);
-	size_t len_t = strlen(t->str);
-	if (len_s < len_t) { return true;}
-	else if (len_s > len_t) {return false;}
-	else {
-		int i;
-		for (i = 0; i < len_s; i++) {
-			if(s->str[i] > t->str[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+	assert(s);
+	assert(t);
+	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) <= 0;
 }
 
 void print_alloc_strategy() {

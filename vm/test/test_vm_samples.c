@@ -26,7 +26,7 @@ SOFTWARE.
 #include <stdbool.h>
 #include <sys/types.h>
 #include <dirent.h>
-#include "wich.h"
+#include <wich.h>
 #include "vm.h"
 
 #include <cunit.h>
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 				strcat(samplesfile, filename);
 				FILE *f = fopen(samplesfile, "r");
 				VM *vm = vm_load(f);
-				vm_exec(vm, false);
+				vm_exec(vm, true);
 				fclose(f);
 			}
 			dp = readdir(dir);
