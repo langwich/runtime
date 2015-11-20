@@ -82,47 +82,47 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"SNEQ",  SNEQ,  0},
 		{"SGT",   SGT,   0},
 		{"SGE",   SGE,   0},
-		{"SLT",   SGT,   0},
-		{"SLE",   SGE,   0},
-		{"VEQ",   VEQ,   0},
-		{"VNEQ",  VNEQ,  0},
+		{"SLT",         SGT,            0},
+		{"SLE",         SGE,            0},
+		{"VEQ",         VEQ,            0},
+		{"VNEQ",        VNEQ,           0},
 
-		{"BR",    BR,    2},
-		{"BRF",   BRF,   2},
+		{"BR",          BR,             2},
+		{"BRF",         BRF,            2},
 
-		{"ICONST",ICONST,4},
-		{"FCONST",FCONST,4},
-		{"SCONST",SCONST,2},
+		{"ICONST",      ICONST,         4},
+		{"FCONST",      FCONST,         4},
+		{"SCONST",      SCONST,         2},
 
-		{"ILOAD", ILOAD, 2},
-		{"FLOAD", FLOAD, 2},
-		{"VLOAD", VLOAD, 2},
-		{"SLOAD", SLOAD, 2},
-		{"STORE", STORE, 2},
-		{"VECTOR",VECTOR, 0},
-		{"VLOAD_INDEX",  VLOAD_INDEX, 0},
-		{"STORE_INDEX", STORE_INDEX,  0},
-		{"SLOAD_INDEX", SLOAD_INDEX,  0},
+		{"ILOAD",       ILOAD,          2},
+		{"FLOAD",       FLOAD,          2},
+		{"VLOAD",       VLOAD,          2},
+		{"SLOAD",       SLOAD,          2},
+		{"STORE",       STORE,          2},
+		{"VECTOR",      VECTOR,         0},
+		{"VLOAD_INDEX", VLOAD_INDEX,    0},
+		{"STORE_INDEX", STORE_INDEX,    0},
+		{"SLOAD_INDEX", SLOAD_INDEX,    0},
 
-		{"PUSH", PUSH, 0},
-		{"POP",  POP,  0},
-		{"CALL", CALL, 2},
-		{"RETV", RETV, 0},
-		{"RET",  RET,  0},
+		{"PUSH",        PUSH_DFLT_RETV, 0},
+		{"POP",         POP,            0},
+		{"CALL",        CALL,           2},
+		{"RETV",        RETV,           0},
+		{"RET",         RET,            0},
 
-		{"IPRINT", IPRINT, 0},
-		{"FPRINT", FPRINT, 0},
-		{"BPRINT", BPRINT, 0},
-		{"SPRINT", SPRINT, 0},
-		{"VPRINT", VPRINT, 0},
+		{"IPRINT",      IPRINT,         0},
+		{"FPRINT",      FPRINT,         0},
+		{"BPRINT",      BPRINT,         0},
+		{"SPRINT",      SPRINT,         0},
+		{"VPRINT",      VPRINT,         0},
 
-		{"NOP",   NOP,  0},
-		{"VLEN",  VLEN, 0},
-		{"SLEN",  SLEN, 0},
-		{"GC_S",  GC_S, 0},
-		{"GC_E",  GC_E, 0},
-		{"SROOT", SROOT,0},
-		{"VROOT", VROOT,0}
+		{"NOP",         NOP,            0},
+		{"VLEN",        VLEN,           0},
+		{"SLEN",        SLEN,           0},
+		{"GC_S",        GC_START,       0},
+		{"GC_E",        GC_END,         0},
+		{"SROOT",       SROOT,          0},
+		{"VROOT",       VROOT,          0}
 };
 
 static void vm_print_instr(VM *vm, addr32 ip);
@@ -132,6 +132,7 @@ static inline int int16(const byte *data, addr32 ip);
 static inline float float32(const byte *data, addr32 ip);
 static void vm_call(VM *vm, Function_metadata *func);
 static void vm_print_stack_value(VM *vm, word p);
+void push_default_return_value(VM *vm, int type);
 
 VM *vm_alloc()
 {
@@ -587,27 +588,9 @@ void vm_exec(VM *vm, bool trace) {
 				c = String_from_char(stack[sp--].s[i-1])->str;
 				stack[++sp].s = c;
 				break;
-			case PUSH:
+			case PUSH_DFLT_RETV:
 				i = *&vm->call_stack[vm->callsp].func->return_type;
-				switch (i) {
-					case INT_TYPE:
-						stack[++sp].i = DEFAULT_INT_VALUE;
-						break;
-					case FLOAT_TYPE:
-						stack[++sp].f = DEFAULT_FLOAT_VALUE;
-						break;
-					case BOOLEAN_TYPE:
-						stack[++sp].b = DEFAULT_BOOLEAN_VALUE;
-						break;
-					case STRING_TYPE:
-						stack[++sp].s = DEFAULT_STRING_VALUE;
-						break;
-					case VECTOR_TYPE:
-						stack[++sp].vptr = PVector_init(0, 0);
-						break;
-					default:
-						break;
-				}
+				push_default_return_value(vm, i);
 				break;
 			case POP:
 				sp--;
@@ -656,16 +639,11 @@ void vm_exec(VM *vm, bool trace) {
 				i = String_len(String_new(c));
 				stack[++sp].i = i;
 				break;
-			case GC_S:
-				num_root = gc_num_roots();
+			case GC_START:
+				vm->call_stack[vm->callsp].save_gc_roots = gc_num_roots();
 				break;
-			case GC_E:
-				if (strcmp(*&vm->call_stack[vm->callsp].func->name,"main")==0 ) {
-					gc_set_num_roots(0);
-				}
-				else {
-					gc_set_num_roots(num_root);
-				}
+			case GC_END:
+				gc_set_num_roots(vm->call_stack[vm->callsp].save_gc_roots);
 				break;
 			case SROOT:
 				gc_add_root((void **)&stack[sp].s);
@@ -703,6 +681,27 @@ void vm_call(VM *vm, Function_metadata *func)
 	vm->ip = func->address; // jump!
 }
 
+void push_default_return_value(VM *vm, int type) {
+	switch (type) {
+		case INT_TYPE:
+			vm->stack[++vm->sp].i = DEFAULT_INT_VALUE;
+			break;
+		case FLOAT_TYPE:
+			vm->stack[++vm->sp].f = DEFAULT_FLOAT_VALUE;
+			break;
+		case BOOLEAN_TYPE:
+			vm->stack[++vm->sp].b = DEFAULT_BOOLEAN_VALUE;
+			break;
+		case STRING_TYPE:
+			vm->stack[++vm->sp].s = DEFAULT_STRING_VALUE;
+			break;
+		case VECTOR_TYPE:
+			vm->stack[++vm->sp].vptr = PVector_init(0, 0);
+			break;
+		default:
+			break;
+	}
+}
 static inline int int32(const byte *data, addr32 ip)
 {
 	return *((word32 *)&data[ip]);

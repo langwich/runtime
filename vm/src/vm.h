@@ -134,7 +134,7 @@ typedef enum {
 	VLOAD_INDEX,
 	STORE_INDEX,
 	SLOAD_INDEX,
-	PUSH,
+	PUSH_DFLT_RETV,
 	POP,
 
 	CALL,
@@ -150,8 +150,8 @@ typedef enum {
 	NOP,
 	VLEN,
 	SLEN,
-	GC_S,
-	GC_E,
+	GC_START,
+	GC_END,
 	SROOT,
 	VROOT
 } BYTECODE;
@@ -182,6 +182,7 @@ typedef struct function {
 typedef struct activation_record {
 	Function_metadata *func;
 	addr32 retaddr;
+	int save_gc_roots;
 	element locals[MAX_LOCALS]; // args + locals go here per func def
 } Activation_Record;
 
