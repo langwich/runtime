@@ -26,6 +26,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdbool.h>
 #include <wich.h>
+#include "persistent_vector.h"
 #include <assert.h>
 
 #ifndef REFCOUNTING
@@ -184,7 +185,7 @@ String *String_from_int(int value) {
 	return String_new(s);
 }
 
-String *String_from_float(double value) {
+String *String_from_float(float value) {
 	char *s = calloc(20, sizeof(char));
 	char buf[50];
 	sprintf(buf,"%1.2f",value);

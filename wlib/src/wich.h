@@ -73,6 +73,7 @@ bool String_gt(String *s, String *t);
 bool String_ge(String *s, String *t);
 bool String_lt(String *s, String *t);
 bool String_le(String *s, String *t);
+int String_len(String *s);
 void print_string(String *s);
 
 PVector_ptr Vector_empty(size_t n);
@@ -87,7 +88,9 @@ PVector_ptr Vector_add(PVector_ptr a, PVector_ptr b);
 PVector_ptr Vector_sub(PVector_ptr a, PVector_ptr b);
 PVector_ptr Vector_mul(PVector_ptr a, PVector_ptr b);
 PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b);
-
+bool Vector_eq(PVector_ptr a, PVector_ptr b);
+bool Vector_neq(PVector_ptr a, PVector_ptr b);
+int Vector_len(PVector_ptr a);
 void print_vector(PVector_ptr a);
 
 // These allocator functions use different implementation according to compiler flags.

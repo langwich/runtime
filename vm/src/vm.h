@@ -33,16 +33,17 @@ static const int MAX_FUNCTIONS	= 1000;
 static const int MAX_LOCALS		= 10;	// max locals/args in activation record
 static const int MAX_CALL_STACK = 1000;
 static const int MAX_OPND_STACK = 1000;
-static const int NUM_INSTRS		= 64;
-
-static const int VM_NIL         = ((uintptr_t)0);
+static const int NUM_INSTRS		= 83;
+static const int    DEFAULT_INT_VALUE = 0;
+static const float  DEFAULT_FLOAT_VALUE = 0.0;
+static const bool   DEFAULT_BOOLEAN_VALUE = true;
+static char*        DEFAULT_STRING_VALUE = "";
 
 typedef unsigned char byte;
 typedef uintptr_t word; // has to be big enough to hold a native machine pointer
 typedef void *ptr;
 typedef unsigned int addr32;
 typedef unsigned int word32;
-typedef unsigned short word16;
 
 // predefined type numbers; needed by VM and any compilers that target the VM.
 // for example, to define the metadata for a global variable of type int, we need to specify
@@ -59,77 +60,100 @@ static const int VECTOR_TYPE = 5;
 // Explicitly type the operations, even the loads/stores
 // for both safety, efficiency, and possible JIT from bytecodes later.
 typedef enum {
-	HALT=0,             // stop the program
+	HALT=0,
 
-	IADD,               // int add
+	IADD,
 	ISUB,
 	IMUL,
 	IDIV,
-	FADD,               // int add
+	FADD,
 	FSUB,
 	FMUL,
 	FDIV,
+	VADD,
+	VADDI,
+	VADDF,
+	VSUB,
+	VSUBI,
+	VSUBF,
+	VMUL,
+	VMULI,
+	VMULF,
+	VDIV,
+	VDIVI,
+	VDIVF,
+	SADD,
 
     OR,
     AND,
+    INEG,
+	FNEG,
+	NOT,
 
-    INEG,               // negate integer
-	FNEG,               // negate float
-	NOT,                // boolean not 0->1, 1->0
+	I2F,
+	F2I,
+	I2S,
+	F2S,
+	V2S,
 
-	I2F,                // int to float
-	F2I,                // float to int
-	I2S,                // int to str
-	F2S,                // float to str
-	V2S,                // vector to str
-	F2V,                // float to vector
-
-	IEQ,                // int equal
+	IEQ,
 	INEQ,
-	ILT,                // int less than
+	ILT,
 	ILE,
 	IGT,
 	IGE,
-	FEQ,                // float equal
+	FEQ,
 	FNEQ,
-	FLT,                // float less than
+	FLT,
 	FLE,
 	FGT,
 	FGE,
-	ISNIL,
+	SEQ,
+	SNEQ,
+	SGT,
+	SGE,
+	SLT,
+	SLE,
+	VEQ,
+	VNEQ,
 
-	BR,                 // branch 16-bit relative in code memory; relative to addr of BR
-	BRT,                // branch if true
-	BRF,                // branch if false
+	BR,
+	BRF,
 
-	ICONST,             // push 32-bit constant integer
-	FCONST,             // floating point constant
-	SCONST,				// string const from from literal in vm via index
+	ICONST,
+	FCONST,
+	SCONST,
 
-	ILOAD,              // load int from local context using arg or local index
-	FLOAD,              // load float from local context
-	VLOAD,				// load vector
-	SLOAD,              // load string from local context
-	STORE,              // store into local context
+	ILOAD,
+	FLOAD,
+	VLOAD,
+	SLOAD,
+	STORE,
 
-	VECTOR,             // create vector of size n with element type float
-	LOAD_INDEX,         // array index a[i]
-	STORE_INDEX,		// store into a[i]
+	VECTOR,
+	VLOAD_INDEX,
+	STORE_INDEX,
+	SLOAD_INDEX,
+	PUSH,
+	POP,
 
-	NIL,                // push null pointer onto stack
-	POP,				// drop top of stack
+	CALL,
+	RETV,
+	RET,
 
-	CALL,               // call a function using index
-	RETV,               // return a value from function
-	RET,                // return from function
-
-	IPRINT,             // print stack top (mostly debugging)
+	IPRINT,
 	FPRINT,
 	BPRINT,
 	SPRINT,
 	VPRINT,
 
-	NOP                 // no-op, no operation
+	NOP,
+	VLEN,
+	SLEN,
+	GC_S,
+	GC_E,
+	SROOT,
+	VROOT
 } BYTECODE;
 
 typedef struct {
@@ -145,8 +169,6 @@ typedef union {
 	char *s;
 	PVector_ptr vptr;
 } element;
-
-// meta-data
 
 // to call a func, we use index into table of Function descriptors
 typedef struct function {
@@ -187,14 +209,8 @@ typedef struct {
 
 extern VM *vm_alloc();
 extern void vm_init(VM *vm, byte *code, int code_size);
-
 extern void vm_exec(VM *vm, bool trace);
-
-extern byte *vm_malloc(VM *vm, int nbytes);
-extern void vm_free(VM *vm, byte *p);
-
 extern int def_function(VM *vm, char *name, int return_type, addr32 address, int nargs, int nlocals);
-
 extern VM_INSTRUCTION vm_instructions[];
 
 #endif

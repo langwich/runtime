@@ -2,7 +2,9 @@
 	0: 5/hello
 1 functions
 	0: addr=0 args=0 locals=0 type=1 4/main
-3 instr, 5 bytes
+5 instr, 7 bytes
+	GC_S
 	SCONST 0
 	SPRINT
+	GC_E
 	HALT
