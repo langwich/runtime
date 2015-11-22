@@ -3,7 +3,7 @@
 0: addr=0 args=0 locals=1 type=5 1/f
 1: addr=37 args=0 locals=0 type=0 4/main
 24 instr, 48 bytes
-GC_S
+GC_START
 ICONST 1
 I2F
 ICONST 2
@@ -15,15 +15,15 @@ VECTOR
 STORE 0
 VROOT
 VLOAD 0
-GC_E
+GC_END
 RETV
-PUSH
+PUSH_DFLT_RETV
 RETV
-GC_E
-GC_S
+GC_END
+GC_START
 CALL 0
 CALL 0
 VADD
 VPRINT
-GC_E
+GC_END
 HALT

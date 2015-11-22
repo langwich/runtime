@@ -27,6 +27,7 @@ SOFTWARE.
 #include <math.h>
 
 #include "wich.h"
+#include "persistent_vector.h"
 
 /*
  * Per "Making Data Structures Persistent"
@@ -90,6 +91,9 @@ double ith(PVector_ptr vptr, int i) {
 		// not found? return default value
 		return default_node->data;
 	}
+	else {
+		fprintf(stderr, "Index %d out range of 1 .. %d\n",i+1,(int)vptr.vector->length);
+	}
 	return NAN;
 }
 
@@ -110,6 +114,9 @@ void set_ith(PVector_ptr vptr, int i, double value) {
 		q->data = value;
 		q->next = default_node->head;
 		default_node->head = q;
+	}
+	else {
+		fprintf(stderr, "Index %d out range of 1 .. %d\n",i+1,(int)vptr.vector->length);
 	}
 }
 

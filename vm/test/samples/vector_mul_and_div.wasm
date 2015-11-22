@@ -3,7 +3,7 @@
 0: addr=0 args=1 locals=2 type=5 3/foo
 1: addr=48 args=0 locals=2 type=0 4/main
 35 instr, 79 bytes
-GC_S
+GC_START
 ICONST 2
 I2F
 ICONST 4
@@ -20,12 +20,12 @@ VDIVI
 STORE 2
 VROOT
 VLOAD 2
-GC_E
+GC_END
 RETV
-PUSH
+PUSH_DFLT_RETV
 RETV
-GC_E
-GC_S
+GC_END
+GC_START
 FCONST 5.0
 STORE 0
 ICONST 2
@@ -36,5 +36,5 @@ STORE 1
 VROOT
 VLOAD 1
 VPRINT
-GC_E
+GC_END
 HALT

@@ -6,21 +6,21 @@
 0: addr=0 args=1 locals=0 type=4 11/becomeSuper
 1: addr=13 args=0 locals=0 type=0 4/main
 18 instr, 30 bytes
-GC_S
+GC_START
 SCONST 0
 SLOAD 0
 SADD
-GC_E
+GC_END
 RETV
-PUSH
+PUSH_DFLT_RETV
 RETV
-GC_E
-GC_S
+GC_END
+GC_START
 SCONST 1
 CALL 0
 SPRINT
 SCONST 2
 CALL 0
 SPRINT
-GC_E
+GC_END
 HALT

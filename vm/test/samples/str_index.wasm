@@ -5,7 +5,7 @@
 0: addr=0 args=0 locals=1 type=0 1/f
 1: addr=38 args=0 locals=0 type=0 4/main
 22 instr, 44 bytes
-GC_S
+GC_START
 SCONST 0
 SCONST 1
 SADD
@@ -22,8 +22,8 @@ SLOAD_INDEX
 SADD
 SPRINT
 RET
-GC_E
-GC_S
+GC_END
+GC_START
 CALL 0
-GC_E
+GC_END
 HALT

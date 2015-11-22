@@ -698,6 +698,70 @@ void test_float_div() {
     run(code);
 }
 
+void test_div_error() {
+    char *code =
+    "0 strings\n"
+    "1 functions\n"
+    "0: addr=0 args=0 locals=0 type=0 4/main\n"
+    "21 instr, 53 bytes\n"
+    "GC_START\n"
+    "ICONST 2\n"
+    "I2F\n"
+    "ICONST 4\n"
+    "I2F\n"
+    "ICONST 6\n"
+    "I2F\n"
+    "ICONST 3\n"
+    "VECTOR\n"
+    "ICONST 1\n"
+    "I2F\n"
+    "ICONST 0\n"
+    "I2F\n"
+    "ICONST 3\n"
+    "I2F\n"
+    "ICONST 3\n"
+    "VECTOR\n"
+    "VDIV\n"
+    "VPRINT\n"
+    "GC_END\n"
+    "HALT\n";
+    run(code);
+}
+
+void test_1(){
+    char* code = "0 strings\n"
+    "1 functions\n"
+    "0: addr=0 args=0 locals=2 type=0 4/main\n"
+    "26 instr, 62 bytes\n"
+    "GC_START\n"
+    "ICONST 1\n"
+    "I2F\n"
+    "ICONST 2\n"
+    "I2F\n"
+    "ICONST 3\n"
+    "I2F\n"
+    "ICONST 3\n"
+    "VECTOR\n"
+    "STORE 0\n"
+    "VROOT\n"
+    "VLOAD 0\n"
+    "COPY_VECTOR\n"
+    "STORE 1\n"
+    "VROOT\n"
+    "VLOAD 1\n"
+    "ICONST 1\n"
+    "ICONST 4\n"
+    "I2F\n"
+    "STORE_INDEX\n"
+    "VLOAD 0\n"
+    "VPRINT\n"
+    "VLOAD 1\n"
+    "VPRINT\n"
+    "GC_END\n"
+    "HALT\n";
+    run(code);
+}
+
 int main(int argc, char *argv[]) {
     cunit_setup = setup;
     cunit_teardown = teardown;
@@ -726,6 +790,8 @@ int main(int argc, char *argv[]) {
     test(test_len);
     test(test_len2);
     test(test_float_div);
+    test(test_div_error);
+    test(test_1);
     return 0;
 }
 

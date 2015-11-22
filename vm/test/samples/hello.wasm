@@ -3,8 +3,8 @@
 1 functions
 	0: addr=0 args=0 locals=0 type=1 4/main
 5 instr, 7 bytes
-	GC_S
+	GC_START
 	SCONST 0
 	SPRINT
-	GC_E
+	GC_END
 	HALT

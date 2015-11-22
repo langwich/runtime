@@ -3,20 +3,20 @@
 0: addr=0 args=1 locals=0 type=3 3/bar
 1: addr=15 args=0 locals=1 type=0 4/main
 17 instr, 33 bytes
-GC_S
+GC_START
 ILOAD 0
 ICONST 10
 ILT
-GC_E
+GC_END
 RETV
-PUSH
+PUSH_DFLT_RETV
 RETV
-GC_E
-GC_S
+GC_END
+GC_START
 ICONST 5
 STORE 0
 ILOAD 0
 CALL 0
 BPRINT
-GC_E
+GC_END
 HALT
