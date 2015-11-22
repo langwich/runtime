@@ -1,13 +1,14 @@
 0 strings
 2 functions
 0: addr=0 args=1 locals=4 type=5 10/bubbleSort
-1: addr=163 args=0 locals=1 type=0 4/main
-83 instr, 207 bytes
+1: addr=164 args=0 locals=1 type=0 4/main
+85 instr, 209 bytes
 GC_START
 VLOAD 0
 VLEN
 STORE 1
 VLOAD 0
+COPY_VECTOR
 STORE 2
 VROOT
 ICONST 1
@@ -82,6 +83,7 @@ VECTOR
 STORE 0
 VROOT
 VLOAD 0
+COPY_VECTOR
 CALL 0
 VPRINT
 GC_END

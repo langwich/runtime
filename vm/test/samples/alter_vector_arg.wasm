@@ -2,7 +2,7 @@
 2 functions
 0: addr=0 args=1 locals=0 type=0 3/bar
 1: addr=22 args=0 locals=1 type=0 4/main
-32 instr, 78 bytes
+33 instr, 79 bytes
 GC_START
 VLOAD 0
 ICONST 1
@@ -25,9 +25,10 @@ VECTOR
 STORE 0
 VROOT
 VLOAD 0
+COPY_VECTOR
 CALL 0
 VLOAD 0
-ICONST 1
+ICONST 2
 ICONST 99
 I2F
 STORE_INDEX

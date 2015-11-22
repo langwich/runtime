@@ -68,10 +68,8 @@ PVector_ptr Vector_new(double *data, size_t n)
 
 PVector_ptr Vector_copy(PVector_ptr v)
 {
-	//print_pvector(v);
 	REF((heap_object *)v.vector);
 	PVector_ptr result = PVector_copy(v);
-	//print_pvector(result);
 	DEREF((heap_object *)v.vector); // might free(v)
 	return result;
 }

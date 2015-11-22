@@ -447,14 +447,18 @@ void vector_op() {
         "0 strings\n"
         "2 functions\n"
         "0: addr=0 args=1 locals=0 type=5 1/f\n"
-        "1: addr=12 args=0 locals=2 type=0 4/main\n"
-        "25 instr, 63 bytes\n"
+        "1: addr=15 args=0 locals=2 type=0 4/main\n"
+        "34 instr, 72 bytes\n"
+        "GC_START\n"
         "VLOAD 0\n"
         "ICONST 2\n"
         "VMULI\n"
+        "GC_END\n"
         "RETV\n"
-        "PUSH\n"
+        "PUSH_DFLT_RETV\n"
         "RETV\n"
+        "GC_END\n"
+        "GC_START\n"
         "ICONST 1\n"
         "I2F\n"
         "ICONST 2\n"
@@ -464,16 +468,21 @@ void vector_op() {
         "ICONST 3\n"
         "VECTOR\n"
         "STORE 0\n"
+        "VROOT\n"
         "VLOAD 0\n"
+        "COPY_VECTOR\n"
         "CALL 0\n"
+        "COPY_VECTOR\n"
         "STORE 1\n"
+        "VROOT\n"
         "VLOAD 1\n"
         "VLOAD 0\n"
         "VDIV\n"
         "ICONST 1\n"
         "VADDI\n"
         "VPRINT\n"
-        "HALT";
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 
@@ -766,32 +775,32 @@ int main(int argc, char *argv[]) {
     cunit_setup = setup;
     cunit_teardown = teardown;
 
-    test(string_add);
-    test(hello);
-    test(int_var_def);
-    test(string_var_def);
-    test(vector);
-    test(func_call);
-    test(func_call_with_args);
-    test(func_call_two_args);
-    test(if_stat);
-    test(if_else);
-    test(while_stat);
-    test(vector_element_assign);
-    test(test_int_to_string);
-    test(vector_add_int);
-    test(string_index);
-    test(fib);
+//    test(string_add);
+//    test(hello);
+//    test(int_var_def);
+//    test(string_var_def);
+//    test(vector);
+//    test(func_call);
+//    test(func_call_with_args);
+//    test(func_call_two_args);
+//    test(if_stat);
+//    test(if_else);
+//    test(while_stat);
+//    test(vector_element_assign);
+//    test(test_int_to_string);
+//    test(vector_add_int);
+//    test(string_index);
+//    test(fib);
     test(vector_op);
-    test(op_boolean_vars);
-    test(testNestedBlock);
-    test(testNop);
-    test(testFuncMissReturnValue);
-    test(test_len);
-    test(test_len2);
-    test(test_float_div);
-    test(test_div_error);
-    test(test_1);
+//    test(op_boolean_vars);
+//    test(testNestedBlock);
+//    test(testNop);
+//    test(testFuncMissReturnValue);
+//    test(test_len);
+//    test(test_len2);
+//    test(test_float_div);
+//    test(test_div_error);
+//    test(test_1);
     return 0;
 }
 

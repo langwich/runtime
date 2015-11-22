@@ -565,10 +565,7 @@ void vm_exec(VM *vm, bool trace) {
             case VLOAD:
                 i = int16(code,ip);
                 ip += 2;
-				//print_pvector(vm->call_stack[vm->callsp].locals[i].vptr);
                 stack[++sp].vptr = vm->call_stack[vm->callsp].locals[i].vptr;
-				//print_pvector(stack[sp].vptr);
-				//printf("%d\n",stack[sp].vptr.version);
                 break;
             case SLOAD:
                 i = int16(code,ip);
@@ -584,15 +581,10 @@ void vm_exec(VM *vm, bool trace) {
 				i = stack[sp--].i;
 				validate_stack_address(sp-i+1);
 				double data[1000];
-//				vptr = PVector_init(0, (size_t )i);
-//				for (int j = i-1; j >= 0;j--) {
-//					set_ith(vptr,j,stack[sp--].f);
-//				}
 				for (int j = i-1; j >= 0;j--) {
 					data[j] = stack[sp--].f;
 				}
 				vptr = Vector_new(data,i);
-				//printf("%d\n",vptr.version);
 				stack[++sp].vptr = vptr;
 				break;
 			case VLOAD_INDEX:
@@ -678,7 +670,15 @@ void vm_exec(VM *vm, bool trace) {
 				gc_add_root((void **)&stack[sp].vptr);
 				break;
 			case COPY_VECTOR:
-				stack[sp].vptr = Vector_copy(vm->call_stack[vm->callsp].locals[i].vptr);
+				if (vm->call_stack[vm->callsp].locals[i].vptr.vector != NULL) {
+					stack[sp].vptr = Vector_copy(vm->call_stack[vm->callsp].locals[i].vptr);
+				}
+				else if (stack[sp].vptr.vector != NULL) {
+					stack[sp].vptr = Vector_copy(stack[sp].vptr);
+				}
+				else {
+					fprintf(stderr, "Vector Object Cannot Be Found");
+				}
 			case NOP : break;
 			default:
 				printf("invalid opcode: %d at ip=%d\n", opcode, (ip - 1));
