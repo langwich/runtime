@@ -11,7 +11,8 @@ add_library(${MODULE_NAME} ${SOURCE})
 target_link_libraries(${MODULE_NAME} malloc_common mark_and_compact gc_mark_and_compact wlib_mark_and_compact)
 INSTALL_LIBRARY(${MODULE_NAME})
 
-add_executable(${MODULE_NAME}_exec src/wrun.c)
-target_link_libraries(${MODULE_NAME}_exec ${MODULE_NAME})
+add_executable(w${MODULE_NAME} src/wrun.c)
+target_link_libraries(w${MODULE_NAME} ${MODULE_NAME})
+INSTALL_EXECUTABLE(w${MODULE_NAME})
 
 ADD_TEST_TARGET("${TEST_TARGETS}" ${MODULE_NAME})
