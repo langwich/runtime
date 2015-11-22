@@ -88,6 +88,7 @@ PVector_ptr Vector_add(PVector_ptr a, PVector_ptr b);
 PVector_ptr Vector_sub(PVector_ptr a, PVector_ptr b);
 PVector_ptr Vector_mul(PVector_ptr a, PVector_ptr b);
 PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b);
+
 bool Vector_eq(PVector_ptr a, PVector_ptr b);
 bool Vector_neq(PVector_ptr a, PVector_ptr b);
 int Vector_len(PVector_ptr a);
