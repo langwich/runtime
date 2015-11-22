@@ -63,6 +63,13 @@ function(INSTALL_LIBRARY LIB_NAME)
 			ARCHIVE DESTINATION lib)
 endfunction()
 
+# use this if you want to install an executable
+# to /usr/local/wich/bin
+function(INSTALL_EXECUTABLE EXECUTABLE)
+	install(TARGETS ${EXECUTABLE}
+			RUNTIME DESTINATION bin)
+endfunction()
+
 ################# S u b d i r s #################
 
 # add all subdirectories
