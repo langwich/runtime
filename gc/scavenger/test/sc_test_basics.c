@@ -121,18 +121,18 @@ void gc_after_single_vector_two_roots() {
 
 	gc();
 	assert_equal(gc_num_live_objects(), 1); // still there as p,q point at it
-	assert_addr_equal(gc_count_roots(), 2);
+	assert_equal(gc_count_roots(), 2);
 
 	p = NULL;
 	gc();
 	assert_equal(gc_num_live_objects(), 1); // still a ptr
-	assert_addr_equal(gc_count_roots(), 1);
+	assert_equal(gc_count_roots(), 1);
 
 
 	q = NULL;
 	gc();
 	assert_equal(gc_num_live_objects(), 0); // no more roots into heap
-	assert_addr_equal(gc_count_roots(), 0);
+	assert_equal(gc_count_roots(), 0);
 
 	Heap_Info info = get_heap_info();
 	assert_equal(info.busy_size, 0);
@@ -160,7 +160,7 @@ void gc_after_two_vectors_two_roots() {
 
 	gc();
 	assert_equal(gc_num_live_objects(), 2); // no more roots into heap
-	assert_addr_equal(gc_count_roots(), 2);
+	assert_equal(gc_count_roots(), 2);
 
 }
 void gc_compacts_vectors() {
