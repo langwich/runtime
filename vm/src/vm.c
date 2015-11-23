@@ -626,11 +626,11 @@ void vm_exec(VM *vm, bool trace) {
 				break;
 			case FPRINT:
 				validate_stack_address(sp);
-				printf("%f\n", stack[sp--].f);
+				printf("%1.2f\n", stack[sp--].f);
 				break;
 			case BPRINT:
 				validate_stack_address(sp);
-				printf("%s\n", stack[sp--].b ? "true" : "false");
+				printf("%d\n", stack[sp--].b);
 				break;
 			case SPRINT:
 				validate_stack_address(sp);
