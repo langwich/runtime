@@ -2,7 +2,7 @@
 1 functions
 0: addr=0 args=0 locals=4 type=0 4/main
 35 instr, 85 bytes
-GC_S
+GC_START
 ICONST 4
 I2F
 ICONST 6
@@ -35,5 +35,5 @@ STORE 3
 VROOT
 VLOAD 3
 VPRINT
-GC_E
+GC_END
 HALT

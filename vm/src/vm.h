@@ -138,7 +138,6 @@ typedef enum {
 	POP,
 
 	CALL,
-	RETV,
 	RET,
 
 	IPRINT,
@@ -153,7 +152,9 @@ typedef enum {
 	GC_START,
 	GC_END,
 	SROOT,
-	VROOT
+	VROOT,
+
+	COPY_VECTOR
 } BYTECODE;
 
 typedef struct {
@@ -199,10 +200,8 @@ typedef struct {
 	Activation_Record call_stack[MAX_CALL_STACK];
 
 	int data_size;
-
 	int num_strings;
 	int num_functions;
-
 	char **strings;
 
 	Function_metadata functions[MAX_FUNCTIONS]; // array of function defs

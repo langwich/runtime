@@ -38,21 +38,23 @@ void DEREF(heap_object *x) { }
 PVector *PVector_alloc(size_t length) {
 	PVector *p = (PVector *)calloc(1, sizeof(PVector) + length * sizeof(PVectorFatNode));
 	p->length = length;
-//	printf("PVector %p\n", p);
 	return p;
 }
 PVectorFatNodeElem *PVectorFatNodeElem_alloc() {
 	PVectorFatNodeElem *p = (PVectorFatNodeElem *)calloc(1, sizeof(PVectorFatNodeElem));
-//	printf("fat node elem %p\n", p);
 	return p;
 }
 String *String_alloc(size_t length) {
 	String *p = (String *)calloc(1, sizeof(String) + (length+1) * sizeof(char));
 	p->length = length;
-//	printf("String %p\n", p);
 	return p;
 }
 #endif
+
+static void inline vector_operation_error() {
+	fprintf(stderr, "VectorOperationError: two vectors must have same length and cann't be NULL\n");
+	exit(1);
+}
 
 // There is a general assumption that support routines follow same
 // ref counting convention as Wich code: functions REF their heap args and
@@ -93,7 +95,8 @@ PVector_ptr Vector_add(PVector_ptr a, PVector_ptr b)
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) vector_operation_error();
+
 	size_t n = a.vector->length;
 	PVector_ptr c = PVector_init(0, n);
 	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) + ith(b, i); // safe because we have sole ptr to c for now
@@ -107,7 +110,7 @@ PVector_ptr Vector_sub(PVector_ptr a, PVector_ptr b)
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) vector_operation_error();
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
 	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) - ith(b, i);
@@ -121,7 +124,7 @@ PVector_ptr Vector_mul(PVector_ptr a, PVector_ptr b)
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) vector_operation_error();
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
 	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) * ith(b, i);
@@ -135,15 +138,45 @@ PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b)
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
 	int i;
-	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) return NIL_VECTOR;
+	if ( a.vector==NULL || b.vector==NULL || a.vector->length!=b.vector->length ) vector_operation_error();
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
-	for (i=0; i<n; i++) c.vector->nodes[i].data = ith(a, i) / ith(b, i);
+	for (i=0; i<n; i++) {
+		if (ith(b,i) == 0) {
+			fprintf(stderr, "ZeroDivisionError: Divisor cann't be 0\n");
+			exit(1);
+		}
+		c.vector->nodes[i].data = ith(a, i) / ith(b, i);
+	}
 	DEREF((heap_object *)a.vector);
 	DEREF((heap_object *)b.vector);
 	return c;
 }
 
+bool Vector_eq(PVector_ptr a, PVector_ptr b) {
+	REF((heap_object *)a.vector);
+	REF((heap_object *)b.vector);
+	if (a.vector == NULL || b.vector == NULL) return false;
+	if (a.vector->length != b.vector->length) return false;
+	int i = (int)a.vector->length;
+	for (int j = 0; j < i; j++) {
+		if(a.vector->nodes[j].data != b.vector->nodes[j].data) return false;
+	}
+	DEREF((heap_object *)a.vector);
+	DEREF((heap_object *)b.vector);
+	return true;
+}
+
+bool Vector_neq(PVector_ptr a, PVector_ptr b) {
+	return !Vector_eq(a,b);
+}
+
+int Vector_len(PVector_ptr v) {
+	REF((heap_object *)v.vector);
+	int len = (int)v.vector->length;
+	DEREF((heap_object *)v.vector);
+	return len;
+}
 void print_vector(PVector_ptr a)
 {
 	REF((heap_object *)a.vector);
@@ -154,8 +187,6 @@ void print_vector(PVector_ptr a)
 String *String_new(char *orig)
 {
 	String *s = String_alloc(strlen(orig));
-//	printf("String_new == %p\n", s);
-//	printf("String_new @s->str == %p\n", s->str);
 	strcpy(s->str, orig);
 	return s;
 }
@@ -193,6 +224,9 @@ String *String_from_float(double value) {
 	return String_new(s);
 }
 
+int String_len(String *s) {
+	return (int)s->length;
+}
 void print_string(String *a)
 {
 	REF((heap_object *)a);

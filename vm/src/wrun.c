@@ -28,7 +28,6 @@ SOFTWARE.
 
 int main(int argc, char *argv[])
 {
-    printf("file %s\n", argv[1]);
     FILE *f = fopen(argv[1], "r");
     if ( f!=NULL ) {
         VM *vm = vm_load(f);

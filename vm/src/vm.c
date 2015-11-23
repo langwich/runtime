@@ -104,10 +104,9 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"STORE_INDEX", STORE_INDEX,    0},
 		{"SLOAD_INDEX", SLOAD_INDEX,    0},
 
-		{"PUSH",        PUSH_DFLT_RETV, 0},
+		{"PUSH_DFLT_RETV", PUSH_DFLT_RETV, 0},
 		{"POP",         POP,            0},
 		{"CALL",        CALL,           2},
-		{"RETV",        RETV,           0},
 		{"RET",         RET,            0},
 
 		{"IPRINT",      IPRINT,         0},
@@ -119,10 +118,11 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"NOP",         NOP,            0},
 		{"VLEN",        VLEN,           0},
 		{"SLEN",        SLEN,           0},
-		{"GC_S",        GC_START,       0},
-		{"GC_E",        GC_END,         0},
+		{"GC_START",    GC_START,       0},
+		{"GC_END",      GC_END,         0},
 		{"SROOT",       SROOT,          0},
-		{"VROOT",       VROOT,          0}
+		{"VROOT",       VROOT,          0},
+		{"COPY_VECTOR",  COPY_VECTOR,   0},
 };
 
 static void vm_print_instr(VM *vm, addr32 ip);
@@ -131,10 +131,10 @@ static inline int int32(const byte *data, addr32 ip);
 static inline int int16(const byte *data, addr32 ip);
 static inline float float32(const byte *data, addr32 ip);
 static void vm_call(VM *vm, Function_metadata *func);
-static void vm_print_stack_value(VM *vm, word p);
+static void vm_print_stack_value(word p);
 void push_default_return_value(VM *vm, int type);
 
-VM *vm_alloc()
+VM * vm_alloc()
 {
 	VM *vm = calloc(1, sizeof(VM));
 	return vm;
@@ -176,6 +176,11 @@ static void inline validate_stack_address(int a)
 	}
 }
 
+static void inline zero_division_error() {
+	fprintf(stderr, "ZeroDivisionError: Divisor cann't be 0\n");
+	exit(1);
+}
+
 static void gc_check()
 {
 	gc();
@@ -192,7 +197,6 @@ void vm_exec(VM *vm, bool trace) {
 	PVector_ptr vptr,r,l;
 	int x, y;
 	Activation_Record *frame;
-	int num_root = 0;
 
 	Function_metadata *const main = vm_function(vm, "main");
 	vm_call(vm, main);
@@ -234,6 +238,7 @@ void vm_exec(VM *vm, bool trace) {
 				validate_stack_address(sp-1);
 				y = stack[sp--].i;
 				x = stack[sp].i;
+				if (y ==0 ) zero_division_error();
 				stack[sp].i = x / y;
 				break;
 			case FADD:
@@ -258,6 +263,7 @@ void vm_exec(VM *vm, bool trace) {
 				validate_stack_address(sp-1);
 				f = stack[sp--].f;
 				g = stack[sp].f;
+				if (f == 0) zero_division_error();
 				stack[sp].f = g / f;
 				break;
             case VADD:
@@ -333,6 +339,7 @@ void vm_exec(VM *vm, bool trace) {
 			case VDIVI:
 				validate_stack_address(sp-1);
 				i = stack[sp--].i;
+				if (i == 0) zero_division_error();
 				vptr = stack[sp].vptr;
 				vptr = Vector_div(vptr,Vector_from_int(i,vptr.vector->length));
 				stack[sp].vptr = vptr;
@@ -340,6 +347,7 @@ void vm_exec(VM *vm, bool trace) {
 			case VDIVF:
 				validate_stack_address(sp-1);
 				f = stack[sp--].f;
+				if (f == 0) zero_division_error();
 				vptr = stack[sp].vptr;
 				vptr = Vector_div(vptr,Vector_from_float(f,vptr.vector->length));
 				stack[sp].vptr = vptr;
@@ -504,12 +512,16 @@ void vm_exec(VM *vm, bool trace) {
                 break;
 			case VEQ:
 				validate_stack_address(sp-1);
-				b1 = Vector_eq(stack[sp--].vptr,stack[sp--].vptr);
+				l = stack[sp--].vptr;
+				r = stack[sp--].vptr;
+				b1 = Vector_eq(l,r);
 				stack[++sp].b = b1;
 				break;
 			case VNEQ:
 				validate_stack_address(sp-1);
-				b1 = Vector_neq(stack[sp--].vptr,stack[sp--].vptr);
+				l = stack[sp--].vptr;
+				r = stack[sp--].vptr;
+				b1 = Vector_neq(l,r);
 				stack[++sp].b = b1;
 				break;
 			case BR:
@@ -566,10 +578,9 @@ void vm_exec(VM *vm, bool trace) {
 			case VECTOR:
 				i = stack[sp--].i;
 				validate_stack_address(sp-i+1);
-				vptr = PVector_init(0, (size_t )i);
-				for (int j = i-1; j >= 0;j--) {
-					set_ith(vptr,j,stack[sp--].f);
-				}
+				double *data = (double*)malloc(i*sizeof(double));
+				for (int j = i-1; j >= 0;j--) { data[j] = stack[sp--].f; }
+				vptr = Vector_new(data,i);
 				stack[++sp].vptr = vptr;
 				break;
 			case VLOAD_INDEX:
@@ -585,6 +596,10 @@ void vm_exec(VM *vm, bool trace) {
 				break;
 			case SLOAD_INDEX:
 				i = stack[sp--].i;
+				if (i-1 >= strlen(stack[sp].s))
+				{
+					fprintf(stderr, "IndexError:string index %d out of range\n",i);
+				}
 				c = String_from_char(stack[sp--].s[i-1])->str;
 				stack[++sp].s = c;
 				break;
@@ -600,10 +615,6 @@ void vm_exec(VM *vm, bool trace) {
 				WRITE_BACK_REGISTERS(vm); // (ip has been updated)
 				vm_call(vm, &vm->functions[a]);
 				LOAD_REGISTERS(vm);
-				break;
-			case RETV:
-				frame = &vm->call_stack[vm->callsp--];
-				ip = frame->retaddr;
 				break;
 			case RET:
 				frame = &vm->call_stack[vm->callsp--];
@@ -651,6 +662,16 @@ void vm_exec(VM *vm, bool trace) {
 			case VROOT:
 				gc_add_root((void **)&stack[sp].vptr);
 				break;
+			case COPY_VECTOR:
+				if (vm->call_stack[vm->callsp].locals[i].vptr.vector != NULL) {
+					stack[sp].vptr = Vector_copy(vm->call_stack[vm->callsp].locals[i].vptr);
+				}
+				else if (stack[sp].vptr.vector != NULL) {
+					stack[sp].vptr = Vector_copy(stack[sp].vptr);
+				}
+				else {
+					fprintf(stderr, "Vector reference cannot be found\n");
+				}
 			case NOP : break;
 			default:
 				printf("invalid opcode: %d at ip=%d\n", opcode, (ip - 1));
@@ -702,6 +723,7 @@ void push_default_return_value(VM *vm, int type) {
 			break;
 	}
 }
+
 static inline int int32(const byte *data, addr32 ip)
 {
 	return *((word32 *)&data[ip]);
@@ -719,8 +741,8 @@ static inline int int16(const byte *data, addr32 ip)
 
 static void vm_print_instr(VM *vm, addr32 ip)
 {
-	int opcode = vm->code[ip];
-	VM_INSTRUCTION *inst = &vm_instructions[opcode];
+	int op_code = vm->code[ip];
+	VM_INSTRUCTION *inst = &vm_instructions[op_code];
 	switch (inst->opnd_size) {
 		case 0:
 			fprintf(stderr, "%04d:  %-25s", ip, inst->name);
@@ -747,7 +769,7 @@ static void vm_print_stack(VM *vm) {
 		Function_metadata *func = frame->func;
 		fprintf(stderr, " %s=[", func->name);
 		for (int j = 0; j < func->nlocals+func->nargs; ++j) {
-			vm_print_stack_value(vm, (word)frame->locals[j].i);
+			vm_print_stack_value((word)frame->locals[j].i);
 		}
 		fprintf(stderr, " ]");
 	}
@@ -755,16 +777,16 @@ static void vm_print_stack(VM *vm) {
 	fprintf(stderr, "opnds=[");
 	for (int i = 0; i <= vm->sp; i++) {
 		int p = vm->stack[i].i;
-		vm_print_stack_value(vm, (word)p);
+		vm_print_stack_value((word)p);
 	}
 	fprintf(stderr, " ] fp=%d sp=%d\n", vm->fp, vm->sp);
 }
 
-void vm_print_stack_value(VM *vm, word p) {
+void vm_print_stack_value(word p) {
 	if ( ((long)p) >= 0 ) {
-		fprintf(stderr, " %lu", p);
+		fprintf(stderr, " %lu", (long)p);
 	}
 	else {
-		fprintf(stderr, " %ld", p); // assume negative value is correct (and not a huge unsigned)
+		fprintf(stderr, " %ld", (long)p); // assume negative value is correct (and not a huge unsigned)
 	}
 }

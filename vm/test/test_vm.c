@@ -47,14 +47,15 @@ static void run(char *code) {
 void hello() {
 	char *code =
 		"1 strings\n"
-		"\t0: 5/hello\n"
-		"1 functions\n"
-		"\t0: addr=0 args=0 locals=0 type=1 4/main\n"
-		"3 instr, 5 bytes\n"
-		"\tSCONST 0\n"
-		"\tSPRINT\n"
-		"\tHALT";
-
+        "0: 5/hello\n"
+        "1 functions\n"
+        "0: addr=0 args=0 locals=0 type=0 4/main\n"
+        "5 instr, 7 bytes\n"
+        "GC_START\n"
+        "SCONST 0\n"
+        "SPRINT\n"
+        "GC_END\n"
+        "HALT\n";
 	run(code);
 }
 
@@ -64,16 +65,18 @@ void hello() {
 void string_add() {
     char *code =
         "2 strings\n"
-        "\t0: 5/hello\n"
-        "\t1: 5/world\n"
+        "0: 5/hello\n"
+        "1: 5/world\n"
         "1 functions\n"
-        "\t0: addr=0 args=0 locals=0 type=1 4/main\n"
-        "5 instr, 9 bytes\n"
-        "\tSCONST 0\n"
-        "\tSCONST 1\n"
-        "\tSADD\n"
-        "\tSPRINT\n"
-        "\tHALT";
+        "0: addr=0 args=0 locals=0 type=0 4/main\n"
+        "7 instr, 11 bytes\n"
+        "GC_START\n"
+        "SCONST 0\n"
+        "SCONST 1\n"
+        "SADD\n"
+        "SPRINT\n"
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 
@@ -84,11 +87,13 @@ void int_var_def() {
     char *code =
         "0 strings\n"
         "1 functions\n"
-        "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "3 instr, 9 bytes\n"
-        "\tICONST 1\n"
-        "\tSTORE 0\n"
-        "\tHALT\n";
+        "0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "5 instr, 11 bytes\n"
+        "GC_START\n"
+        "ICONST 1\n"
+        "STORE 0\n"
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 
@@ -98,13 +103,16 @@ void int_var_def() {
 void string_var_def() {
     char *code =
         "1 strings\n"
-        "\t0: 5/hello\n"
+        "0: 5/hello\n"
         "1 functions\n"
-        "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "3 instr, 7 bytes\n"
-        "\tSCONST 0\n"
-        "\tSTORE 0\n"
-        "\tHALT\n";
+        "0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "6 instr, 10 bytes\n"
+        "GC_START\n"
+        "SCONST 0\n"
+        "STORE 0\n"
+        "SROOT\n"
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 
@@ -117,16 +125,19 @@ void vector() {
         "0 strings\n"
         "1 functions\n"
         "0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "9 instr, 28 bytes\n"
-        "\tFCONST 1.0\n"
-        "\tFCONST 2.0\n"
-        "\tFCONST 3.0\n"
-        "\tICONST 3\n"
-        "\tVECTOR\n"
-        "\tSTORE 0\n"
-        "\tVLOAD 0\n"
-        "\tVPRINT\n"
-        "\tHALT\n";
+        "12 instr, 32 bytes\n"
+        "GC_START\n"
+        "FCONST 1.0\n"
+        "FCONST 2.0\n"
+        "FCONST 3.0\n"
+        "ICONST 3\n"
+        "VECTOR\n"
+        "STORE 0\n"
+        "VROOT\n"
+        "VLOAD 0\n"
+        "VPRINT\n"
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 
@@ -139,51 +150,26 @@ void func_call() {
     char *code =
         "0 strings\n"
         "3 functions\n"
-        "\t0: addr=0 args=0 locals=0 type=0 1/f\n"
-        "\t1: addr=10 args=1 locals=0 type=1 1/g\n"
-        "\t2: addr=16 args=0 locals=0 type=0 4/main\n"
-        "10 instr, 20 bytes\n"
-        "\tICONST 3\n"
-        "\tCALL 1\n"
-        "\tPOP\n"
-        "\tRET\n"
-        "\tILOAD 0\n"
-        "\tRETV\n"
-        "\tPUSH\n"
-        "\tRETV\n"
-        "\tCALL 0\n"
-        "\tHALT";
-    run(code);
-}
-
-/*
- * func f(q:int){var i = g(q,true) print (i)}
- * func g(z:int,b:boolean):int{ print(b) return z }
- * f(1)
- */
-void func_call_with_args() {
-    char *code =
-        "0 strings\n"
-        "3 functions\n"
-        "0: addr=0 args=1 locals=1 type=0 1/f\n"
-        "1: addr=19 args=2 locals=0 type=1 1/g\n"
-        "2: addr=29 args=0 locals=0 type=0 4/main\n"
-        "16 instr, 38 bytes\n"
-        "ILOAD 0\n"
-        "ICONST 1\n"
+        "0: addr=0 args=0 locals=0 type=0 1/f\n"
+        "1: addr=12 args=1 locals=0 type=1 1/g\n"
+        "2: addr=21 args=0 locals=0 type=0 4/main\n"
+        "17 instr, 27 bytes\n"
+        "GC_START\n"
+        "ICONST 3\n"
         "CALL 1\n"
-        "STORE 1\n"
-        "ILOAD 1\n"
-        "IPRINT\n"
+        "POP\n"
         "RET\n"
-        "ILOAD 1\n"
-        "BPRINT\n"
+        "GC_END\n"
+        "GC_START\n"
         "ILOAD 0\n"
-        "RETV\n"
-        "PUSH\n"
-        "RETV\n"
-        "ICONST 1\n"
+        "GC_END\n"
+        "RET\n"
+        "PUSH_DFLT_RETV\n"
+        "RET\n"
+        "GC_END\n"
+        "GC_START\n"
         "CALL 0\n"
+        "GC_END\n"
         "HALT\n";
     run(code);
 }
@@ -198,9 +184,10 @@ void func_call_two_args() {
         "0 strings\n"
         "3 functions\n"
         "0: addr=0 args=0 locals=1 type=0 1/f\n"
-        "1: addr=21 args=2 locals=0 type=3 1/g\n"
-        "2: addr=48 args=0 locals=0 type=0 4/main\n"
-        "20 instr, 52 bytes\n"
+        "1: addr=23 args=2 locals=0 type=3 1/g\n"
+        "2: addr=54 args=0 locals=0 type=0 4/main\n"
+        "28 instr, 60 bytes\n"
+        "GC_START\n"
         "ICONST 3\n"
         "ICONST 1\n"
         "CALL 1\n"
@@ -208,19 +195,26 @@ void func_call_two_args() {
         "ILOAD 0\n"
         "BPRINT\n"
         "RET\n"
+        "GC_END\n"
+        "GC_START\n"
         "ILOAD 0\n"
         "ILOAD 1\n"
         "IGT\n"
-        "BRF 12\n"
+        "BRF 13\n"
         "ICONST 1\n"
-        "RETV\n"
-        "BR 9\n"
+        "GC_END\n"
+        "RET\n"
+        "BR 10\n"
         "ICONST 0\n"
-        "RETV\n"
-        "PUSH\n"
-        "RETV\n"
+        "GC_END\n"
+        "RET\n"
+        "PUSH_DFLT_RETV\n"
+        "RET\n"
+        "GC_END\n"
+        "GC_START\n"
         "CALL 0\n"
-        "HALT";
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 
@@ -232,43 +226,47 @@ void if_stat() {
     char *code =
         "0 strings\n"
         "1 functions\n"
-        "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "9 instr, 25 bytes\n"
-        "\tICONST 3\n"
-        "\tSTORE 0\n"
-        "\tILOAD 0\n"
-        "\tICONST 0\n"
-        "\tIGT\n"
-        "\tBRF 7\n"
-        "\tILOAD 0\n"
-        "\tIPRINT\n"
-        "\tHALT\n";
+        "0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "11 instr, 27 bytes\n"
+        "GC_START\n"
+        "ICONST 3\n"
+        "STORE 0\n"
+        "ILOAD 0\n"
+        "ICONST 0\n"
+        "IGT\n"
+        "BRF 7\n"
+        "ILOAD 0\n"
+        "IPRINT\n"
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 
 /*
  * var i = 3
  * if ( i>0 ) print (i)
- * else print (1);
+ * else print (1)
  */
 void if_else() {
     char *code =
         "0 strings\n"
         "1 functions\n"
-        "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "12 instr, 32 bytes\n"
-        "\tICONST 3\n"
-        "\tSTORE 0\n"
-        "\tILOAD 0\n"
-        "\tICONST 0\n"
-        "\tIGT\n"
-        "\tBRF 14\n"
-        "\tILOAD 0\n"
-        "\tIPRINT\n"
-        "\tBR 7\n"
-        "\tICONST 1\n"
-        "\tIPRINT\n"
-        "\tHALT\n";
+        "0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "14 instr, 36 bytes\n"
+        "GC_START\n"
+        "ICONST 3\n"
+        "STORE 0\n"
+        "ILOAD 0\n"
+        "ICONST 0\n"
+        "IGT\n"
+        "BRF 10\n"
+        "ILOAD 0\n"
+        "IPRINT\n"
+        "BR 9\n"
+        "ICONST 1\n"
+        "IPRINT\n"
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 /*
@@ -281,21 +279,23 @@ void while_stat() {
         "0 strings\n"
         "1 functions\n"
         "0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "\t14 instr, 40 bytes\n"
-        "\tICONST 0\n"
-        "\tSTORE 0\n"
-        "\tILOAD 0\n"
-        "\tICONST 10\n"
-        "\tILT\n"
-        "\tBRF 18\n"
-        "\tILOAD 0\n"
-        "\tICONST 1\n"
-        "\tIADD\n"
-        "\tSTORE 0\n"
-        "\tBR -24\n"
-        "\tILOAD 0\n"
-        "\tIPRINT\n"
-        "\tHALT\n";
+        "16 instr, 42 bytes\n"
+        "GC_START\n"
+        "ICONST 0\n"
+        "STORE 0\n"
+        "ILOAD 0\n"
+        "ICONST 10\n"
+        "ILT\n"
+        "BRF 18\n"
+        "ILOAD 0\n"
+        "ICONST 1\n"
+        "IADD\n"
+        "STORE 0\n"
+        "BR -24\n"
+        "ILOAD 0\n"
+        "IPRINT\n"
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 
@@ -308,21 +308,24 @@ void vector_element_assign() {
     char *code =
         "0 strings\n"
         "1 functions\n"
-        "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "13 instr, 42 bytes\n"
-        "\tFCONST 1.0\n"
-        "\tFCONST 2.0\n"
-        "\tFCONST 3.0\n"
-        "\tICONST 3\n"
-        "\tVECTOR\n"
-        "\tSTORE 0\n"
-        "\tVLOAD 0\n"
-        "\tICONST 1\n"
-        "\tFCONST 4.0\n"
-        "\tSTORE_INDEX\n"
-        "\tVLOAD 0\n"
-        "\tVPRINT\n"
-        "\tHALT\n";
+        "0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "16 instr, 46 bytes\n"
+        "GC_START\n"
+        "FCONST 1.0\n"
+        "FCONST 2.0\n"
+        "FCONST 3.0\n"
+        "ICONST 3\n"
+        "VECTOR\n"
+        "STORE 0\n"
+        "VROOT\n"
+        "VLOAD 0\n"
+        "ICONST 1\n"
+        "FCONST 4.0\n"
+        "STORE_INDEX\n"
+        "VLOAD 0\n"
+        "VPRINT\n"
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 
@@ -374,65 +377,31 @@ void vector_add_int() {
 void string_index() {
     char *code =
         "2 strings\n"
-        "\t0: 3/car\n"
-        "\t1: 3/cat\n"
+        "0: 3/car\n"
+        "1: 3/cat\n"
         "1 functions\n"
-        "\t0: addr=0 args=0 locals=3 type=0 4/main\n"
-        "15 instr, 39 bytes\n"
-        "\tSCONST 0\n"
-        "\tSTORE 0\n"
-        "\tSCONST 1\n"
-        "\tSTORE 1\n"
-        "\tSLOAD 0\n"
-        "\tICONST 1\n"
-        "\tSLOAD_INDEX \n"
-        "\tSLOAD 1\n"
-        "\tICONST 2\n"
-        "\tSLOAD_INDEX\n"
-        "\tSADD\n"
-        "\tSTORE 2\n"
-        "\tSLOAD 2\n"
-        "\tSPRINT\n"
-        "\tHALT\n";
-    run(code);
-}
-/*
- * func fib(x:int) : int {
- *      if (x <= 1) { return 1 }
- *      return fib(x-1) + fib(x-2)
- *  }
- * print(fib(5))
- */
-
-void fib() {
-    char *code =
-        "0 strings\n"
-        "2 functions\n"
-        "0: addr=0 args=1 locals=0 type=1 3/fib\n"
-        "1: addr=46 args=0 locals=0 type=0 4/main\n"
-        "22 instr, 56 bytes\n"
-        "ILOAD 0\n"
+        "0: addr=0 args=0 locals=3 type=0 4/main\n"
+        "20 instr, 44 bytes\n"
+        "GC_START\n"
+        "SCONST 0\n"
+        "STORE 0\n"
+        "SROOT\n"
+        "SCONST 1\n"
+        "STORE 1\n"
+        "SROOT\n"
+        "SLOAD 0\n"
         "ICONST 1\n"
-        "ILE\n"
-        "BRF 9\n"
-        "ICONST 1\n"
-        "RETV\n"
-        "ILOAD 0\n"
-        "ICONST 1\n"
-        "ISUB\n"
-        "CALL 0\n"
-        "ILOAD 0\n"
+        "SLOAD_INDEX\n"
+        "SLOAD 1\n"
         "ICONST 2\n"
-        "ISUB\n"
-        "CALL 0\n"
-        "IADD\n"
-        "RETV\n"
-        "PUSH\n"
-        "RETV\n"
-        "ICONST 5\n"
-        "CALL 0\n"
-        "IPRINT\n"
-        "HALT";
+        "SLOAD_INDEX\n"
+        "SADD\n"
+        "STORE 2\n"
+        "SROOT\n"
+        "SLOAD 2\n"
+        "SPRINT\n"
+        "GC_END\n"
+        "HALT\n";
     run(code);
 }
 
@@ -447,14 +416,18 @@ void vector_op() {
         "0 strings\n"
         "2 functions\n"
         "0: addr=0 args=1 locals=0 type=5 1/f\n"
-        "1: addr=12 args=0 locals=2 type=0 4/main\n"
-        "25 instr, 63 bytes\n"
+        "1: addr=15 args=0 locals=2 type=0 4/main\n"
+        "34 instr, 72 bytes\n"
+        "GC_START\n"
         "VLOAD 0\n"
         "ICONST 2\n"
         "VMULI\n"
-        "RETV\n"
-        "PUSH\n"
-        "RETV\n"
+        "GC_END\n"
+        "RET\n"
+        "PUSH_DFLT_RETV\n"
+        "RET\n"
+        "GC_END\n"
+        "GC_START\n"
         "ICONST 1\n"
         "I2F\n"
         "ICONST 2\n"
@@ -464,93 +437,20 @@ void vector_op() {
         "ICONST 3\n"
         "VECTOR\n"
         "STORE 0\n"
+        "VROOT\n"
         "VLOAD 0\n"
+        "COPY_VECTOR\n"
         "CALL 0\n"
+        "COPY_VECTOR\n"
         "STORE 1\n"
+        "VROOT\n"
         "VLOAD 1\n"
         "VLOAD 0\n"
         "VDIV\n"
         "ICONST 1\n"
         "VADDI\n"
         "VPRINT\n"
-        "HALT";
-    run(code);
-}
-
-void op_boolean_vars() {
-    char *code = "0 strings\n"
-        "3 functions\n"
-        "0: addr=0 args=1 locals=0 type=3 3/foo\n"
-        "1: addr=12 args=1 locals=0 type=3 3/bar\n"
-        "2: addr=41 args=0 locals=2 type=0 4/main\n"
-        "28 instr, 72 bytes\n"
-        "ILOAD 0\n"
-        "ICONST 10\n"
-        "ILT\n"
-        "RETV\n"
-        "PUSH\n"
-        "RETV\n"
-        "ILOAD 0\n"
-        "ICONST 1\n"
-        "ILT\n"
-        "BRF 12\n"
-        "ICONST 1\n"
-        "RETV\n"
-        "BR 9\n"
-        "ICONST 0\n"
-        "RETV\n"
-        "PUSH\n"
-        "RETV\n"
-        "ICONST 5\n"
-        "CALL 1\n"
-        "STORE 0\n"
-        "ICONST 1\n"
-        "CALL 0\n"
-        "STORE 1\n"
-        "ILOAD 0\n"
-        "ILOAD 1\n"
-        "OR\n"
-        "BPRINT\n"
-        "HALT\n";
-    run(code);
-}
-
-void testNestedBlock() {
-    char *code =
-        "4 strings\n"
-        "0: 3/cat\n"
-        "1: 3/dog\n"
-        "2: 3/moo\n"
-        "3: 3/boo\n"
-        "2 functions\n"
-        "0: addr=0 args=1 locals=5 type=1 1/f\n"
-        "1: addr=53 args=0 locals=0 type=0 4/main\n"
-        "26 instr, 70 bytes\n"
-        "ICONST 32\n"
-        "STORE 1\n"
-        "SCONST 0\n"
-        "STORE 2\n"
-        "SCONST 1\n"
-        "STORE 4\n"
-        "SCONST 2\n"
-        "STORE 5\n"
-        "ILOAD 1\n"
-        "RETV\n"
-        "SCONST 3\n"
-        "STORE 4\n"
-        "ICONST 7\n"
-        "I2F\n"
-        "ICONST 1\n"
-        "VECTOR\n"
-        "STORE 3\n"
-        "PUSH\n"
-        "RETV\n"
-        "ICONST 1\n"
-        "I2F\n"
-        "ICONST 1\n"
-        "VECTOR\n"
-        "CALL 0\n"
-        "IPRINT\n"
+        "GC_END\n"
         "HALT\n";
     run(code);
 }
@@ -561,7 +461,8 @@ void testNop() {
         "0: 2/hi\n"
         "1 functions\n"
         "0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "11 instr, 29 bytes\n"
+        "13 instr, 31 bytes\n"
+        "GC_START\n"
         "ICONST 3\n"
         "STORE 0\n"
         "ILOAD 0\n"
@@ -572,6 +473,7 @@ void testNop() {
         "BR 7\n"
         "SCONST 0\n"
         "SPRINT\n"
+        "GC_END\n"
         "HALT\n";
     run(code);
 }
@@ -581,8 +483,9 @@ void testFuncMissReturnValue() {
         "0 strings\n"
         "2 functions\n"
         "0: addr=0 args=1 locals=0 type=5 1/f\n"
-        "1: addr=53 args=0 locals=0 type=0 4/main\n"
-        "25 instr, 63 bytes\n"
+        "1: addr=57 args=0 locals=0 type=0 4/main\n"
+        "30 instr, 68 bytes\n"
+        "GC_START\n"
         "ILOAD 0\n"
         "ICONST 0\n"
         "ILT\n"
@@ -593,7 +496,8 @@ void testFuncMissReturnValue() {
         "VECTOR\n"
         "ILOAD 0\n"
         "VADDI\n"
-        "RETV\n"
+        "GC_END\n"
+        "RET\n"
         "BR 22\n"
         "ICONST 1\n"
         "I2F\n"
@@ -602,11 +506,14 @@ void testFuncMissReturnValue() {
         "ILOAD 0\n"
         "VADDI\n"
         "STORE 0\n"
-        "PUSH\n"
-        "RETV\n"
+        "PUSH_DFLT_RETV\n"
+        "RET\n"
+        "GC_END\n"
+        "GC_START\n"
         "ICONST 3\n"
         "CALL 0\n"
         "VPRINT\n"
+        "GC_END\n"
         "HALT";
     run(code);
 }
@@ -684,7 +591,7 @@ void test_float_div() {
         "1 functions\n"
         "0: addr=0 args=0 locals=2 type=0 4/main\n"
         "11 instr, 27 bytes\n"
-        "GC_S\n"
+        "GC_START\n"
         "FCONST 1.0\n"
         "STORE 0\n"
         "FCONST 2.0\n"
@@ -693,10 +600,75 @@ void test_float_div() {
         "FLOAD 0\n"
         "FSUB\n"
         "FPRINT\n"
-        "GC_E\n"
+        "GC_END\n"
         "HALT\n";
     run(code);
 }
+
+void test_div_error() {
+    char *code =
+    "0 strings\n"
+    "1 functions\n"
+    "0: addr=0 args=0 locals=0 type=0 4/main\n"
+    "21 instr, 53 bytes\n"
+    "GC_START\n"
+    "ICONST 2\n"
+    "I2F\n"
+    "ICONST 4\n"
+    "I2F\n"
+    "ICONST 6\n"
+    "I2F\n"
+    "ICONST 3\n"
+    "VECTOR\n"
+    "ICONST 1\n"
+    "I2F\n"
+    "ICONST 0\n"
+    "I2F\n"
+    "ICONST 3\n"
+    "I2F\n"
+    "ICONST 3\n"
+    "VECTOR\n"
+    "VDIV\n"
+    "VPRINT\n"
+    "GC_END\n"
+    "HALT\n";
+    run(code);
+}
+
+/*var x = [1,2,3]
+ * x[4] = 4
+ * print(x)
+*/
+
+void test_index_out_of_range() {
+    char *code =
+        "0 strings\n"
+        "1 functions\n"
+        "0: addr=0 args=0 locals=1 type=0 4/main\n"
+        "20 instr, 50 bytes\n"
+        "GC_START\n"
+        "ICONST 1\n"
+        "I2F\n"
+        "ICONST 2\n"
+        "I2F\n"
+        "ICONST 3\n"
+        "I2F\n"
+        "ICONST 3\n"
+        "VECTOR\n"
+        "STORE 0\n"
+        "VROOT\n"
+        "VLOAD 0\n"
+        "ICONST 4\n"
+        "ICONST 4\n"
+        "I2F\n"
+        "STORE_INDEX\n"
+        "VLOAD 0\n"
+        "VPRINT\n"
+        "GC_END\n"
+        "HALT\n";
+    run(code);
+}
+
 
 int main(int argc, char *argv[]) {
     cunit_setup = setup;
@@ -708,7 +680,6 @@ int main(int argc, char *argv[]) {
     test(string_var_def);
     test(vector);
     test(func_call);
-    test(func_call_with_args);
     test(func_call_two_args);
     test(if_stat);
     test(if_else);
@@ -717,15 +688,14 @@ int main(int argc, char *argv[]) {
     test(test_int_to_string);
     test(vector_add_int);
     test(string_index);
-    test(fib);
     test(vector_op);
-    test(op_boolean_vars);
-    test(testNestedBlock);
     test(testNop);
     test(testFuncMissReturnValue);
     test(test_len);
     test(test_len2);
     test(test_float_div);
+    test(test_div_error);
+    test(test_index_out_of_range);
     return 0;
 }
 
