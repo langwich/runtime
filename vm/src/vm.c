@@ -578,10 +578,8 @@ void vm_exec(VM *vm, bool trace) {
 			case VECTOR:
 				i = stack[sp--].i;
 				validate_stack_address(sp-i+1);
-				double data[1000];
-				for (int j = i-1; j >= 0;j--) {
-					data[j] = stack[sp--].f;
-				}
+				double *data = (double*)malloc(i*sizeof(double));
+				for (int j = i-1; j >= 0;j--) { data[j] = stack[sp--].f; }
 				vptr = Vector_new(data,i);
 				stack[++sp].vptr = vptr;
 				break;
@@ -598,8 +596,9 @@ void vm_exec(VM *vm, bool trace) {
 				break;
 			case SLOAD_INDEX:
 				i = stack[sp--].i;
-				if (i-1 >= strlen(stack[sp].s)) {
-					fprintf(stderr, "Index %d out range of 1 .. %d\n",i,(int)strlen(stack[sp].s));
+				if (i-1 >= strlen(stack[sp].s))
+				{
+					fprintf(stderr, "IndexError:string index %d out of range\n",i);
 				}
 				c = String_from_char(stack[sp--].s[i-1])->str;
 				stack[++sp].s = c;
@@ -671,7 +670,7 @@ void vm_exec(VM *vm, bool trace) {
 					stack[sp].vptr = Vector_copy(stack[sp].vptr);
 				}
 				else {
-					fprintf(stderr, "Vector Object Cannot Be Found");
+					fprintf(stderr, "Vector reference cannot be found\n");
 				}
 			case NOP : break;
 			default:

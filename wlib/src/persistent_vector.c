@@ -52,6 +52,11 @@ SOFTWARE.
  * which the node was created."
  */
 
+static void inline index_error(int i) {
+	fprintf(stderr, "IndexError:vector index %d out of range\n",i);
+	exit(1);
+}
+
 PVector_ptr PVector_init(double val, size_t n) {
 	PVector *v = PVector_alloc(n);
 	v->version_count = -1; // first version is 0
@@ -75,51 +80,40 @@ PVector_ptr PVector_new(double *data, size_t n) {
 }
 
 double ith(PVector_ptr vptr, int i) {
-	if ( i>=0 && i< vptr.vector->length ) {
-		PVectorFatNode *default_node = &vptr.vector->nodes[i];
-		if ( default_node->head==NULL ) {       // fast path
-			return default_node->data;          // return default value if no version list
-		}
-		// Look for value associated with this version in list first
-		PVectorFatNodeElem *p = default_node->head;
-		while ( p!=NULL ) {
-			if ( p->version== vptr.version ) {
-				return p->data;
-			}
-			p = p->next;
-		}
-		// not found? return default value
-		return default_node->data;
+	if (i<0 || i>= vptr.vector->length) index_error(i+1);
+	PVectorFatNode *default_node = &vptr.vector->nodes[i];
+	if ( default_node->head==NULL ) {       // fast path
+		return default_node->data;          // return default value if no version list
 	}
-	else {
-		fprintf(stderr, "Index %d out range of 1 .. %d\n",i+1,(int)vptr.vector->length);
-		exit(1);
+	// Look for value associated with this version in list first
+	PVectorFatNodeElem *p = default_node->head;
+	while ( p!=NULL ) {
+		if ( p->version== vptr.version ) {
+			return p->data;
+		}
+		p = p->next;
 	}
-	return NAN;
+	// not found? return default value
+	return default_node->data;
 }
 
 void set_ith(PVector_ptr vptr, int i, double value) {
-	if ( i>=0 && i< vptr.vector->length ) {
-		PVectorFatNode *default_node = &vptr.vector->nodes[i];
-		PVectorFatNodeElem *p = default_node->head;  // can never set default value in fat node after creation
-		while (p != NULL) {
-			if ( p->version== vptr.version ) {       // found our version so let's update it
-				p->data = value;
-				return;
-			}
-			p = p->next;
+	if (i<0 || i>= vptr.vector->length) index_error(i+1);
+	PVectorFatNode *default_node = &vptr.vector->nodes[i];
+	PVectorFatNodeElem *p = default_node->head;  // can never set default value in fat node after creation
+	while (p != NULL) {
+		if ( p->version== vptr.version ) {       // found our version so let's update it
+			p->data = value;
+			return;
 		}
-		// if not found, we create a new fat node with (version,value) and make it the head of the list
-		PVectorFatNodeElem *q = PVectorFatNodeElem_alloc();
-		q->version = vptr.version;
-		q->data = value;
-		q->next = default_node->head;
-		default_node->head = q;
+		p = p->next;
 	}
-	else {
-		fprintf(stderr, "Index %d out range of 1 .. %d\n",i+1,(int)vptr.vector->length);
-		exit(1);
-	}
+	// if not found, we create a new fat node with (version,value) and make it the head of the list
+	PVectorFatNodeElem *q = PVectorFatNodeElem_alloc();
+	q->version = vptr.version;
+	q->data = value;
+	q->next = default_node->head;
+	default_node->head = q;
 }
 
 char *PVector_as_string(PVector_ptr a) {
