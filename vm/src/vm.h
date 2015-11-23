@@ -33,7 +33,7 @@ static const int MAX_FUNCTIONS	= 1000;
 static const int MAX_LOCALS		= 10;	// max locals/args in activation record
 static const int MAX_CALL_STACK = 1000;
 static const int MAX_OPND_STACK = 1000;
-static const int NUM_INSTRS		= 84;
+static const int NUM_INSTRS		= 83;
 static const int    DEFAULT_INT_VALUE = 0;
 static const float  DEFAULT_FLOAT_VALUE = 0.0;
 static const bool   DEFAULT_BOOLEAN_VALUE = true;
@@ -138,7 +138,6 @@ typedef enum {
 	POP,
 
 	CALL,
-	RETV,
 	RET,
 
 	IPRINT,

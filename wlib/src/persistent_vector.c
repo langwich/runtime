@@ -93,6 +93,7 @@ double ith(PVector_ptr vptr, int i) {
 	}
 	else {
 		fprintf(stderr, "Index %d out range of 1 .. %d\n",i+1,(int)vptr.vector->length);
+		exit(1);
 	}
 	return NAN;
 }
@@ -117,6 +118,7 @@ void set_ith(PVector_ptr vptr, int i, double value) {
 	}
 	else {
 		fprintf(stderr, "Index %d out range of 1 .. %d\n",i+1,(int)vptr.vector->length);
+		exit(1);
 	}
 }
 

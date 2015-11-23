@@ -25,7 +25,6 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <wich.h>
-#include <persistent_vector.h>
 #include "vm.h"
 
 #include "wloader.h"
@@ -108,7 +107,6 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"PUSH_DFLT_RETV", PUSH_DFLT_RETV, 0},
 		{"POP",         POP,            0},
 		{"CALL",        CALL,           2},
-		{"RETV",        RETV,           0},
 		{"RET",         RET,            0},
 
 		{"IPRINT",      IPRINT,         0},
@@ -618,10 +616,6 @@ void vm_exec(VM *vm, bool trace) {
 				WRITE_BACK_REGISTERS(vm); // (ip has been updated)
 				vm_call(vm, &vm->functions[a]);
 				LOAD_REGISTERS(vm);
-				break;
-			case RETV:
-				frame = &vm->call_stack[vm->callsp--];
-				ip = frame->retaddr;
 				break;
 			case RET:
 				frame = &vm->call_stack[vm->callsp--];
