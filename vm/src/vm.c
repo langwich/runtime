@@ -179,7 +179,7 @@ static void inline validate_stack_address(int a)
 static void inline zero_division_error()
 {
 	fprintf(stderr, "ZeroDivisionError: Divisor cann't be 0\n");
-	exit(1);
+	//exit(1);
 }
 
 static void gc_check()
