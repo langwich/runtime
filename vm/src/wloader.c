@@ -51,11 +51,11 @@ VM *vm_load(FILE *f)
 
     int nstrings;
     fscanf(f, "%d strings\n", &nstrings);
-    vm->strings = (char **)calloc(nstrings, sizeof(char *));
+    vm->strings = (char **)calloc((size_t)nstrings, sizeof(char *));
     for (int i=0; i<nstrings; i++) {
         int index, name_size;
         fscanf(f, "%d: %d/", &index, &name_size);
-        char *str = calloc(name_size+1, sizeof(char));
+        char *str = calloc((size_t)name_size+1, sizeof(char));
         fgets(str, name_size+1, f);
         vm->strings[index] = str;
     }
@@ -76,7 +76,7 @@ VM *vm_load(FILE *f)
     int ninstr, nbytes;
     element e;
     fscanf(f, "%d instr, %d bytes\n", &ninstr, &nbytes);
-    byte *code = calloc(nbytes, sizeof(byte));
+    byte *code = calloc((size_t)nbytes, sizeof(byte));
     addr32 ip = 0;
     for (int i=1; i<=ninstr; i++) {
         char instr[80+1];
@@ -133,15 +133,6 @@ static void vm_write16(byte *data, unsigned int n)
     data[0] = (byte)(n & 0xFF);
 }
 
-BYTECODE vm_opcode(char *name) {
-    for (int i = 0; i < NUM_INSTRS; ++i) {
-        if ( strcmp(name, vm_instructions[i].name)==0 ) {
-            return vm_instructions[i].opcode;
-        }
-    }
-    return -1;
-}
-
 VM_INSTRUCTION *vm_instr(char *name) {
     for (int i = 0; i < NUM_INSTRS; ++i) {
         if ( strcmp(name, vm_instructions[i].name)==0 ) {
@@ -168,25 +159,4 @@ void save_string(char *filename, char *s) {
 	}
 	fputs(s, f);
 	fclose(f);
-}
-
-char *file_contents(char *filename) {
-    struct stat sb;
-    if ( stat(filename, &sb)!=0 ) {
-        fprintf(stderr, "can't stat %s\n", filename);
-        return NULL;
-    }
-    char *buf = malloc((size_t)sb.st_size);
-    FILE *f = fopen(filename, "r");
-    if ( f==NULL ) {
-        fprintf(stderr, "can't open %s\n", filename);
-        return NULL;
-    }
-    size_t read = fread(buf, sizeof(unsigned char), sb.st_size, f);
-    fclose(f);
-    if (read != sb.st_size) {
-        fprintf(stderr, "read %d not %d bytes\n", (int)read, (int)sb.st_size);
-        return NULL;
-    }
-    return buf;
 }

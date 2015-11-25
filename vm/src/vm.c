@@ -132,7 +132,7 @@ static inline int int16(const byte *data, addr32 ip);
 static inline float float32(const byte *data, addr32 ip);
 static void vm_call(VM *vm, Function_metadata *func);
 static void vm_print_stack_value(word p);
-void push_default_return_value(VM *vm, int type);
+int push_default_value(int index, int sp,  element *stack);
 
 VM * vm_alloc()
 {
@@ -176,7 +176,8 @@ static void inline validate_stack_address(int a)
 	}
 }
 
-static void inline zero_division_error() {
+static void inline zero_division_error()
+{
 	fprintf(stderr, "ZeroDivisionError: Divisor cann't be 0\n");
 	exit(1);
 }
@@ -188,7 +189,8 @@ static void gc_check()
 	if ( info.live!=0 ) fprintf(stderr, "%d objects remain after collection\n", info.live);
 }
 
-void vm_exec(VM *vm, bool trace) {
+void vm_exec(VM *vm, bool trace)
+{
 	int a = 0;
 	int i = 0;
 	bool b1, b2;
@@ -605,7 +607,7 @@ void vm_exec(VM *vm, bool trace) {
 				break;
 			case PUSH_DFLT_RETV:
 				i = *&vm->call_stack[vm->callsp].func->return_type;
-				push_default_return_value(vm, i);
+				sp = push_default_value(i, sp, stack);
 				break;
 			case POP:
 				sp--;
@@ -626,11 +628,11 @@ void vm_exec(VM *vm, bool trace) {
 				break;
 			case FPRINT:
 				validate_stack_address(sp);
-				printf("%f\n", stack[sp--].f);
+				printf("%1.2f\n", stack[sp--].f);
 				break;
 			case BPRINT:
 				validate_stack_address(sp);
-				printf("%s\n", stack[sp--].b ? "true" : "false");
+				printf("%d\n", stack[sp--].b);
 				break;
 			case SPRINT:
 				validate_stack_address(sp);
@@ -702,26 +704,27 @@ void vm_call(VM *vm, Function_metadata *func)
 	vm->ip = func->address; // jump!
 }
 
-void push_default_return_value(VM *vm, int type) {
-	switch (type) {
+int push_default_value(int i, int sp, element *stack) {
+	switch (i) {
 		case INT_TYPE:
-			vm->stack[++vm->sp].i = DEFAULT_INT_VALUE;
+			stack[++sp].i = DEFAULT_INT_VALUE;
 			break;
 		case FLOAT_TYPE:
-			vm->stack[++vm->sp].f = DEFAULT_FLOAT_VALUE;
+			stack[++sp].f = DEFAULT_FLOAT_VALUE;
 			break;
 		case BOOLEAN_TYPE:
-			vm->stack[++vm->sp].b = DEFAULT_BOOLEAN_VALUE;
+			stack[++sp].b = DEFAULT_BOOLEAN_VALUE;
 			break;
 		case STRING_TYPE:
-			vm->stack[++vm->sp].s = DEFAULT_STRING_VALUE;
+			stack[++sp].s = DEFAULT_STRING_VALUE;
 			break;
 		case VECTOR_TYPE:
-			vm->stack[++vm->sp].vptr = PVector_init(0, 0);
+			stack[++sp].vptr = PVector_init(0, 0);
 			break;
 		default:
 			break;
 	}
+	return sp;
 }
 
 static inline int int32(const byte *data, addr32 ip)

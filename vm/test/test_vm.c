@@ -38,7 +38,7 @@ static void run(char *code) {
 	FILE *f = fopen("/tmp/t.wasm", "r");
 	VM *vm = vm_load(f);
 	fclose(f);
-	vm_exec(vm, false);
+	vm_exec(vm,false);
 }
 
 /*
@@ -669,6 +669,25 @@ void test_index_out_of_range() {
     run(code);
 }
 
+void test_need_default_return(){
+    char *code = "0 strings\n"
+    "2 functions\n"
+    "0: addr=0 args=0 locals=0 type=1 1/f\n"
+    "1: addr=5 args=0 locals=0 type=0 4/main\n"
+    "10 instr, 12 bytes\n"
+    "GC_START\n"
+    "NOP\n"
+    "PUSH_DFLT_RETV\n"
+    "RET\n"
+    "GC_END\n"
+    "GC_START\n"
+    "CALL 0\n"
+    "IPRINT\n"
+    "GC_END\n"
+    "HALT\n";
+    run(code);
+}
+
 
 int main(int argc, char *argv[]) {
     cunit_setup = setup;
@@ -696,6 +715,7 @@ int main(int argc, char *argv[]) {
     test(test_float_div);
     test(test_div_error);
     test(test_index_out_of_range);
+    test(test_need_default_return);
     return 0;
 }
 
