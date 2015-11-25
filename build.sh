@@ -10,6 +10,9 @@ fi
 # get the directory contains this script
 DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 
+# environment variables
+export WICHRUNTIME=$DIR
+
 # make install the project
 BUILD_DIR=/tmp/wich-build/
 SAMPLE_DIR=$BUILD_DIR/malloc/samples/
