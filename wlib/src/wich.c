@@ -53,7 +53,7 @@ String *String_alloc(size_t length) {
 
 static void inline vector_operation_error() {
 	fprintf(stderr, "VectorOperationError: two vectors must have same length and cann't be NULL\n");
-	exit(1);
+	//exit(1);
 }
 
 // There is a general assumption that support routines follow same
@@ -144,7 +144,7 @@ PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b)
 	for (i=0; i<n; i++) {
 		if (ith(b,i) == 0) {
 			fprintf(stderr, "ZeroDivisionError: Divisor cann't be 0\n");
-			exit(1);
+			//exit(1);
 		}
 		c.vector->nodes[i].data = ith(a, i) / ith(b, i);
 	}

@@ -54,7 +54,7 @@ SOFTWARE.
 
 static void inline index_error(int i) {
 	fprintf(stderr, "IndexError:vector index %d out of range\n",i);
-	exit(1);
+	//exit(1);
 }
 
 PVector_ptr PVector_init(double val, size_t n) {

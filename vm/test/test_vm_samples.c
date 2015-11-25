@@ -72,4 +72,5 @@ int main(int argc, char *argv[]) {
 	else {
 		fprintf(stderr, "can't find samples dir\n");
 	}
+	return 0;
 }
