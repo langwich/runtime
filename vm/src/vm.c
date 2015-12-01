@@ -239,7 +239,10 @@ void vm_exec(VM *vm, bool trace)
 				validate_stack_address(sp-1);
 				y = stack[sp--].i;
 				x = stack[sp].i;
-				if (y ==0 ) zero_division_error();
+				if (y ==0 ) {
+					zero_division_error();
+					break;
+				}
 				stack[sp].i = x / y;
 				break;
 			case FADD:
@@ -264,7 +267,10 @@ void vm_exec(VM *vm, bool trace)
 				validate_stack_address(sp-1);
 				f = stack[sp--].f;
 				g = stack[sp].f;
-				if (f == 0) zero_division_error();
+				if (f == 0) {
+					zero_division_error();
+					break;
+				}
 				stack[sp].f = g / f;
 				break;
             case VADD:
@@ -340,7 +346,10 @@ void vm_exec(VM *vm, bool trace)
 			case VDIVI:
 				validate_stack_address(sp-1);
 				i = stack[sp--].i;
-				if (i == 0) zero_division_error();
+				if (i == 0) {
+					zero_division_error();
+					break;
+				}
 				vptr = stack[sp].vptr;
 				vptr = Vector_div(vptr,Vector_from_int(i,vptr.vector->length));
 				stack[sp].vptr = vptr;
@@ -348,7 +357,10 @@ void vm_exec(VM *vm, bool trace)
 			case VDIVF:
 				validate_stack_address(sp-1);
 				f = stack[sp--].f;
-				if (f == 0) zero_division_error();
+				if (f == 0) {
+					zero_division_error();
+					break;
+				}
 				vptr = stack[sp].vptr;
 				vptr = Vector_div(vptr,Vector_from_float(f,vptr.vector->length));
 				stack[sp].vptr = vptr;
@@ -600,6 +612,7 @@ void vm_exec(VM *vm, bool trace)
 				if (i-1 >= strlen(stack[sp].s))
 				{
 					fprintf(stderr, "StringIndexOutOfRange: %d\n",(int)strlen(stack[sp].s));
+					break;
 				}
 				c = String_from_char(stack[sp--].s[i-1])->str;
 				stack[++sp].s = c;
@@ -673,6 +686,7 @@ void vm_exec(VM *vm, bool trace)
 				else {
 					fprintf(stderr, "Vector reference cannot be found\n");
 				}
+				break;
 			case NOP : break;
 			default:
 				printf("invalid opcode: %d at ip=%d\n", opcode, (ip - 1));

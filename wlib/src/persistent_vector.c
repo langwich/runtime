@@ -53,7 +53,7 @@ SOFTWARE.
  */
 
 static void inline vector_index_error(int i) {
-	fprintf(stderr, "VectorIndexOutOfRangeError: %d\n",i);
+	fprintf(stderr, "VectorIndexOutOfRange: %d\n",i);
 }
 
 PVector_ptr PVector_init(double val, size_t n) {
@@ -79,7 +79,9 @@ PVector_ptr PVector_new(double *data, size_t n) {
 }
 
 double ith(PVector_ptr vptr, int i) {
-	if (i<0 || i>= vptr.vector->length) vector_index_error((int)vptr.vector->length);
+	if (i<0 || i>= vptr.vector->length) {
+		vector_index_error((int)vptr.vector->length);
+	}
 	PVectorFatNode *default_node = &vptr.vector->nodes[i];
 	if ( default_node->head==NULL ) {       // fast path
 		return default_node->data;          // return default value if no version list
@@ -97,7 +99,10 @@ double ith(PVector_ptr vptr, int i) {
 }
 
 void set_ith(PVector_ptr vptr, int i, double value) {
-	if (i<0 || i>= vptr.vector->length) vector_index_error((int)vptr.vector->length);
+	if (i<0 || i>= vptr.vector->length) {
+		vector_index_error((int)vptr.vector->length);
+		return;
+	}
 	PVectorFatNode *default_node = &vptr.vector->nodes[i];
 	PVectorFatNodeElem *p = default_node->head;  // can never set default value in fat node after creation
 	while (p != NULL) {

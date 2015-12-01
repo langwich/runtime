@@ -51,14 +51,12 @@ String *String_alloc(size_t length) {
 }
 #endif
 
-static void inline vector_operation_error(char * error_message) {
-	char type[] = "VectorOperationError:";
-	fprintf(stderr, "%s",strcat (type,error_message));
+static void inline vector_operation_error() {
+	fprintf(stderr, "VectorsOperationError: two vectors must have different length\n");
 }
 
-static void inline null_pointer_error(char * error_message) {
-	char type[] = "NullPointerError:";
-	fprintf(stderr, "%s",strcat (type,error_message));
+static void inline null_pointer_error(const char * error_message) {
+	fprintf(stderr, "NullPointerError: %s",error_message);
 }
 
 // There is a general assumption that support routines follow same
@@ -99,8 +97,14 @@ PVector_ptr Vector_add(PVector_ptr a, PVector_ptr b)
 {
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
-	if ( a.vector==NULL || b.vector==NULL ) null_pointer_error("Addition operator cannot be applied to NULL Vectors\n");
-	if ( a.vector->length!=b.vector->length ) vector_operation_error("Vectors have different length\n");
+	if ( a.vector==NULL || b.vector==NULL ) {
+		null_pointer_error("Addition operator cannot be applied to NULL Vectors\n");
+		return NIL_VECTOR;
+	}
+	if ( a.vector->length!=b.vector->length ) {
+		vector_operation_error();
+		return NIL_VECTOR;
+	}
 	int i;
 	size_t n = a.vector->length;
 	PVector_ptr c = PVector_init(0, n);
@@ -114,8 +118,14 @@ PVector_ptr Vector_sub(PVector_ptr a, PVector_ptr b)
 {
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
-	if ( a.vector==NULL || b.vector==NULL ) null_pointer_error("Subtraction operator cannot be applied to NULL Vectors\n");
-	if ( a.vector->length!=b.vector->length ) vector_operation_error("Vectors have different length\n");
+	if ( a.vector==NULL || b.vector==NULL ) {
+		null_pointer_error("Subtraction operator cannot be applied to NULL Vectors\n");
+		return NIL_VECTOR;
+	}
+	if ( a.vector->length!=b.vector->length ) {
+		vector_operation_error();
+		return NIL_VECTOR;
+	}
 	int i;
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
@@ -129,8 +139,14 @@ PVector_ptr Vector_mul(PVector_ptr a, PVector_ptr b)
 {
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
-	if ( a.vector==NULL || b.vector==NULL ) null_pointer_error("Multiplication operator cannot be applied to NULL Vectors\n");
-	if ( a.vector->length!=b.vector->length ) vector_operation_error("Vectors have different length\n");
+	if ( a.vector==NULL || b.vector==NULL ) {
+		null_pointer_error("Multiplication operator cannot be applied to NULL Vectors\n");
+		return NIL_VECTOR;
+	}
+	if ( a.vector->length!=b.vector->length ) {
+		vector_operation_error();
+		return NIL_VECTOR;
+	}
 	int i;
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
@@ -144,15 +160,19 @@ PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b)
 {
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
-	if ( a.vector==NULL || b.vector==NULL ) null_pointer_error("Division operator cannot be applied to NULL Vectors\n");
-	if ( a.vector->length!=b.vector->length ) vector_operation_error("Vectors have different length\n");
+	if ( a.vector==NULL || b.vector==NULL ) {
+		null_pointer_error("Division operator cannot be applied to NULL Vectors\n");
+		return NIL_VECTOR;
+	}
+	if ( a.vector->length!=b.vector->length ) {
+		vector_operation_error();
+		return NIL_VECTOR;
+	}
 	int i;
 	size_t n = a.vector->length;
 	PVector_ptr  c = PVector_init(0, n);
 	for (i=0; i<n; i++) {
-		if (ith(b,i) == 0) {
-			fprintf(stderr, "ZeroDivisionError: Divisor cann't be 0\n");
-		}
+		if (ith(b,i) == 0) { fprintf(stderr, "ZeroDivisionError: Divisor cann't be 0\n"); return NIL_VECTOR; }
 		c.vector->nodes[i].data = ith(a, i) / ith(b, i);
 	}
 	DEREF((heap_object *)a.vector);
@@ -163,7 +183,10 @@ PVector_ptr Vector_div(PVector_ptr a, PVector_ptr b)
 bool Vector_eq(PVector_ptr a, PVector_ptr b) {
 	REF((heap_object *)a.vector);
 	REF((heap_object *)b.vector);
-	if ( a.vector==NULL || b.vector==NULL ) null_pointer_error("Equality operator cannot be applied to NULL Vectors\n");
+	if ( a.vector==NULL || b.vector==NULL ) {
+		null_pointer_error("Equality operator cannot be applied to NULL Vectors\n");
+		return -1;
+	}
 	if (a.vector->length != b.vector->length) return false;
 	int i = (int)a.vector->length;
 	for (int j = 0; j < i; j++) {
@@ -179,7 +202,10 @@ bool Vector_neq(PVector_ptr a, PVector_ptr b) {
 }
 
 int Vector_len(PVector_ptr v) {
-	if (v.vector == NULL) null_pointer_error("Len() cannot be applied to NULL Vector object\n");
+	if (v.vector == NULL) {
+		null_pointer_error("len() cannot be applied to NULL Vector object\n");
+		return -1;
+	}
 	REF((heap_object *)v.vector);
 	int len = (int)v.vector->length;
 	DEREF((heap_object *)v.vector);
@@ -188,6 +214,10 @@ int Vector_len(PVector_ptr v) {
 
 void print_vector(PVector_ptr a)
 {
+	if (a.vector == NULL) {
+		null_pointer_error("NULL Vector object Cannot be printed out\n");
+		return;
+	}
 	REF((heap_object *)a.vector);
 	print_pvector(a);
 	DEREF((heap_object *)a.vector);
@@ -207,7 +237,10 @@ String *String_from_char(char c)
 }
 
 String *String_from_vector(PVector_ptr v) {
-	if (v.vector == NULL) null_pointer_error("NULL Vector object cannot be converted to string\n");
+	if (v.vector == NULL) {
+		null_pointer_error("NULL Vector object cannot be converted to string\n");
+		return NIL_STRING;
+	}
 	char *s = calloc(v.vector->length*20, sizeof(char));
 	char buf[50];
 	for (int i=0; i<v.vector->length; i++) {
@@ -234,10 +267,19 @@ String *String_from_float(double value) {
 }
 
 int String_len(String *s) {
+	if (s == NULL) {
+		null_pointer_error("len() cannot be applied to NULL string object\n");
+		return -1;
+	}
 	return (int)s->length;
 }
+
 void print_string(String *a)
 {
+	if (a == NULL) {
+		null_pointer_error("NULL string object cannot be printed out\n");
+		return;
+	}
 	REF((heap_object *)a);
 	printf("%s\n", a->str);
 	DEREF((heap_object *)a);
@@ -245,9 +287,12 @@ void print_string(String *a)
 
 String *String_add(String *s, String *t)
 {
-	if ( s==NULL && t==NULL) null_pointer_error("Addition Operator cannot be applied to two NULL string objects\n");
-	if ( s==NULL ) return t; // don't REF/DEREF as we might free our return value
-	if ( t==NULL ) return s;
+	if ( s == NULL && t == NULL) {
+		null_pointer_error("Addition Operator cannot be applied to two NULL string objects\n");
+		return NIL_STRING;
+	}
+	if ( s == NULL ) return t; // don't REF/DEREF as we might free our return value
+	if ( t == NULL ) return s;
 	REF((heap_object *)s);
 	REF((heap_object *)t);
 	size_t n = strlen(s->str) + strlen(t->str);
@@ -280,6 +325,7 @@ bool String_ge(String *s, String *t) {
 	assert(t);
 	return strncmp(s->str, t->str, s->length > t->length ? s->length : t->length) >= 0;
 }
+
 bool String_lt(String *s, String *t) {
 	assert(s);
 	assert(t);
