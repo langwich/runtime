@@ -49,7 +49,6 @@ typedef unsigned int word32;
 // for example, to define the metadata for a global variable of type int, we need to specify
 // the type somehow. We use this INT_TYPE value in olava object files.
 
-static const int VOID_TYPE = 0;
 static const int INT_TYPE = 1;
 static const int FLOAT_TYPE	= 2;
 static const int BOOLEAN_TYPE = 3;

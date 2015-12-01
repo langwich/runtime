@@ -688,7 +688,6 @@ void test_need_default_return(){
     run(code);
 }
 
-
 int main(int argc, char *argv[]) {
     cunit_setup = setup;
     cunit_teardown = teardown;

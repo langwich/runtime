@@ -179,7 +179,6 @@ static void inline validate_stack_address(int a)
 static void inline zero_division_error()
 {
 	fprintf(stderr, "ZeroDivisionError: Divisor cann't be 0\n");
-	//exit(1);
 }
 
 static void gc_check()
@@ -600,7 +599,7 @@ void vm_exec(VM *vm, bool trace)
 				i = stack[sp--].i;
 				if (i-1 >= strlen(stack[sp].s))
 				{
-					fprintf(stderr, "IndexError:string index %d out of range\n",i);
+					fprintf(stderr, "StringIndexOutOfRange: %d\n",(int)strlen(stack[sp].s));
 				}
 				c = String_from_char(stack[sp--].s[i-1])->str;
 				stack[++sp].s = c;
