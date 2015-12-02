@@ -599,7 +599,7 @@ void vm_exec(VM *vm, bool trace)
 			case VLOAD_INDEX:
 				i = stack[sp--].i;
 				vptr = stack[sp--].vptr;
-				vm->stack[++sp].f = ith(vptr, i-1);
+				vm->stack[++sp].f = (float)ith(vptr, i-1);
 				break;
 			case STORE_INDEX:
 				f = stack[sp--].f;

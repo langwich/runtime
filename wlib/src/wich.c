@@ -215,7 +215,7 @@ int Vector_len(PVector_ptr v) {
 void print_vector(PVector_ptr a)
 {
 	if (a.vector == NULL) {
-		null_pointer_error("NULL Vector object Cannot be printed out\n");
+		printf("%s","[]");
 		return;
 	}
 	REF((heap_object *)a.vector);
