@@ -58,6 +58,7 @@ typedef struct string {
 } String;
 
 static const PVector_ptr NIL_VECTOR = {-1,NULL};
+static String* NIL_STRING = NULL;
 
 String *String_new(char *s);
 String *String_from_char(char c);
@@ -116,12 +117,4 @@ handle_sys_errors(int errno)
 static inline void setup_error_handlers() {
 	signal(SIGSEGV, handle_sys_errors);
 	signal(SIGBUS, handle_sys_errors);
-}
-
-static inline void COPY_ON_WRITE(void *x) {
-//	if ( x!=NULL && ((heap_object *)x)->refs > 1 ) {
-//		((heap_object *)x)->refs--;
-//		x = Vector_copy(x);
-//		((heap_object *)x)->refs = 1;
-//	}
 }
