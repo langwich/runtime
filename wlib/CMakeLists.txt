@@ -22,4 +22,8 @@ add_library("${MODULE_NAME}_mark_and_sweep" ${SOURCE})
 set_target_properties("${MODULE_NAME}_mark_and_sweep" PROPERTIES COMPILE_FLAGS "-DMARK_AND_SWEEP")
 INSTALL_LIBRARY("${MODULE_NAME}_mark_and_sweep")
 
+add_library("${MODULE_NAME}_scavenger" ${SOURCE})
+set_target_properties("${MODULE_NAME}_scavenger" PROPERTIES COMPILE_FLAGS "-DSCAVENGER")
+INSTALL_LIBRARY("${MODULE_NAME}_scavenger")
+
 ADD_TEST_TARGET("${TEST_TARGETS}" ${MODULE_NAME})
