@@ -164,10 +164,11 @@ typedef struct {
 
 typedef union {
 	int i;
-	double f;
+	float f;
 	bool b;
 	char *s;
 	PVector_ptr vptr;
+//	char ba[sizeof(double)];
 } element;
 
 // to call a func, we use index into table of Function descriptors

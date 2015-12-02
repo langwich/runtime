@@ -193,7 +193,7 @@ void vm_exec(VM *vm, bool trace)
 	int a = 0;
 	int i = 0;
 	bool b1, b2;
-	double f,g;
+	float f,g;
 	char* c;
 	PVector_ptr vptr,r,l;
 	int x, y;
@@ -747,7 +747,7 @@ static inline int int32(const byte *data, addr32 ip)
 
 static inline float float32(const byte *data, addr32 ip)
 {
-	return *((int *)&data[ip]); // could be negative value
+	return *((float *)&data[ip]);
 }
 
 static inline int int16(const byte *data, addr32 ip)
