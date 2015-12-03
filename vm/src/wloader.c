@@ -28,6 +28,7 @@ SOFTWARE.
 
 static void vm_write16(byte *data, unsigned int n);
 static void vm_write32(byte *data, unsigned int n);
+static void vm_write64(byte *data, char *a);
 /*
 Create a VM from a Wich object/asm file, .wasm; files look like:
 
@@ -87,8 +88,8 @@ VM *vm_load(FILE *f)
             code[ip] = I->opcode;
             ip++;
             e.f = fvalue;
-            vm_write32(&code[ip],(unsigned )e.i);
-            ip += 4;
+            vm_write64(&code[ip], e.ba);
+            ip += 8;
             continue;
         }
 
@@ -122,6 +123,17 @@ static void vm_write32(byte *data, unsigned int n)
     data[2] = (byte)((n >> 16) & 0xFF);
     data[1] = (byte)((n >> 8) & 0xFF);
     data[0] = (byte)(n & 0xFF);
+}
+
+static void vm_write64(byte *data, char *a){
+    data[7] = (byte)a[7];
+    data[6] = (byte)a[6];
+    data[5] = (byte)a[5];
+    data[4] = (byte)a[4];
+    data[3] = (byte)a[3];
+    data[2] = (byte)a[2];
+    data[1] = (byte)a[1];
+    data[0] = (byte)a[0];
 }
 
 static void vm_write16(byte *data, unsigned int n)

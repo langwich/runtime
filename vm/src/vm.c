@@ -91,7 +91,7 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"BRF",         BRF,            2},
 
 		{"ICONST",      ICONST,         4},
-		{"FCONST",      FCONST,         4},
+		{"FCONST",      FCONST,         8},
 		{"SCONST",      SCONST,         2},
 
 		{"ILOAD",       ILOAD,          2},
@@ -129,7 +129,7 @@ static void vm_print_instr(VM *vm, addr32 ip);
 static void vm_print_stack(VM *vm);
 static inline int int32(const byte *data, addr32 ip);
 static inline int int16(const byte *data, addr32 ip);
-static inline float float32(const byte *data, addr32 ip);
+static inline double double64(const byte *data, addr32 ip);
 static void vm_call(VM *vm, Function_metadata *func);
 static void vm_print_stack_value(word p);
 int push_default_value(int index, int sp,  element *stack);
@@ -193,7 +193,7 @@ void vm_exec(VM *vm, bool trace)
 	int a = 0;
 	int i = 0;
 	bool b1, b2;
-	float f,g;
+	double f,g;
 	char* c;
 	PVector_ptr vptr,r,l;
 	int x, y;
@@ -408,7 +408,7 @@ void vm_exec(VM *vm, bool trace)
 				break;
             case F2S:
 				validate_stack_address(sp);
-				stack[sp].s = String_from_float((float)stack[sp].f)->str;
+				stack[sp].s = String_from_float(stack[sp].f)->str;
                 break;
             case V2S:
 				validate_stack_address(sp);
@@ -555,8 +555,8 @@ void vm_exec(VM *vm, bool trace)
 				ip += 4;
 				break;
 			case FCONST:
-				stack[++sp].f = float32(code,ip);
-				ip += 4;
+				stack[++sp].f = double64(code, ip);
+				ip += 8;
 				break;
 			case SCONST :
 				i = int16(code,ip);
@@ -599,7 +599,7 @@ void vm_exec(VM *vm, bool trace)
 			case VLOAD_INDEX:
 				i = stack[sp--].i;
 				vptr = stack[sp--].vptr;
-				vm->stack[++sp].f = (float)ith(vptr, i-1);
+				vm->stack[++sp].f = ith(vptr, i-1);
 				break;
 			case STORE_INDEX:
 				f = stack[sp--].f;
@@ -745,9 +745,11 @@ static inline int int32(const byte *data, addr32 ip)
 	return *((word32 *)&data[ip]);
 }
 
-static inline float float32(const byte *data, addr32 ip)
+static inline double double64(const byte *data, addr32 ip)
 {
-	return *((float *)&data[ip]);
+	union cvt { int i;double f; };
+	union cvt *x = (union cvt *)&data[ip]; // gets just 4 bytes
+	return x->f;
 }
 
 static inline int int16(const byte *data, addr32 ip)

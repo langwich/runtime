@@ -125,7 +125,7 @@ void vector() {
         "0 strings\n"
         "1 functions\n"
         "0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "12 instr, 32 bytes\n"
+        "12 instr, 44 bytes\n"
         "GC_START\n"
         "FCONST 1.0\n"
         "FCONST 2.0\n"
@@ -309,7 +309,7 @@ void vector_element_assign() {
         "0 strings\n"
         "1 functions\n"
         "0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "16 instr, 46 bytes\n"
+        "16 instr, 62 bytes\n"
         "GC_START\n"
         "FCONST 1.0\n"
         "FCONST 2.0\n"
@@ -329,43 +329,6 @@ void vector_element_assign() {
     run(code);
 }
 
-void test_int_to_string() {
-    char *code =
-        "1 strings\n"
-        "\t0:5/hello\n"
-        "1 functions\n"
-        "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
-        "6 instr, 12 bytes\n"
-        "\tSCONST 0\n"
-        "\tICONST 101\n"
-        "\tI2S\n"
-        "\tSADD\n"
-        "\tSPRINT\n"
-        "\tHALT\n";
-    run(code);
-}
-
-void vector_add_int() {
-    char *code =
-        "0 strings\n"
-        "1 functions\n"
-        "\t0: addr=0 args=0 locals=2 type=0 4/main\n"
-        "13 instr, 41 bytes\n"
-        "\tFCONST 1.0\n"
-        "\tFCONST 2.0\n"
-        "\tFCONST 3.0\n"
-        "\tICONST 3\n"
-        "\tVECTOR\n"
-        "\tSTORE 0\n"
-        "\tVLOAD 0\n"
-        "\tICONST 1\n"
-        "\tVADDI\n"
-        "\tSTORE 1\n"
-        "\tVLOAD 1\n"
-        "\tVPRINT\n"
-        "\tHALT\n";
-    run(code);
-}
 
 /*
  * var x = "car"
@@ -590,7 +553,7 @@ void test_float_div() {
         "0 strings\n"
         "1 functions\n"
         "0: addr=0 args=0 locals=2 type=0 4/main\n"
-        "11 instr, 27 bytes\n"
+        "11 instr, 35 bytes\n"
         "GC_START\n"
         "FCONST 1.0\n"
         "STORE 0\n"
@@ -693,7 +656,7 @@ void test_bubblesort() {
     "2 functions\n"
     "\t0: addr=0 args=1 locals=3 type=5 10/bubbleSort\n"
     "\t1: addr=164 args=0 locals=1 type=0 4/main\n"
-    "88 instr, 226 bytes\n"
+    "88 instr, 230 bytes\n"
     "\tGC_START\n"
     "\tVLOAD 0\n"
     "\tVLEN\n"
@@ -765,7 +728,7 @@ void test_bubblesort() {
     "\tI2F\n"
     "\tICONST 4\n"
     "\tI2F\n"
-    "\tFCONST 2.15\n"
+    "\tFCONST 2.153\n"
     "\tICONST 2\n"
     "\tI2F\n"
     "\tICONST 23\n"
@@ -785,33 +748,60 @@ void test_bubblesort() {
     run(code);
 }
 
+void test_while() {
+    char* code = "0 strings\n"
+    "1 functions\n"
+    "\t0: addr=0 args=0 locals=1 type=0 4/main\n"
+    "19 instr, 53 bytes\n"
+    "\tGC_START\n"
+    "\tICONST 10\n"
+    "\tSTORE 0\n"
+    "\tILOAD 0\n"
+    "\tICONST 0\n"
+    "\tIGT\n"
+    "\tBRF 33\n"
+    "\tILOAD 0\n"
+    "\tI2F\n"
+    "\tFCONST 1.0\n"
+    "\tFADD\n"
+    "\tFPRINT\n"
+    "\tILOAD 0\n"
+    "\tICONST 1\n"
+    "\tISUB\n"
+    "\tSTORE 0\n"
+    "\tBR -39\n"
+    "\tGC_END\n"
+    "\tHALT\n";
+    run(code);
+}
+
 int main(int argc, char *argv[]) {
     cunit_setup = setup;
     cunit_teardown = teardown;
 
-    test(string_add);
-    test(hello);
-    test(int_var_def);
-    test(string_var_def);
-    test(vector);
-    test(func_call);
-    test(func_call_two_args);
-    test(if_stat);
-    test(if_else);
-    test(while_stat);
-    test(vector_element_assign);
-    test(test_int_to_string);
-    test(vector_add_int);
-    test(string_index);
-    test(vector_op);
-    test(testNop);
-    test(testFuncMissReturnValue);
-    test(test_len);
-    test(test_len2);
-    test(test_float_div);
-    test(test_div_error);
-    test(test_index_out_of_range);
-    test(test_need_default_return);
+//    test(string_add);
+//    test(hello);
+//    test(int_var_def);
+//    test(string_var_def);
+//    test(vector);
+//    test(func_call);
+//    test(func_call_two_args);
+//    test(if_stat);
+//    test(if_else);
+//    test(while_stat);
+//    test(vector_element_assign);
+//    test(string_index);
+//    test(vector_op);
+//    test(testNop);
+//    test(testFuncMissReturnValue);
+//    test(test_len);
+//    test(test_len2);
+//    test(test_float_div);
+//    test(test_div_error);
+//    test(test_index_out_of_range);
+//    test(test_need_default_return);
+//    test(test_bubblesort);
+    test(test_while);
     return 0;
 }
 
