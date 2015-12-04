@@ -52,8 +52,8 @@ SOFTWARE.
  * which the node was created."
  */
 
-static void inline vector_index_error(int i) {
-	fprintf(stderr, "VectorIndexOutOfRange: %d\n",i);
+static void inline vector_index_error(int e, int i) {
+	fprintf(stderr, "VectorIndexOutOfRange: %d out of index : 1 to %d\n",e,i);
 }
 
 PVector_ptr PVector_init(double val, size_t n) {
@@ -80,7 +80,7 @@ PVector_ptr PVector_new(double *data, size_t n) {
 
 double ith(PVector_ptr vptr, int i) {
 	if (i<0 || i>= vptr.vector->length) {
-		vector_index_error((int)vptr.vector->length);
+		vector_index_error(i+1,(int)vptr.vector->length);
 	}
 	PVectorFatNode *default_node = &vptr.vector->nodes[i];
 	if ( default_node->head==NULL ) {       // fast path
@@ -100,7 +100,7 @@ double ith(PVector_ptr vptr, int i) {
 
 void set_ith(PVector_ptr vptr, int i, double value) {
 	if (i<0 || i>= vptr.vector->length) {
-		vector_index_error((int)vptr.vector->length);
+		vector_index_error(i+1,(int)vptr.vector->length);
 		return;
 	}
 	PVectorFatNode *default_node = &vptr.vector->nodes[i];
