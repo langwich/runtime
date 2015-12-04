@@ -52,7 +52,7 @@ String *String_alloc(size_t length) {
 #endif
 
 static void inline vector_operation_error() {
-	fprintf(stderr, "VectorsOperationError: two vectors must have different length\n");
+	fprintf(stderr, "VectorsOperationError: two vectors have different length\n");
 }
 
 static void inline null_pointer_error(const char * error_message) {
