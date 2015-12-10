@@ -56,6 +56,25 @@ static void inline vector_index_error(int e, int i) {
 	fprintf(stderr, "VectorIndexOutOfRange: %d out of index : 1 to %d\n",e,i);
 }
 
+PVector_ptr PVector_copy(PVector_ptr vptr) {
+	// make shallow copy
+	PVector_ptr copy = (PVector_ptr){++vptr.vector->version_count, vptr.vector};
+
+	// for every element of v.vector, look for changes by vptr.version (vector we are copying)
+	for (int i=0; i<vptr.vector->length; i++) {
+		PVectorFatNode *default_node = &vptr.vector->nodes[i];
+		PVectorFatNodeElem *p = default_node->head;
+		while (p != NULL) {
+			if (p->version == vptr.version) {       // found a value set by vptr, so make a copy of it
+				set_ith(copy, i, p->data);
+			}
+			p = p->next;
+		}
+	}
+
+	return copy;
+}
+
 PVector_ptr PVector_init(double val, size_t n) {
 	PVector *v = PVector_alloc(n);
 	v->version_count = -1; // first version is 0

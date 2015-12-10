@@ -57,10 +57,7 @@ typedef struct {                // can't use "PVector *" since we need a version
 	PVector *vector;
 } PVector_ptr;
 
-static inline PVector_ptr PVector_copy(PVector_ptr v) {
-	return (PVector_ptr){++v.vector->version_count, v.vector};
-}
-
+PVector_ptr PVector_copy(PVector_ptr vptr);
 PVector_ptr PVector_init(double val, size_t n);
 PVector_ptr PVector_new(double *data, size_t n);
 void print_pvector(PVector_ptr a);
