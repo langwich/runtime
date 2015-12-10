@@ -30,6 +30,9 @@ int main(int argc, char *argv[])
 	assert_float_equal(ith(x,1), 102.0);
 	assert_float_equal(ith(y,1), 2.0);      // our copy doesn't change.
 
+	PVector_ptr copied = PVector_copy(x);   // test copy.
+	assert_float_equal(ith(copied,1), 102.0);
+
 	set_ith(y, 1, 302.00);                  // change copy now
 	assert_float_equal(ith(x,1), 102.0);
 	assert_float_equal(ith(y,1), 302.0);
