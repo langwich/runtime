@@ -238,12 +238,12 @@ void vm_exec(VM *vm, bool trace)
 			case IDIV:
 				validate_stack_address(sp-1);
 				y = stack[sp--].i;
-				x = stack[sp].i;
+				x = stack[sp--].i;
 				if (y ==0 ) {
 					zero_division_error();
 					break;
 				}
-				stack[sp].i = x / y;
+				stack[++sp].i = x / y;
 				break;
 			case FADD:
 				validate_stack_address(sp-1);
@@ -266,12 +266,12 @@ void vm_exec(VM *vm, bool trace)
 			case FDIV:
 				validate_stack_address(sp-1);
 				f = stack[sp--].f;
-				g = stack[sp].f;
+				g = stack[sp--].f;
 				if (f == 0) {
 					zero_division_error();
 					break;
 				}
-				stack[sp].f = g / f;
+				stack[++sp].f = g / f;
 				break;
             case VADD:
 				validate_stack_address(sp-1);
@@ -609,12 +609,13 @@ void vm_exec(VM *vm, bool trace)
 				break;
 			case SLOAD_INDEX:
 				i = stack[sp--].i;
-				if (i-1 >= strlen(stack[sp].s))
+				char * str = stack[sp--].s;
+				if (i-1 >= strlen(str))
 				{
-					fprintf(stderr, "StringIndexOutOfRange: %d\n",(int)strlen(stack[sp].s));
+					fprintf(stderr, "StringIndexOutOfRange: %d out of index : 1 to %d\n",i,(int)strlen(stack[sp].s));
 					break;
 				}
-				c = String_from_char(stack[sp--].s[i-1])->str;
+				c = String_from_char(str[i-1])->str;
 				stack[++sp].s = c;
 				break;
 			case PUSH_DFLT_RETV:
