@@ -677,10 +677,7 @@ void vm_exec(VM *vm, bool trace)
 				gc_add_root((void **)&stack[sp].vptr);
 				break;
 			case COPY_VECTOR:
-				if (vm->call_stack[vm->callsp].locals[i].vptr.vector != NULL) {
-					stack[sp].vptr = Vector_copy(vm->call_stack[vm->callsp].locals[i].vptr);
-				}
-				else if (stack[sp].vptr.vector != NULL) {
+				if (stack[sp].vptr.vector != NULL) {
 					stack[sp].vptr = Vector_copy(stack[sp].vptr);
 				}
 				else {
