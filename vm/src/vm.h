@@ -199,7 +199,6 @@ typedef struct {
 	element stack[MAX_OPND_STACK]; 	// operand stack, grows upwards; word addressable
 	Activation_Record call_stack[MAX_CALL_STACK];
 
-	int data_size;
 	int num_strings;
 	int num_functions;
 	char **strings;
