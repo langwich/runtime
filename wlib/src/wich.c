@@ -241,9 +241,10 @@ String *String_from_vector(PVector_ptr v) {
 		null_pointer_error("NULL Vector object cannot be converted to string\n");
 		return NIL_STRING;
 	}
-	char *s = calloc(v.vector->length*20, sizeof(char));
-	char buf[50];
+	char s[v.vector->length*20];
+	s[0] = '\0';
 	for (int i=0; i<v.vector->length; i++) {
+		char buf[50];
 		sprintf(buf, "%d", (int)ith(v, i));
 		strcat(s, buf);
 	}
@@ -251,19 +252,15 @@ String *String_from_vector(PVector_ptr v) {
 }
 
 String *String_from_int(int value) {
-	char *s = calloc(20, sizeof(char));
 	char buf[50];
 	sprintf(buf,"%d",value);
-	strcat(s, buf);
-	return String_new(s);
+	return String_new(buf);
 }
 
 String *String_from_float(double value) {
-	char *s = calloc(20, sizeof(char));
 	char buf[50];
 	sprintf(buf,"%1.2f",value);
-	strcat(s, buf);
-	return String_new(s);
+	return String_new(buf);
 }
 
 int String_len(String *s) {
