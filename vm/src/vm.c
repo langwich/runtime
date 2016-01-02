@@ -82,8 +82,8 @@ VM_INSTRUCTION vm_instructions[] = {
 		{"SNEQ",  SNEQ,  0},
 		{"SGT",   SGT,   0},
 		{"SGE",   SGE,   0},
-		{"SLT",         SGT,            0},
-		{"SLE",         SGE,            0},
+		{"SLT",         SLT,            0},
+		{"SLE",         SLE,            0},
 		{"VEQ",         VEQ,            0},
 		{"VNEQ",        VNEQ,           0},
 
