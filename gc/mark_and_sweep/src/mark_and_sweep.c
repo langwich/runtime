@@ -100,6 +100,7 @@ heap_object *gc_alloc(object_metadata *metadata, size_t size) {
 static void *gc_raw_alloc(size_t size) {
     if (alloc_bump_ptr + size > end_of_heap) {
         void *object = gc_alloc_from_freelist(size);
+        // TODO parrt: shouldn't this return object if not null?
         if (NULL == object) {
             gc();
             object = gc_alloc_from_freelist(size);
