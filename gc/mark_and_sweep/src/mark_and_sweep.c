@@ -230,6 +230,7 @@ static void sweep() {
 }
 
 static void free_object(heap_object *p) {
+    // todo: parrt says shouldn't we be wiping free list each time? This is insanely slow O(n^2)
     if (!already_in_freelist(p)){
         p->next = free_list;
         free_list = p;
