@@ -113,6 +113,7 @@ static Free_Header *nextfree(uint32_t size) {
 	       another Free_Header (MIN_CHUNK_SIZE) for the new free chunk.
 	 */
 	while (p != NULL && size != p->size && p->size < size + MIN_CHUNK_SIZE) {
+		// todo: it should find chunk if big enough for size but not big enough to split; just give it whole thing
 		prev = p;
 		p = p->next;
 	}
