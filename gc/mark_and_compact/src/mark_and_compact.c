@@ -185,6 +185,7 @@ void gc() {
 	gc_mark();
 
 	// TODO: add next_live field to heap_object to avoid walking all objects to find live
+	// oops actually must move objects from low to high ptr addresses.
 	// reallocate all live objects starting from start_of_heap
 	if (DEBUG) printf("FORWARD\n");
 	next_free_forwarding = heap;
