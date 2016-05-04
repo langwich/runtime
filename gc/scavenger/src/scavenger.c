@@ -251,6 +251,7 @@ static void forward_object(heap_object *p) {
 	move_to_forwarding_addr(p);
 	if (DEBUG) printf("forward ptr fields @ %p\n", p->forwarded);
 	forward_ptr_fields(p->forwarded); // update ptr fields of the relocated object and forward them
+	// todo: seems like the move should happen after updating any ptr fields else heap1 won't have updated fields
 }
 
 static void forward_ptr_fields(const heap_object *p) {// check for tracked heap ptrs in this object

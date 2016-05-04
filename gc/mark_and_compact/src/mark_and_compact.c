@@ -184,6 +184,7 @@ void gc() {
 
 	gc_mark();
 
+	// TODO: add next_live field to heap_object to avoid walking all objects to find live
 	// reallocate all live objects starting from start_of_heap
 	if (DEBUG) printf("FORWARD\n");
 	next_free_forwarding = heap;
@@ -197,6 +198,7 @@ void gc() {
 
 	// Now that we know where to move objects, update and move objects
 	if (DEBUG) printf("COMPACT\n");
+	// TODO: can this be foreach_live()?
 	foreach_object(move_live_objects_to_forwarding_addr); // also visits the dead to wack p->magic
 
 	// reset highwater mark *after* we've moved everything around; foreach_object() uses next_free
