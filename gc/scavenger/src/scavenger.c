@@ -219,6 +219,7 @@ void gc_scavenge() {
 		}
 
 		else if (ptr_is_in_heap_1(p))  { // in heap_1 and root has been updated
+			// todo: this case shouldn't be possible; no root could already point at target heap
 			if (DEBUG) printf("roots[%d] = %p,  is already in heap_1, root has been updated\n", i, p);
 			continue;
 		}
